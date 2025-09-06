@@ -1,0 +1,6 @@
+@BackendTechnicalAssetsManagement_HostAddress = http://localhost:5278
+
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
