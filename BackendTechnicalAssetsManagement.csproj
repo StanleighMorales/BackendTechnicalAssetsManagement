@@ -8,23 +8,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="src\Entities\**" />
+    <Content Remove="src\Entities\**" />
+    <EmbeddedResource Remove="src\Entities\**" />
+    <None Remove="src\Entities\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="src\Interfaces\" />
+    <Folder Include="wwwroot\" />
     <Folder Include="src\Data\" />
     <Folder Include="src\Extensions\" />
-    <Folder Include="src\Entities\" />
-    <Folder Include="src\Profiles\" />
-    <Folder Include="src\Services\" />
-    <Folder Include="src\Repository\" />
   </ItemGroup>
 
 </Project>

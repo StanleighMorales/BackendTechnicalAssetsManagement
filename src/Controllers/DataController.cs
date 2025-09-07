@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Interfaces.IServices;
+﻿using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

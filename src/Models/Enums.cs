@@ -1,4 +1,4 @@
-﻿namespace BackendTechnicalAssetsManagement.Model
+﻿namespace BackendTechnicalAssetsManagement.src.Models
 {
     public class Enums
     {

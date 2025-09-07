@@ -1,13 +1,14 @@
-﻿using BackendTechnicalAssetsManagement.Model;
-using BackendTechnicalAssetsManagement.src.Models.DTOs.Items;
+﻿using BackendTechnicalAssetsManagement.src.DTOs.Item;
+using TechnicalAssetManagementApi.Dtos.Item;
 
-namespace BackendTechnicalAssetsManagement.src.Interfaces.IServices
+namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
 {
     public interface IItemService
     {
-        Task<Item> CreateItemAsync(CreateItemDto request);
-        Task<List<Item>> GetItemsAsync(int pageNumber, int pageSize);
-        Task<Item?> GetItemByIdAsync(int id);
-        Task<List<Item>> GetAllItems();
+        Task<IEnumerable<ItemDto>> GetAllItemsAsync();
+        Task<ItemDto?> GetItemByIdAsync(int id);
+        Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto); // Consistent naming
+        Task<bool> UpdateItemAsync(int id, UpdateItemDto updateItemDto);
+        Task<bool> DeleteItemAsync(int id);
     }
 }

@@ -1,8 +1,7 @@
-﻿using BackendTechnicalAssetsManagement.Model;
+﻿using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using BackendTechnicalAssetsManagement.Models;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {

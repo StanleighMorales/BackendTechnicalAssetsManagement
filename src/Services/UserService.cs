@@ -1,6 +1,6 @@
 ﻿using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
-using BackendTechnicalAssetsManagement.src.Interfaces.IServices;
+using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 
 namespace BackendTechnicalAssetsManagement.src.Services

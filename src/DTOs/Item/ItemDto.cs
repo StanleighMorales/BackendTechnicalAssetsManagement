@@ -1,10 +1,10 @@
 ﻿using static BackendTechnicalAssetsManagement.src.Models.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.Models
+namespace BackendTechnicalAssetsManagement.src.DTOs.Item
 {
-    public class Item
+    public class ItemDto
     {
-        public int Id { get; set; } // Primary Key
+        public int Id { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
         public string? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
@@ -12,14 +12,9 @@ namespace BackendTechnicalAssetsManagement.src.Models
         public string? ItemModel { get; set; }
         public string ItemMake { get; set; } = string.Empty;
         public string? Description { get; set; }
-
         public ItemCategory Category { get; set; }
         public ItemCondition Condition { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-
-
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }

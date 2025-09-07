@@ -1,4 +1,4 @@
-﻿namespace BackendTechnicalAssetsManagement.Model
+﻿namespace BackendTechnicalAssetsManagement.Models
 {
     public record RefreshToken
     {
