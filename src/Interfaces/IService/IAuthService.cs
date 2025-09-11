@@ -10,6 +10,8 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
         Task<string> Login(LoginUserDto request);
         Task<string> RefreshToken();
 
+        Task<UserDto> RegisterStaffAsync(RegisterStaffDto registerStaffDto);
+
         Task Logout();
     }
 }

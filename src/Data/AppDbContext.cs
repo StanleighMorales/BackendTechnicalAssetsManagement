@@ -12,5 +12,14 @@ namespace BackendTechnicalAssetsManagement.src.Data
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Item> Items { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Teacher>().HasBaseType<User>();
+            modelBuilder.Entity<Staff>().HasBaseType<User>();
+            modelBuilder.Entity<Student>().HasBaseType<User>();
+
+            // TODO: Understand more about this later
+        }
     }
 }

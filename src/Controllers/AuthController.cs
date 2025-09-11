@@ -14,6 +14,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public AuthController(IAuthService authService)
         {
             _authService = authService;
+
         }
 
         [HttpPost("register")]
@@ -31,6 +32,26 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [HttpPost("register-staff")]
+        public async Task<IActionResult> RegisterStaff([FromBody]RegisterStaffDto staffDto)
+        {
+            // The [ApiController] attribute helps handle this, but an explicit check is good.
+            // This checks if required fields are missing, email format is wrong, etc.
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var newUser = await _authService.RegisterStaffAsync(staffDto);
+                return Ok(new { message = "Staff Registered Successfully." });
+            }catch(Exception ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto request)
         {

@@ -6,7 +6,9 @@
         public enum ItemCondition { New, Good, Defective, Refurbished, NeedRepair }
 
         public enum ItemCategory { Electronics, Keys, MediaEquipment, Tools, Miscellaneous }
-       
-    }
+
+        public enum UserRole { Admin, Manager, Staff, Teacher, Student }
+
+        }
 }
     

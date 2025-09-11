@@ -1,4 +1,5 @@
-﻿using BackendTechnicalAssetsManagement.src.Models;
+﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
@@ -10,6 +11,8 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using BackendTechnicalAssetsManagement.Models;
+using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
+using System.Runtime.InteropServices;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -18,12 +21,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMapper _mapper;
+        private readonly IPasswordHashingService _passwordHashingService;
+        private readonly IUserRepository _userRepository;
+        
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper)
         {
             _context = context;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
+            _passwordHashingService = passwordHashingService;
+            _userRepository = userRepository;
+            _mapper = mapper;
         }
 
         public async Task<User> Register(RegisterUserDto request)
@@ -47,13 +57,52 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return newUser;
         }
 
-        public async Task<string> Login(LoginUserDto request)
+        public async Task<UserDto> RegisterStaffAsync(RegisterStaffDto staffDto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(c => c.Username == request.Username);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            if (await _userRepository.GetByUsernameAsync(staffDto.Username) != null)
             {
-                throw new Exception("Invalid username or password.");
+                // Throw an exception that the controller can catch.
+                // This prevents creating duplicate usernames.
+                throw new Exception($"Username '{staffDto.Username}' is already taken.");
             }
+            if(await _userRepository.GetByEmailAsync(staffDto.Email) != null)
+            {
+                throw new Exception($"Email '{staffDto.Email}' already exist.");
+            }
+            if(await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
+            {
+                throw new Exception($"Phone Number already used.");
+
+            }
+            
+            var staffModel = _mapper.Map<Staff>(staffDto);
+
+            staffModel.PasswordHash = _passwordHashingService.HashPassword(staffDto.Password);
+
+            await _userRepository.AddAsync(staffModel);
+            await _userRepository.SaveChangesAsync();
+
+            return _mapper.Map<UserDto>(staffModel);
+        }
+
+        public async Task<string> Login(LoginUserDto loginDto)
+        {
+            var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            {
+
+                throw new Exception("Invalid");
+                //throw new Exception("Invalid username or password.");
+            }
+            if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
+            {
+                //for testing..
+                throw new Exception("Invalid Password."); 
+                //uncomment when dont testing
+                //throw new Exception("Invalid username or password.");
+            }
+            //TODO make sure to make this that even email is working, currently only username is working
 
             string accessToken = CreateAccessToken(user);
 
@@ -65,7 +114,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             user.TokenCreated = refreshToken.Created;
             user.TokenExpires = refreshToken.Expires;
 
-            await _context.SaveChangesAsync();
+            await _userRepository.SaveChangesAsync();
 
             return accessToken;
 
@@ -121,9 +170,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             List<Claim> claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+               
+                
             };
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                claims.Add(new Claim(ClaimTypes.Email, user.Email));
+            }
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value!));
 
