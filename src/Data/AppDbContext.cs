@@ -15,6 +15,23 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .Property(user => user.UserRole)
+                .HasConversion<string>();
+           
+            modelBuilder.Entity<Item>()
+                .Property(i => i.Condition)
+                .HasConversion<string>();
+
+            
+            modelBuilder.Entity<Item>()
+                .Property(i => i.Category)
+                .HasConversion<string>();
+
+
+
             modelBuilder.Entity<Teacher>().HasBaseType<User>();
             modelBuilder.Entity<Staff>().HasBaseType<User>();
             modelBuilder.Entity<Student>().HasBaseType<User>();

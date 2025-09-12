@@ -19,7 +19,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();   
 
 // Manual AutoMapper Registration
 builder.Services.AddAutoMapper(cfg => {

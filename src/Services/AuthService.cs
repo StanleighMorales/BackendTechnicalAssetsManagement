@@ -12,7 +12,6 @@ using System.Security.Cryptography;
 using System.Text;
 using BackendTechnicalAssetsManagement.Models;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using System.Runtime.InteropServices;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -92,17 +91,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
 
-                throw new Exception("Invalid");
-                //throw new Exception("Invalid username or password.");
+                throw new Exception("Invalid username or password.");
             }
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
-                //for testing..
-                throw new Exception("Invalid Password."); 
-                //uncomment when dont testing
-                //throw new Exception("Invalid username or password.");
+                throw new Exception("Invalid username or password.");
             }
-            //TODO make sure to make this that even email is working, currently only username is working
 
             string accessToken = CreateAccessToken(user);
 
@@ -117,7 +111,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _userRepository.SaveChangesAsync();
 
             return accessToken;
-
         }
         public async Task Logout()
         {

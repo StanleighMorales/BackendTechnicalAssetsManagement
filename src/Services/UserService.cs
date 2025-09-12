@@ -1,12 +1,8 @@
-﻿using BackendTechnicalAssetsManagement.src.Data;
-using Microsoft.EntityFrameworkCore;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+﻿using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using AutoMapper;
-using BackendTechnicalAssetsManagement.src.Models;
-
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService
