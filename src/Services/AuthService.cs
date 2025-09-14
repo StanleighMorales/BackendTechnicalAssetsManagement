@@ -202,6 +202,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
                 Expires = newRefreshToken.Expires
             };
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
