@@ -17,6 +17,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class AuthService : IAuthService
     {
+        //TODO: add a repository for this later instead of communicating directly to db.
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;

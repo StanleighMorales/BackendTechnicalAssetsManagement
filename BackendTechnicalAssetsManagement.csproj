@@ -5,8 +5,8 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>633c8010-4a61-4276-b467-b708d9f9ce25</UserSecretsId>
-	</PropertyGroup>
+	  <UserSecretsId>27f5bafc-ba7b-486a-9971-179845b90533</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<Compile Remove="src/Entities/**" />
@@ -32,7 +32,6 @@
 
 	<ItemGroup>
 		<Folder Include="wwwroot\" />
-		<Folder Include="src\Data\" />
 		<Folder Include="src\Extensions\" />
 	</ItemGroup>
 	<ItemGroup>

@@ -33,7 +33,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
 
     public class StudentDto : UserDto
     {
-        public new int Id { get; set; }
         public IFormFile? FrontStudentIdPicture { get; set; }
         public IFormFile? BackStudentIdPicture { get; set; }
 

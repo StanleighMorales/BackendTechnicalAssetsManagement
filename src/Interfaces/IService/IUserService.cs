@@ -5,7 +5,7 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
 {
     public interface IUserService
     {
-        Task<GetUserProfileDto> GetUserProfileByIdAsync(int userId);
+        Task<BaseProfileDto> GetUserProfileByIdAsync(int userId);
 
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<UserDto?> GetUserByIdAsync(int id);

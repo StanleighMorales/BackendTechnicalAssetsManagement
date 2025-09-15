@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250910124129_MakeStaffPhoneNumberNullable")]
-    partial class MakeStaffPhoneNumberNullable
+    [Migration("20250915072623_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,11 +33,13 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Condition")
-                        .HasColumnType("int");
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -83,11 +85,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -98,14 +95,15 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("RefreshToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("TokenCreated")
+                    b.Property<DateTime?>("TokenCreated")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("TokenExpires")
+                    b.Property<DateTime?>("TokenExpires")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserRole")
-                        .HasColumnType("int");
+                    b.Property<string>("UserRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -115,9 +113,55 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.ToTable("Users");
 
-                    b.HasDiscriminator().HasValue("User");
+                    b.UseTptMappingStrategy();
+                });
 
-                    b.UseTphMappingStrategy();
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Admin", b =>
+                {
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Admins", (string)null);
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Manager", b =>
+                {
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Managers", (string)null);
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Staff", b =>
@@ -141,22 +185,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Users", t =>
-                        {
-                            t.Property("FirstName")
-                                .HasColumnName("Staff_FirstName");
-
-                            t.Property("LastName")
-                                .HasColumnName("Staff_LastName");
-
-                            t.Property("MiddleName")
-                                .HasColumnName("Staff_MiddleName");
-
-                            t.Property("PhoneNumber")
-                                .HasColumnName("Staff_PhoneNumber");
-                        });
-
-                    b.HasDiscriminator().HasValue("Staff");
+                    b.ToTable("Staff", (string)null);
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Student", b =>
@@ -218,13 +247,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("Users", t =>
-                        {
-                            t.Property("PhoneNumber")
-                                .HasColumnName("Student_PhoneNumber");
-                        });
-
-                    b.HasDiscriminator().HasValue("Student");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Teacher", b =>
@@ -234,14 +257,66 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("FirstName")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasDiscriminator().HasValue("Teacher");
+                    b.ToTable("Teachers", (string)null);
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Admin", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Admin", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Manager", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Manager", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Staff", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Staff", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Student", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Student", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Teacher", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Teacher", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

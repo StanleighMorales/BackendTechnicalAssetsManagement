@@ -33,6 +33,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             CreateMap<RegisterStaffDto, Staff>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Staff));
+            // Mappings for GETTING user profiles
+            CreateMap<User, BaseProfileDto>();
+            CreateMap<Student, GetStudentProfileDto>();
+            CreateMap<Teacher, GetTeacherProfileDto>();
+            CreateMap<Staff, GetStaffProfileDto>();
+            CreateMap<Manager, GetManagerProfileDto>();
+            CreateMap<Admin, GetAdminProfileDto>();
         }
     }
 }

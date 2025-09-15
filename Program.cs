@@ -1,4 +1,5 @@
 using AutoMapper;
+using System.Text.Json.Serialization;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
@@ -11,15 +12,20 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
-{   //TODO move this thing 
+{
     serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
 });
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSwaggerGen();   
+builder.Services.AddSwaggerGen();
 
 // Manual AutoMapper Registration
 builder.Services.AddAutoMapper(cfg => {
@@ -27,12 +33,17 @@ builder.Services.AddAutoMapper(cfg => {
     cfg.AddProfile<UserMappingProfile>();
 });
 
-
-// DI Registrations
-builder.Services.AddScoped<IAuthService, AuthService>();
+#region DI Registrations
+// Repository
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
-builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+// Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<IUserService, UserService>();
+#endregion
+
+
 
 //Singleton Services
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
@@ -47,19 +58,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Custom Extension Method Services
 builder.Services.AddAuthServices(builder.Configuration);
 builder.Services.AddSwaggerServices();
+
+#region Cors Policy
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
         policy.WithOrigins(allowedOrigins)
-              // Specify only the headers the client is allowed to send
-              .WithHeaders("Content-Type", "Authorization")
-              // Specify only the methods the client is allowed to use
-              .WithMethods("GET", "POST", "PUT", "DELETE")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
               .AllowCredentials();
     });
 });
+#endregion
+
 var app = builder.Build();
 
 // HTTP request pipeline.

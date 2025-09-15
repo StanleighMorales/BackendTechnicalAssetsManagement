@@ -9,8 +9,14 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
 
+
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Staff> Staff {  get; set; }
+        public DbSet<Admin> Admins { get; set; }
+        public DbSet<Manager> Manager { get; set; }
         public DbSet<Item> Items { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,9 +38,11 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
 
 
-            modelBuilder.Entity<Teacher>().HasBaseType<User>();
-            modelBuilder.Entity<Staff>().HasBaseType<User>();
-            modelBuilder.Entity<Student>().HasBaseType<User>();
+            modelBuilder.Entity<Student>().ToTable("Students");
+            modelBuilder.Entity<Teacher>().ToTable("Teachers");
+            modelBuilder.Entity<Staff>().ToTable("Staff");
+            modelBuilder.Entity<Admin>().ToTable("Admins");
+            modelBuilder.Entity<Manager>().ToTable("Managers");
 
             // TODO: Understand more about this later
         }
