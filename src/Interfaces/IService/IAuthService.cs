@@ -12,6 +12,11 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
 
         Task<UserDto> RegisterStaffAsync(RegisterStaffDto registerStaffDto);
 
+        Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto registerTeacherDto);
+
+        Task<UserDto> RegisterStudentAsync(RegisterStudentDto registerStudentDto);
+
+
         Task Logout();
     }
 }

@@ -1,17 +1,19 @@
 ﻿using AutoMapper;
-using BackendTechnicalAssetsManagement.src.Models;
+using BackendTechnicalAssetsManagement.Models;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
+using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using BackendTechnicalAssetsManagement.Models;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -24,16 +26,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IUserRepository _userRepository;
+        private readonly IUserValidationService _userValidationService;
+        private readonly IWebHostEnvironment _hostEnvironment;
         
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment hostEnvironment)
         {
             _context = context;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
             _passwordHashingService = passwordHashingService;
             _userRepository = userRepository;
+            _userValidationService = userValidationService;
             _mapper = mapper;
+            _hostEnvironment = hostEnvironment;
         }
 
         public async Task<User> Register(RegisterUserDto request)
@@ -65,16 +71,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 // This prevents creating duplicate usernames.
                 throw new Exception($"Username '{staffDto.Username}' is already taken.");
             }
-            if(await _userRepository.GetByEmailAsync(staffDto.Email) != null)
+            if (await _userRepository.GetByEmailAsync(staffDto.Email) != null)
             {
                 throw new Exception($"Email '{staffDto.Email}' already exist.");
             }
-            if(await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
+            if (await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
             {
                 throw new Exception($"Phone Number already used.");
 
             }
-            
+
+
             var staffModel = _mapper.Map<Staff>(staffDto);
 
             staffModel.PasswordHash = _passwordHashingService.HashPassword(staffDto.Password);
@@ -84,6 +91,41 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             return _mapper.Map<UserDto>(staffModel);
         }
+        public async Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto teacherDto)
+        { 
+            await _userValidationService.ValidateUniqueUserAsync(
+                teacherDto.Username,
+                teacherDto.Email,
+                teacherDto.PhoneNumber
+                );
+
+            var teacherModel = _mapper.Map<Teacher>(teacherDto);
+            
+            await _userRepository.AddAsync(teacherModel);
+            await _userRepository.SaveChangesAsync(); 
+
+            return _mapper.Map<UserDto>(teacherModel);
+        }
+        public async Task<UserDto> RegisterStudentAsync(RegisterStudentDto studentDto)
+        {
+            await _userValidationService.ValidateUniqueUserAsync(
+                studentDto.Username,
+                studentDto.Email,
+                studentDto.PhoneNumber
+                );
+            string? imagePathFrontId = await SaveImageWithValidationAsync(studentDto.FrontStudentIdPicture);
+            string? imagePathBackId = await SaveImageWithValidationAsync(studentDto.BackStudentIdPicture);
+            string? imagePathProfile = await SaveImageWithValidationAsync(studentDto.ProfilePicture);
+
+            var studenModel = _mapper.Map<Student>(studentDto);
+
+            await _userRepository.AddAsync(studenModel);
+            await _userRepository.SaveChangesAsync();
+
+            return _mapper.Map<UserDto>(studenModel);
+
+        }
+
 
         public async Task<string> Login(LoginUserDto loginDto)
         {
@@ -209,5 +251,36 @@ namespace BackendTechnicalAssetsManagement.src.Services
             };
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
         }
+
+        private async Task<string?> SaveImageWithValidationAsync(IFormFile? image)
+        {
+            if (image == null || image.Length == 0) return null;
+            if (image.Length > 2 * 1024 * 1024) throw new ArgumentException("Image file size cannot exceed 2MB");
+
+            var allowedExtensions = new[] { ".jpg", ".png", ".jpeg", ".gif", ".webp" };
+            var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                throw new ArgumentException("Invalid image file type.");
+            }
+
+            if (string.IsNullOrEmpty(_hostEnvironment.WebRootPath))
+            {
+                throw new InvalidOperationException("wwwroot folder is not configured.");
+            }
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
+            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "items");
+            Directory.CreateDirectory(uploadsFolder);
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await image.CopyToAsync(fileStream);
+            }
+            return Path.Combine("images", "items", uniqueFileName).Replace('\\', '/');
+        }
+
+
     }
 }

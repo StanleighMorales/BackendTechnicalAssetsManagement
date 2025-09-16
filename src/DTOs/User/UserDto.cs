@@ -24,7 +24,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     }
     public class TeacherDto : UserDto
     {
-        [Required]
         public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;

@@ -8,6 +8,8 @@ using BackendTechnicalAssetsManagement.src.Profiles;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using Microsoft.EntityFrameworkCore;
+using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+using BackendTechnicalAssetsManagement.src.Validations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 #endregion
 
 

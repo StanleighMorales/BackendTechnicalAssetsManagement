@@ -37,7 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)

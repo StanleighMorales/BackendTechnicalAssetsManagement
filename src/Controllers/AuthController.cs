@@ -1,6 +1,7 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -51,6 +52,40 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return Conflict(new { message = ex.Message });
             }
         }
+        [HttpPost("register-teacher")]
+        public async Task<IActionResult> RegisterTeacher([FromBody]RegisterTeacherDto teacherDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var newUser = await _authService.RegisterTeacherAsync(teacherDto);
+                return Ok(new { message = " Teacher Registered Successfully." });
+            } catch(Exception ex)
+            {
+                return Conflict(new {message = ex.Message});
+            }
+        }
+        [HttpPost("register-student")]
+        public async Task <IActionResult> RegisterStudent([FromForm]RegisterStudentDto studentDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var newUser = await _authService.RegisterStudentAsync(studentDto);
+                return Ok(new { message = "Student Registered Successfully." });
+            }catch (Exception ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+        }
+        
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto request)

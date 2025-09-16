@@ -3,7 +3,7 @@ using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Models;
-using Microsoft.AspNetCore.Hosting;
+
 using TechnicalAssetManagementApi.Dtos.Item;
 
 namespace BackendTechnicalAssetsManagement.src.Services
@@ -26,8 +26,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             public DuplicateSerialNumberException(string message) : base(message) { }
         }
 
-        // --- FULLY IMPLEMENTED CREATE METHOD ---
-        public async Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto) // Consistent naming
+        public async Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto)
         {
             // 1. Validate for duplicate serial number
             var existingItem = await _itemRepository.GetBySerialNumberAsync(createItemDto.SerialNumber);
@@ -55,7 +54,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<ItemDto>(newItem);
         }
 
-        // --- All other CRUD methods, fully implemented ---
         public async Task<IEnumerable<ItemDto>> GetAllItemsAsync()
         {
             var items = await _itemRepository.GetAllAsync();
@@ -108,8 +106,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _itemRepository.DeleteAsync(id);
             return await _itemRepository.SaveChangesAsync();
         }
-
-        // --- Helper Methods ---
+        //Remove this after the Image validation is successfully working
         private async Task<string?> SaveImageWithValidationAsync(IFormFile? image)
         {
             if (image == null || image.Length == 0) return null;
