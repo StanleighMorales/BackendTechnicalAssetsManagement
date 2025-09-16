@@ -4,7 +4,7 @@ namespace BackendTechnicalAssetsManagement.src.Models
 {
     public class User
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string Username { get; set; } = string.Empty;
         public string? PasswordHash { get; set; } = string.Empty;
 
@@ -59,7 +59,6 @@ namespace BackendTechnicalAssetsManagement.src.Models
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
-        public string? Position { get; set; }
     }
 
     public class Manager : User
@@ -68,6 +67,5 @@ namespace BackendTechnicalAssetsManagement.src.Models
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
-        public string? Position { get; set; }
     }
 }

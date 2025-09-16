@@ -37,12 +37,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             throw new NotImplementedException();
         }
 
-        public Task<UserDto?> GetUserByIdAsync(int id)
+        public Task<UserDto?> GetUserByIdAsync(Guid id)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<BaseProfileDto> GetUserProfileByIdAsync(int userId)
+        public async Task<BaseProfileDto> GetUserProfileByIdAsync(Guid userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
 

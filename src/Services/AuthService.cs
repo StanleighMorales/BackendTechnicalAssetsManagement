@@ -121,7 +121,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("User ID not found in token");
             }
 
-            var user = await _context.Users.FindAsync(int.Parse(userIdString));
+            var user = await _context.Users.FindAsync(Guid.Parse(userIdString));
             if (user == null)
             {
                 throw new Exception("User not found");

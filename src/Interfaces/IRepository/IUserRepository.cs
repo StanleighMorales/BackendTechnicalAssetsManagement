@@ -4,7 +4,7 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IRepository
 {
     public interface IUserRepository
     {
-        Task<User?> GetByIdAsync(int id);
+        Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByUsernameAsync(string username);
         Task<User?> GetByIdentifierAsync(string identifyer);
         Task<User?> GetByEmailAsync(string email);

@@ -27,13 +27,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
-                if (!int.TryParse(userIdString, out var userId))
+                if (!Guid.TryParse(userIdString, out var userId))
                 {
                     // This means the token's ID claim is not a valid integer.
                     return BadRequest("Invalid user ID format in token.");
                 }
 
-                var userProfile = await _userService.GetUserProfileByIdAsync(int.Parse(userIdString));
+                var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
 
                 return Ok(userProfile);
             }
