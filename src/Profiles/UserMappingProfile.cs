@@ -2,6 +2,8 @@
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace BackendTechnicalAssetsManagement.src.Profiles
 {
@@ -16,7 +18,8 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<Student, StudentDto>()
                 .Include<Staff, StaffDto>()
                 .Include<Manager, ManagerDto>()
-                .Include<Admin, AdminDto>();
+                .Include<Admin, AdminDto>()
+                .IncludeAllDerived(); 
 
 
             //after including in the base mapping what will happen is it will go to the map that is included so make sure to add it (CreateMap)
@@ -24,6 +27,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<Teacher, TeacherDto>();
             CreateMap<Manager, ManagerDto>();
             CreateMap<Admin, AdminDto>();
+            CreateMap<Student, StudentDto>()
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
+                    src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
             // Derived mappings
             // From DTO to Model
             CreateMap<UserDto, User>()
@@ -40,6 +50,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             CreateMap<StaffDto, Staff>();
             CreateMap<TeacherDto, Teacher>();
+            CreateMap<StudentDto, Student>();
+            CreateMap<ManagerDto, Manager>();
+            CreateMap<AdminDto, Admin>();
 
             CreateMap<RegisterStaffDto, Staff>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Staff));
@@ -47,20 +60,43 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Teacher));
             CreateMap<RegisterStudentDto, Student>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Student))
-                .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore())
-                .ForMember(dest => dest.FrontStudentIdPictureUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.BackStudentIdPictureUrl, opt => opt.Ignore());
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.ProfilePicture)))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.FrontStudentIdPicture)))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.BackStudentIdPicture)));
             CreateMap<RegisterManagerDto, Manager>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Manager));
             CreateMap<RegisterAdminDto, Admin>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Admin));
 
             CreateMap<User, BaseProfileDto>();
-            CreateMap<Student, GetStudentProfileDto>();
+            CreateMap<Student, GetStudentProfileDto>()
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
+                    src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
             CreateMap<Teacher, GetTeacherProfileDto>();
             CreateMap<Staff, GetStaffProfileDto>();
             CreateMap<Manager, GetManagerProfileDto>();
             CreateMap<Admin, GetAdminProfileDto>();
+
+            
+        }
+
+        private byte[]? ConvertIFormFileToByteArray(IFormFile? formFile)
+        {
+            if (formFile == null || formFile.Length == 0)
+            {
+                return null;
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                formFile.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
+
         }
     }
 }

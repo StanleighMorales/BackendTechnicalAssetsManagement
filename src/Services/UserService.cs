@@ -56,22 +56,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 case UserRole.Student:
                     // Assume you have a _studentRepository to get student-specific info
                     var studentProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetStudentProfileDto>(studentProfile); // Use AutoMapper for clean mapping
+                    return _mapper.Map<GetStudentProfileDto>(user); // Use AutoMapper for clean mapping
 
                 case UserRole.Teacher:
                     var teacherProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetTeacherProfileDto>(teacherProfile);
+                    return _mapper.Map<GetTeacherProfileDto>(user);
 
                 case UserRole.Staff:
                     var staffProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetStaffProfileDto>(staffProfile);
+                    return _mapper.Map<GetStaffProfileDto>(user);
 
                 case UserRole.Manager:
                     var managerProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetManagerProfileDto>(managerProfile);
+                    return _mapper.Map<GetManagerProfileDto>(user);
                 case UserRole.Admin:
                     var adminProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetAdminProfileDto>(adminProfile);
+                    return _mapper.Map<GetAdminProfileDto>(user);
 
                 default:
                     return _mapper.Map<BaseProfileDto>(user);

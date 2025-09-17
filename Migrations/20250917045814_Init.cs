@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -121,7 +121,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProfilePicture = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -134,8 +134,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     CityMunicipality = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Province = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PostalCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FrontStudentIdPictureUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BackStudentIdPictureUrl = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    FrontStudentIdPicture = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
+                    BackStudentIdPicture = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {

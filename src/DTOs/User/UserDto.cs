@@ -46,8 +46,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
 
     public class StudentDto : UserDto
     {
-        public IFormFile? FrontStudentIdPicture { get; set; }
-        public IFormFile? BackStudentIdPicture { get; set; }
+        public string? FrontStudentIdPicture { get; set; }
+        public string? BackStudentIdPicture { get; set; }
 
         [Required]
         public string LastName { get; set; } = string.Empty;
@@ -57,14 +57,14 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         [Required]
         public string StudentIdNumber { get; set; } = string.Empty;
         [Required]
-        public int PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
         public string Course { get; set; } = string.Empty;
         [Required]
         public string Section { get; set; } = string.Empty;
         [Required]
         public string Year { get; set; } = string.Empty;
 
-        public IFormFile? ProfilePicture { get; set; }
+        public string? ProfilePicture { get; set; }
         [Required]
         public string Street { get; set; } = string.Empty;
         [Required]

@@ -27,10 +27,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IUserRepository _userRepository;
         private readonly IUserValidationService _userValidationService;
-        private readonly IWebHostEnvironment _hostEnvironment;
         
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment hostEnvironment)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService)
         {
             _context = context;
             _configuration = configuration;
@@ -39,7 +38,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userRepository = userRepository;
             _userValidationService = userValidationService;
             _mapper = mapper;
-            _hostEnvironment = hostEnvironment;
         }
 
         public async Task<User> Register(RegisterUserDto request)
@@ -114,17 +112,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 studentDto.Email,
                 studentDto.PhoneNumber
                 );
-            string? imagePathFrontId = await SaveImageWithValidationAsync(studentDto.FrontStudentIdPicture);
-            string? imagePathBackId = await SaveImageWithValidationAsync(studentDto.BackStudentIdPicture);
-            string? imagePathProfile = await SaveImageWithValidationAsync(studentDto.ProfilePicture);
 
-            var studenModel = _mapper.Map<Student>(studentDto);
-            studenModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
+            var studentModel = _mapper.Map<Student>(studentDto);
 
-            await _userRepository.AddAsync(studenModel);
+            ValidateImage(studentDto.FrontStudentIdPicture);
+            ValidateImage(studentDto.BackStudentIdPicture);
+            ValidateImage(studentDto.ProfilePicture);
+
+            studentModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
+
+            await _userRepository.AddAsync(studentModel);
             await _userRepository.SaveChangesAsync();
 
-            return _mapper.Map<UserDto>(studenModel);
+            return _mapper.Map<UserDto>(studentModel);
 
         }
 
@@ -161,7 +161,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             return _mapper.Map<UserDto>(adminDto);
         }
-
+        #region Login/Logout
         public async Task<string> Login(LoginUserDto loginDto)
         {
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
@@ -190,6 +190,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             return accessToken;
         }
+
         public async Task Logout()
         {
             var userIdString = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -217,6 +218,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             };
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", "", cookieOptions);
         }
+        #endregion
+        #region Token Generations/Set
         public async Task<string> RefreshToken()
         {
             var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
@@ -274,6 +277,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 Created = DateTime.Now
             };
         }
+        
 
         private void SetRefreshTokenCookie(RefreshToken newRefreshToken)
         {
@@ -286,34 +290,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
             };
             _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
         }
+        #endregion
 
-        private async Task<string?> SaveImageWithValidationAsync(IFormFile? image)
+        private void ValidateImage(IFormFile? image)
         {
-            if (image == null || image.Length == 0) return null;
-            if (image.Length > 2 * 1024 * 1024) throw new ArgumentException("Image file size cannot exceed 2MB");
+            if (image == null) return;
+
+            if (image.Length > 2 * 1024 * 1024)
+            {
+                throw new ArgumentException("Image file size cannot exceed 2MB.");
+            }
 
             var allowedExtensions = new[] { ".jpg", ".png", ".jpeg", ".gif", ".webp" };
             var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
             {
-                throw new ArgumentException("Invalid image file type.");
+                throw new ArgumentException("Invalid image file type. Allowed types are: " + string.Join(", ", allowedExtensions));
             }
-
-            if (string.IsNullOrEmpty(_hostEnvironment.WebRootPath))
-            {
-                throw new InvalidOperationException("wwwroot folder is not configured.");
-            }
-
-            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
-            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "items");
-            Directory.CreateDirectory(uploadsFolder);
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await image.CopyToAsync(fileStream);
-            }
-            return Path.Combine("images", "items", uniqueFileName).Replace('\\', '/');
         }
 
 

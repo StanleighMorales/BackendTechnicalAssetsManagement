@@ -26,7 +26,7 @@ namespace BackendTechnicalAssetsManagement.src.Models
     }
     public class Student : User
     {
-        public string? ProfilePicture { get; set; }
+        public byte[]? ProfilePicture { get; set; }
 
         public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
@@ -41,8 +41,8 @@ namespace BackendTechnicalAssetsManagement.src.Models
         public string Province { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
 
-        public string? FrontStudentIdPictureUrl { get; set; }
-        public string? BackStudentIdPictureUrl { get; set; }
+        public byte[]? FrontStudentIdPicture { get; set; }
+        public byte[]? BackStudentIdPicture { get; set; }
 
     }
     public class Staff : User

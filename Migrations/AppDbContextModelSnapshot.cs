@@ -181,8 +181,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 {
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
 
-                    b.Property<string>("BackStudentIdPictureUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<byte[]>("BackStudentIdPicture")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("CityMunicipality")
                         .IsRequired()
@@ -196,8 +196,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FrontStudentIdPictureUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<byte[]>("FrontStudentIdPicture")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -213,8 +213,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfilePicture")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<byte[]>("ProfilePicture")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Province")
                         .IsRequired()

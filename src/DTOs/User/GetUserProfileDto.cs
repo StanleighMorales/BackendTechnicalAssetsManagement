@@ -45,9 +45,9 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     }
     public class GetStudentProfileDto : BaseProfileDto
     {
-        public string? ProfilePictureUrl { get; set; }
-        public string? FrontStudentIdPictureUrl { get; set; }
-        public string? BackStudentIdPictureUrl { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? FrontStudentIdPicture { get; set; }
+        public string? BackStudentIdPicture { get; set; }
 
         public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
