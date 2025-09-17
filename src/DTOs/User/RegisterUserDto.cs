@@ -80,4 +80,24 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         [Required]
         public string PostalCode { get; set; } = string.Empty;
     }
+    public class RegisterManagerDto : RegisterUserDto
+    {
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
+        public string? PhoneNumber { get; set; }
+    }
+    public class RegisterAdminDto : RegisterUserDto
+    {
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
+        public string? PhoneNumber { get; set; }
+    }
 }

@@ -13,18 +13,25 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             //From Model to DTO
             CreateMap<User, UserDto>()
                 .Include<Teacher, TeacherDto>()
-                //.Include<Student, StudentDto>()
-                .Include<Staff, StaffDto>();
+                .Include<Student, StudentDto>()
+                .Include<Staff, StaffDto>()
+                .Include<Manager, ManagerDto>()
+                .Include<Admin, AdminDto>();
+
 
             //after including in the base mapping what will happen is it will go to the map that is included so make sure to add it (CreateMap)
             CreateMap<Staff, StaffDto>();
             CreateMap<Teacher, TeacherDto>();
+            CreateMap<Manager, ManagerDto>();
+            CreateMap<Admin, AdminDto>();
             // Derived mappings
             // From DTO to Model
             CreateMap<UserDto, User>()
                 .Include<TeacherDto, Teacher>()
-                //.Include<StudentDto, Student>()
-                .Include<StaffDto, Staff>();
+                .Include<StudentDto, Student>()
+                .Include<StaffDto, Staff>()
+                .Include<ManagerDto, Manager>()
+                .Include<AdminDto, Admin>();
             //this helps us map the base class properties automatically
             //instead of mapping each property one by one
             //e.g newUser { Id = dto.Id, LastName = dto.LastName, ... }
@@ -43,7 +50,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore())
                 .ForMember(dest => dest.FrontStudentIdPictureUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.BackStudentIdPictureUrl, opt => opt.Ignore());
-                
+            CreateMap<RegisterManagerDto, Manager>()
+                .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Manager));
+            CreateMap<RegisterAdminDto, Admin>()
+                .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Admin));
 
             CreateMap<User, BaseProfileDto>();
             CreateMap<Student, GetStudentProfileDto>();

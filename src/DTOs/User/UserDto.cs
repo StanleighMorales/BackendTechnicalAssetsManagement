@@ -22,6 +22,20 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public string PhoneNumber {  get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
     }
+    public class ManagerDto : UserDto
+    {
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+    }
+    public class AdminDto : UserDto
+    {
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+    }
     public class TeacherDto : UserDto
     {
         public string LastName { get; set; } = string.Empty;

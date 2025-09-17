@@ -33,7 +33,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        [HttpPost("register-staff")]
+        [HttpPost("staff/register")]
         public async Task<IActionResult> RegisterStaff([FromBody]RegisterStaffDto staffDto)
         {
             // The [ApiController] attribute helps handle this, but an explicit check is good.
@@ -52,7 +52,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return Conflict(new { message = ex.Message });
             }
         }
-        [HttpPost("register-teacher")]
+        [HttpPost("teacher/register")]
         public async Task<IActionResult> RegisterTeacher([FromBody]RegisterTeacherDto teacherDto)
         {
             if (!ModelState.IsValid)
@@ -69,7 +69,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return Conflict(new {message = ex.Message});
             }
         }
-        [HttpPost("register-student")]
+        [HttpPost("student/register")]
         public async Task <IActionResult> RegisterStudent([FromForm]RegisterStudentDto studentDto)
         {
             if (!ModelState.IsValid)
@@ -83,6 +83,40 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             }catch (Exception ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("managers/register")]
+        public async Task<IActionResult> RegisterManager([FromBody]RegisterManagerDto managerDto)
+        {
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var newUser = await _authService.RegisterManagerAsync(managerDto);
+                return Ok(new { message = "Manager Registered Successfully." });
+            }catch(Exception ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+        }
+        [HttpPost("admin/register")]
+        public async Task<IActionResult> RegisterAdmin([FromBody]RegisterAdminDto adminDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var newUser = await _authService.RegisterAdminAsync(adminDto);
+                return Ok(new { message = "Admin Added Success." });
+
+            }catch(Exception ex)
+            {
+                return Conflict(new {message = ex.Message});
             }
         }
         

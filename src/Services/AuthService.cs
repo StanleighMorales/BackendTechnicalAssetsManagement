@@ -100,7 +100,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 );
 
             var teacherModel = _mapper.Map<Teacher>(teacherDto);
-            
+            teacherModel.PasswordHash = _passwordHashingService.HashPassword(teacherDto.Password);
+
             await _userRepository.AddAsync(teacherModel);
             await _userRepository.SaveChangesAsync(); 
 
@@ -118,6 +119,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             string? imagePathProfile = await SaveImageWithValidationAsync(studentDto.ProfilePicture);
 
             var studenModel = _mapper.Map<Student>(studentDto);
+            studenModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
 
             await _userRepository.AddAsync(studenModel);
             await _userRepository.SaveChangesAsync();
@@ -126,6 +128,39 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         }
 
+        public async Task<UserDto> RegisterManagerAsync(RegisterManagerDto managerDto)
+        {
+            await _userValidationService.ValidateUniqueUserAsync(
+                managerDto.Username,
+                managerDto.Email,
+                managerDto.PhoneNumber
+                );
+
+            var managerModel = _mapper.Map<Manager>(managerDto);
+
+            managerModel.PasswordHash = _passwordHashingService.HashPassword(managerDto.Password);
+
+            await _userRepository.AddAsync(managerModel);
+            await _userRepository.SaveChangesAsync();
+
+            return _mapper.Map<UserDto>(managerModel);
+        }
+
+        public async Task<UserDto> RegisterAdminAsync(RegisterAdminDto adminDto)
+        {
+            await _userValidationService.ValidateUniqueUserAsync(
+                adminDto.Username,
+                adminDto.Email,
+                adminDto.PhoneNumber
+                );
+            var adminModel = _mapper.Map<Admin>(adminDto);
+            adminModel.PasswordHash = _passwordHashingService.HashPassword(adminDto.Password);
+
+            await _userRepository.AddAsync(adminModel);
+            await _userRepository.SaveChangesAsync();
+
+            return _mapper.Map<UserDto>(adminDto);
+        }
 
         public async Task<string> Login(LoginUserDto loginDto)
         {
