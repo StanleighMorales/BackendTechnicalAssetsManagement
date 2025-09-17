@@ -2,6 +2,7 @@
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 
@@ -60,9 +61,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Teacher));
             CreateMap<RegisterStudentDto, Student>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Student))
-                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.ProfilePicture)))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.FrontStudentIdPicture)))
-                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src => ConvertIFormFileToByteArray(src.BackStudentIdPicture)));
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture)))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture)))
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture)));
             CreateMap<RegisterManagerDto, Manager>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => Enums.UserRole.Manager));
             CreateMap<RegisterAdminDto, Admin>()
@@ -84,19 +85,5 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             
         }
 
-        private byte[]? ConvertIFormFileToByteArray(IFormFile? formFile)
-        {
-            if (formFile == null || formFile.Length == 0)
-            {
-                return null;
-            }
-
-            using (var memoryStream = new MemoryStream())
-            {
-                formFile.CopyTo(memoryStream);
-                return memoryStream.ToArray();
-            }
-
-        }
     }
 }

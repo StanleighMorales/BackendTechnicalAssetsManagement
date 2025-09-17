@@ -4,9 +4,9 @@ namespace BackendTechnicalAssetsManagement.src.Models
 {
     public class Item
     {
-        public int Id { get; set; } // Primary Key
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string SerialNumber { get; set; } = string.Empty;
-        public string? Image { get; set; }
+        public byte[]? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;
         public string? ItemModel { get; set; }
