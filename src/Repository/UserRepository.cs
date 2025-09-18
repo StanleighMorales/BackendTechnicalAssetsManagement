@@ -42,7 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await _context.Users.FindAsync(id);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<User?> GetByIdentifierAsync(string identifier)

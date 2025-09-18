@@ -1,15 +1,18 @@
 using AutoMapper;
-using System.Text.Json.Serialization;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
 using BackendTechnicalAssetsManagement.src.Profiles;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
-using Microsoft.EntityFrameworkCore;
-using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+using BackendTechnicalAssetsManagement.src.Utils;
 using BackendTechnicalAssetsManagement.src.Validations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +30,40 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSwaggerGen();
+#region SwaggerGen
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Backend Technical Assets Management API",
+        Version = "v1"
+    });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+#endregion
+
 
 // Manual AutoMapper Registration
 builder.Services.AddAutoMapper(cfg => {
@@ -47,7 +83,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 #endregion
 
-
+// Utilities
+builder.Services.AddScoped<ImageFileManager>();
 
 //Singleton Services
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
@@ -61,7 +98,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Custom Extension Method Services
 builder.Services.AddAuthServices(builder.Configuration);
-builder.Services.AddSwaggerServices();
+
+
 
 #region Cors Policy
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
@@ -83,10 +121,23 @@ var app = builder.Build();
 // HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    app.UseSwagger(options =>
+    {
+        options.RouteTemplate = "openapi/{documentName}.json";
+    });
 
+    app.UseSwaggerUI(options =>
+    {
+        // Point Swagger UI to the new JSON endpoint as well
+        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+    });
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "Backend Technical Assets Management API";
+        options.Theme = ScalarTheme.DeepSpace;
+    });
+}
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 

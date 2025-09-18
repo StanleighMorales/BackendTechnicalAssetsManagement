@@ -20,7 +20,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return item;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var itemToDelete = await _context.Items.FindAsync(id);
             if (itemToDelete != null)
@@ -28,13 +28,12 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 _context.Items.Remove(itemToDelete);
             }
         }
-
         public async Task<IEnumerable<Item>> GetAllAsync()
         {
             return await _context.Items.ToListAsync();
         }
 
-        public async Task<Item?> GetByIdAsync(int id)
+        public async Task<Item?> GetByIdAsync(Guid id)
         {
             return await _context.Items.FindAsync(id);
         }

@@ -6,8 +6,8 @@ using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
 using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
 using BackendTechnicalAssetsManagement.src.Models;
-using BackendTechnicalAssetsManagement.src.Utils;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +15,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using static BackendTechnicalAssetsManagement.src.Models.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -41,127 +42,145 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _mapper = mapper;
         }
 
-        public async Task<User> Register(RegisterUserDto request)
-        {
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-            {
-                throw new Exception("Username already Exist");
-            }
-
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            var newUser = new User()
-            {
-                Username = request.Username,
-                PasswordHash = hashedPassword
-            };
-
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-
-            return newUser;
-        }
-
-        public async Task<UserDto> RegisterStaffAsync(RegisterStaffDto staffDto)
-        {
-            if (await _userRepository.GetByUsernameAsync(staffDto.Username) != null)
-            {
-                // Throw an exception that the controller can catch.
-                // This prevents creating duplicate usernames.
-                throw new Exception($"Username '{staffDto.Username}' is already taken.");
-            }
-            if (await _userRepository.GetByEmailAsync(staffDto.Email) != null)
-            {
-                throw new Exception($"Email '{staffDto.Email}' already exist.");
-            }
-            if (await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
-            {
-                throw new Exception($"Phone Number already used.");
-
-            }
-
-
-            var staffModel = _mapper.Map<Staff>(staffDto);
-
-            staffModel.PasswordHash = _passwordHashingService.HashPassword(staffDto.Password);
-
-            await _userRepository.AddAsync(staffModel);
-            await _userRepository.SaveChangesAsync();
-
-            return _mapper.Map<UserDto>(staffModel);
-        }
-        public async Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto teacherDto)
-        { 
-            await _userValidationService.ValidateUniqueUserAsync(
-                teacherDto.Username,
-                teacherDto.Email,
-                teacherDto.PhoneNumber
-                );
-
-            var teacherModel = _mapper.Map<Teacher>(teacherDto);
-            teacherModel.PasswordHash = _passwordHashingService.HashPassword(teacherDto.Password);
-
-            await _userRepository.AddAsync(teacherModel);
-            await _userRepository.SaveChangesAsync(); 
-
-            return _mapper.Map<UserDto>(teacherModel);
-        }
-        public async Task<UserDto> RegisterStudentAsync(RegisterStudentDto studentDto)
+        public async Task<UserDto> Register(RegisterUserDto request)
         {
             await _userValidationService.ValidateUniqueUserAsync(
-                studentDto.Username,
-                studentDto.Email,
-                studentDto.PhoneNumber
+                request.Username,
+                request.Email,
+                request.PhoneNumber
                 );
 
-            var studentModel = _mapper.Map<Student>(studentDto);
+            User newUser;
 
-            ValidateImageUtil.ValidateImage(studentDto.FrontStudentIdPicture);
-            ValidateImageUtil.ValidateImage(studentDto.BackStudentIdPicture);
-            ValidateImageUtil.ValidateImage(studentDto.ProfilePicture);
+            switch (request.Role)
+            {
+                case UserRole.Student:
+                    newUser = _mapper.Map<Student>(request);
+                    break;
+                case UserRole.Teacher:
+                    newUser = _mapper.Map<Teacher>(request);
+                    break;
+                case UserRole.Staff:
+                    newUser = _mapper.Map<Staff>(request);
+                    break;
+                case UserRole.Manager:
+                    newUser = _mapper.Map<Manager>(request);
+                    break;
+                case UserRole.Admin:
+                    newUser = _mapper.Map<Admin>(request);
+                    break;
+                default:
+                    // Handle cases where the role is not supported or invalid
+                    throw new ArgumentException("Invalid user role specified.");
+            }
+            newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
 
-            studentModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
-
-            await _userRepository.AddAsync(studentModel);
+            await _userRepository.AddAsync( newUser );
             await _userRepository.SaveChangesAsync();
 
-            return _mapper.Map<UserDto>(studentModel);
-
+            return _mapper.Map<UserDto>(newUser);
         }
 
-        public async Task<UserDto> RegisterManagerAsync(RegisterManagerDto managerDto)
-        {
-            await _userValidationService.ValidateUniqueUserAsync(
-                managerDto.Username,
-                managerDto.Email,
-                managerDto.PhoneNumber
-                );
+        //public async Task<UserDto> RegisterStaffAsync(RegisterStaffDto staffDto)
+        //{
+        //    if (await _userRepository.GetByUsernameAsync(staffDto.Username) != null)
+        //    {
+        //        // Throw an exception that the controller can catch.
+        //        // This prevents creating duplicate usernames.
+        //        throw new Exception($"Username '{staffDto.Username}' is already taken.");
+        //    }
+        //    if (await _userRepository.GetByEmailAsync(staffDto.Email) != null)
+        //    {
+        //        throw new Exception($"Email '{staffDto.Email}' already exist.");
+        //    }
+        //    if (await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
+        //    {
+        //        throw new Exception($"Phone Number already used.");
 
-            var managerModel = _mapper.Map<Manager>(managerDto);
+        //    }
 
-            managerModel.PasswordHash = _passwordHashingService.HashPassword(managerDto.Password);
 
-            await _userRepository.AddAsync(managerModel);
-            await _userRepository.SaveChangesAsync();
+        //    var staffModel = _mapper.Map<Staff>(staffDto);
 
-            return _mapper.Map<UserDto>(managerModel);
-        }
+        //    staffModel.PasswordHash = _passwordHashingService.HashPassword(staffDto.Password);
 
-        public async Task<UserDto> RegisterAdminAsync(RegisterAdminDto adminDto)
-        {
-            await _userValidationService.ValidateUniqueUserAsync(
-                adminDto.Username,
-                adminDto.Email,
-                adminDto.PhoneNumber
-                );
-            var adminModel = _mapper.Map<Admin>(adminDto);
-            adminModel.PasswordHash = _passwordHashingService.HashPassword(adminDto.Password);
+        //    await _userRepository.AddAsync(staffModel);
+        //    await _userRepository.SaveChangesAsync();
 
-            await _userRepository.AddAsync(adminModel);
-            await _userRepository.SaveChangesAsync();
+        //    return _mapper.Map<UserDto>(staffModel);
+        //}
+        //public async Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto teacherDto)
+        //{ 
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        teacherDto.Username,
+        //        teacherDto.Email,
+        //        teacherDto.PhoneNumber
+        //        );
 
-            return _mapper.Map<UserDto>(adminDto);
-        }
+        //    var teacherModel = _mapper.Map<Teacher>(teacherDto);
+        //    teacherModel.PasswordHash = _passwordHashingService.HashPassword(teacherDto.Password);
+
+        //    await _userRepository.AddAsync(teacherModel);
+        //    await _userRepository.SaveChangesAsync(); 
+
+        //    return _mapper.Map<UserDto>(teacherModel);
+        //}
+        //public async Task<UserDto> RegisterStudentAsync(RegisterStudentDto studentDto)
+        //{
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        studentDto.Username,
+        //        studentDto.Email,
+        //        studentDto.PhoneNumber
+        //        );
+
+        //    var studentModel = _mapper.Map<Student>(studentDto);
+
+        //    ValidateImageUtil.ValidateImage(studentDto.FrontStudentIdPicture);
+        //    ValidateImageUtil.ValidateImage(studentDto.BackStudentIdPicture);
+        //    ValidateImageUtil.ValidateImage(studentDto.ProfilePicture);
+
+        //    studentModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
+
+        //    await _userRepository.AddAsync(studentModel);
+        //    await _userRepository.SaveChangesAsync();
+
+        //    return _mapper.Map<UserDto>(studentModel);
+
+        //}
+
+        //public async Task<UserDto> RegisterManagerAsync(RegisterManagerDto managerDto)
+        //{
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        managerDto.Username,
+        //        managerDto.Email,
+        //        managerDto.PhoneNumber
+        //        );
+
+        //    var managerModel = _mapper.Map<Manager>(managerDto);
+
+        //    managerModel.PasswordHash = _passwordHashingService.HashPassword(managerDto.Password);
+
+        //    await _userRepository.AddAsync(managerModel);
+        //    await _userRepository.SaveChangesAsync();
+
+        //    return _mapper.Map<UserDto>(managerModel);
+        //}
+
+        //public async Task<UserDto> RegisterAdminAsync(RegisterAdminDto adminDto)
+        //{
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        adminDto.Username,
+        //        adminDto.Email,
+        //        adminDto.PhoneNumber
+        //        );
+        //    var adminModel = _mapper.Map<Admin>(adminDto);
+        //    adminModel.PasswordHash = _passwordHashingService.HashPassword(adminDto.Password);
+
+        //    await _userRepository.AddAsync(adminModel);
+        //    await _userRepository.SaveChangesAsync();
+
+        //    return _mapper.Map<UserDto>(adminDto);
+        //}
         #region Login/Logout
         public async Task<string> Login(LoginUserDto loginDto)
         {

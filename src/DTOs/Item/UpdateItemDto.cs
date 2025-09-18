@@ -5,20 +5,23 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
 {
     public class UpdateItemDto
     {
-        [Required]
-        public string SerialNumber { get; set; } = string.Empty;
-        public IFormFile? Image { get; set; } // Allow updating the image
-        [Required]
-        public string ItemName { get; set; } = string.Empty;
-        [Required]
-        public string ItemType { get; set; } = string.Empty;
+        public string? SerialNumber { get; set; } 
+    
+        public IFormFile? Image { get; set; } 
+    
+        public string? ItemName { get; set; } 
+    
+        public string? ItemType { get; set; } 
+    
         public string? ItemModel { get; set; }
-        [Required]
-        public string ItemMake { get; set; } = string.Empty;
+    
+        public string? ItemMake { get; set; } 
+    
         public string? Description { get; set; }
-        [Required]
-        public ItemCategory Category { get; set; }
-        [Required]
-        public ItemCondition Condition { get; set; }
+    
+        public ItemCategory? Category { get; set; } 
+    
+        public ItemCondition? Condition { get; set; }
+
     }
 }

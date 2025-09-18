@@ -10,7 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IRepository
         /// </summary>
         /// <param name="id">The ID of the item.</param>
         /// <returns>The item if found; otherwise, null.</returns>
-        Task<Item?> GetByIdAsync(int id);
+        Task<Item?> GetByIdAsync(Guid id);
 
         /// <summary>
         /// Gets a single item by its unique serial number.
@@ -42,7 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IRepository
         /// Removes an item from the database context by its ID.
         /// </summary>
         /// <param name="id">The ID of the item to delete.</param>
-        Task DeleteAsync(int id);
+        Task DeleteAsync(Guid id);
 
         /// <summary>
         // Saves all pending changes in the context to the database.

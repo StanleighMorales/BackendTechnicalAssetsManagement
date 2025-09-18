@@ -6,19 +6,19 @@ namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
 {
     public interface IAuthService
     {
-        Task<User> Register(RegisterUserDto request);
+        Task<UserDto> Register(RegisterUserDto request);
         Task<string> Login(LoginUserDto request);
         Task<string> RefreshToken();
 
-        Task<UserDto> RegisterStaffAsync(RegisterStaffDto registerStaffDto);
+        //Task<UserDto> RegisterStaffAsync(RegisterStaffDto registerStaffDto);
 
-        Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto registerTeacherDto);
+        //Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto registerTeacherDto);
 
-        Task<UserDto> RegisterStudentAsync(RegisterStudentDto registerStudentDto);
+        //Task<UserDto> RegisterStudentAsync(RegisterStudentDto registerStudentDto);
 
-        Task<UserDto> RegisterManagerAsync(RegisterManagerDto registerManagerDto);
+        //Task<UserDto> RegisterManagerAsync(RegisterManagerDto registerManagerDto);
 
-        Task<UserDto> RegisterAdminAsync(RegisterAdminDto registerAdminDto);
+        //Task<UserDto> RegisterAdminAsync(RegisterAdminDto registerAdminDto);
 
 
         Task Logout();

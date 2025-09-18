@@ -7,7 +7,7 @@ using ZXing.SkiaSharp;
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class BarcodeController : Controller
     {
         [HttpGet("{text}")]

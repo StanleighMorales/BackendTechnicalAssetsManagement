@@ -22,19 +22,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         }
 
-        //public async Task<UserDto> CreateUserAsync(RegisterUserDto registerUserDto)
-        //{
-        //    var existingUser = await _userRepository.GetByIdAsync(registerUserDto)
-        //}
-
         public Task<bool> DeleteUserAsync(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
-            throw new NotImplementedException();
+            var user = await _userRepository.GetAllAsync();
+
+            return (IEnumerable<UserDto>)_mapper.Map<UserDto>(user);
         }
 
         public Task<UserDto?> GetUserByIdAsync(Guid id)
@@ -48,39 +45,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if(user == null)
             {
-                throw new Exception("User not found");
+                throw new KeyNotFoundException("User not found");
             }
 
-            switch (user.UserRole)
-            {
-                case UserRole.Student:
-                    // Assume you have a _studentRepository to get student-specific info
-                    var studentProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetStudentProfileDto>(user); // Use AutoMapper for clean mapping
-
-                case UserRole.Teacher:
-                    var teacherProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetTeacherProfileDto>(user);
-
-                case UserRole.Staff:
-                    var staffProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetStaffProfileDto>(user);
-
-                case UserRole.Manager:
-                    var managerProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetManagerProfileDto>(user);
-                case UserRole.Admin:
-                    var adminProfile = await _userRepository.GetByIdAsync(userId);
-                    return _mapper.Map<GetAdminProfileDto>(user);
-
-                default:
-                    return _mapper.Map<BaseProfileDto>(user);
-            }
+            return _mapper.Map<BaseProfileDto>(user);
         }
 
         public Task<bool> UpdateUserAsync(int id, UserDto userDto)
         {
             throw new NotImplementedException();
         }
+
     }
 }

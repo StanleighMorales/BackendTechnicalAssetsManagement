@@ -7,7 +7,7 @@ using TechnicalAssetManagementApi.Dtos.Item;
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
@@ -27,7 +27,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/item/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ItemDto>> GetItemById(int id)
+        public async Task<ActionResult<ItemDto>> GetItemById(Guid id)
         {
             var item = await _itemService.GetItemByIdAsync(id);
             if (item == null)
@@ -58,7 +58,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // PUT: /api/item/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateItem(int id, [FromForm] UpdateItemDto updateItemDto)
+        public async Task<IActionResult> UpdateItem(Guid id, [FromForm] UpdateItemDto updateItemDto)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // DELETE: /api/item/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteItem(int id)
+        public async Task<IActionResult> DeleteItem(Guid id)
         {
             var success = await _itemService.DeleteItemAsync(id);
             if (!success)

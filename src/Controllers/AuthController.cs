@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
-    [Route("api/Auth")]
+    [Route("api/v1/Auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -33,94 +33,95 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        [HttpPost("staff/register")]
-        public async Task<IActionResult> RegisterStaff([FromBody]RegisterStaffDto staffDto)
-        {
-            // The [ApiController] attribute helps handle this, but an explicit check is good.
-            // This checks if required fields are missing, email format is wrong, etc.
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        #region Refractored API
+        //[HttpPost("staff/register")]
+        //public async Task<IActionResult> RegisterStaff([FromBody]RegisterStaffDto staffDto)
+        //{
+        //    // The [ApiController] attribute helps handle this, but an explicit check is good.
+        //    // This checks if required fields are missing, email format is wrong, etc.
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            try
-            {
-                var newUser = await _authService.RegisterStaffAsync(staffDto);
-                return Ok(new { message = "Staff Registered Successfully." });
-            }catch(Exception ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
-        }
-        [HttpPost("teacher/register")]
-        public async Task<IActionResult> RegisterTeacher([FromBody]RegisterTeacherDto teacherDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //    try
+        //    {
+        //        var newUser = await _authService.RegisterStaffAsync(staffDto);
+        //        return Ok(new { message = "Staff Registered Successfully." });
+        //    }catch(Exception ex)
+        //    {
+        //        return Conflict(new { message = ex.Message });
+        //    }
+        //}
+        //[HttpPost("teacher/register")]
+        //public async Task<IActionResult> RegisterTeacher([FromBody]RegisterTeacherDto teacherDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            try
-            {
-                var newUser = await _authService.RegisterTeacherAsync(teacherDto);
-                return Ok(new { message = " Teacher Registered Successfully." });
-            } catch(Exception ex)
-            {
-                return Conflict(new {message = ex.Message});
-            }
-        }
-        [HttpPost("student/register")]
-        public async Task <IActionResult> RegisterStudent([FromForm]RegisterStudentDto studentDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            try
-            {
-                var newUser = await _authService.RegisterStudentAsync(studentDto);
-                return Ok(new { message = "Student Registered Successfully." });
-            }catch (Exception ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
-        }
+        //    try
+        //    {
+        //        var newUser = await _authService.RegisterTeacherAsync(teacherDto);
+        //        return Ok(new { message = " Teacher Registered Successfully." });
+        //    } catch(Exception ex)
+        //    {
+        //        return Conflict(new {message = ex.Message});
+        //    }
+        //}
+        //[HttpPost("student/register")]
+        //public async Task <IActionResult> RegisterStudent([FromForm]RegisterStudentDto studentDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+        //    try
+        //    {
+        //        var newUser = await _authService.RegisterStudentAsync(studentDto);
+        //        return Ok(new { message = "Student Registered Successfully." });
+        //    }catch (Exception ex)
+        //    {
+        //        return Conflict(new { message = ex.Message });
+        //    }
+        //}
 
-        [HttpPost("managers/register")]
-        public async Task<IActionResult> RegisterManager([FromBody]RegisterManagerDto managerDto)
-        {
-            if(!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            try
-            {
-                var newUser = await _authService.RegisterManagerAsync(managerDto);
-                return Ok(new { message = "Manager Registered Successfully." });
-            }catch(Exception ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
-        }
-        [HttpPost("admin/register")]
-        public async Task<IActionResult> RegisterAdmin([FromBody]RegisterAdminDto adminDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            try
-            {
-                var newUser = await _authService.RegisterAdminAsync(adminDto);
-                return Ok(new { message = "Admin Added Success." });
+        //[HttpPost("managers/register")]
+        //public async Task<IActionResult> RegisterManager([FromBody]RegisterManagerDto managerDto)
+        //{
+        //    if(!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+        //    try
+        //    {
+        //        var newUser = await _authService.RegisterManagerAsync(managerDto);
+        //        return Ok(new { message = "Manager Registered Successfully." });
+        //    }catch(Exception ex)
+        //    {
+        //        return Conflict(new { message = ex.Message });
+        //    }
+        //}
+        //[HttpPost("admin/register")]
+        //public async Task<IActionResult> RegisterAdmin([FromBody]RegisterAdminDto adminDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+        //    try
+        //    {
+        //        var newUser = await _authService.RegisterAdminAsync(adminDto);
+        //        return Ok(new { message = "Admin Added Success." });
 
-            }catch(Exception ex)
-            {
-                return Conflict(new {message = ex.Message});
-            }
-        }
-        
-
+        //    }catch(Exception ex)
+        //    {
+        //        return Conflict(new {message = ex.Message});
+        //    }
+        //}
+        #endregion
+        #region Login/Logout
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto request)
         {
@@ -149,7 +150,8 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
+        #endregion
+        #region Refresh Token
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
@@ -163,5 +165,6 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+        #endregion
     }
 }

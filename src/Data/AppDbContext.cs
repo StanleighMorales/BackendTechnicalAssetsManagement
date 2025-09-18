@@ -36,13 +36,12 @@ namespace BackendTechnicalAssetsManagement.src.Data
                 .Property(i => i.Category)
                 .HasConversion<string>();
 
-
-
             modelBuilder.Entity<Student>().ToTable("Students");
             modelBuilder.Entity<Teacher>().ToTable("Teachers");
-            modelBuilder.Entity<Staff>().ToTable("Staff");
             modelBuilder.Entity<Admin>().ToTable("Admins");
+            modelBuilder.Entity<Staff>().ToTable("Staff");
             modelBuilder.Entity<Manager>().ToTable("Managers");
+
 
             // TODO: Understand more about this later
         }

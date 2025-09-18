@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using static BackendTechnicalAssetsManagement.src.Models.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 {
@@ -11,7 +13,12 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         [RegularExpression(@"^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$", ErrorMessage = "Please enter a valid email address. user")]
         [MaxLength(254, ErrorMessage = "The email address cannot exceed 254 characters.")]
         public string Email { get; set; } = string.Empty;
-
+        [Required]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+        public string? PhoneNumber { get; set; }
+        [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public UserRole Role { get; set; }
         [Required]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         public string Password { get; set; } = string.Empty;
@@ -25,13 +32,10 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     public class RegisterStaffDto : RegisterUserDto
     {
         [Required]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
         [Required]
-        public string FirstName { get; set; }
-
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
-        public string? PhoneNumber { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         public string? Position { get; set; }
     }
@@ -42,9 +46,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         [Required]
         public string FirstName { get; set; } = string.Empty;
-        [Required]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
-        public string? PhoneNumber { get; set; }
 
         [Required]
         public string Department { get; set; } = string.Empty;
@@ -61,9 +62,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string FirstName { get; set; } = string.Empty;
         [Required]
         public string StudentIdNumber { get; set; } = string.Empty;
-        [Required]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
-        public string PhoneNumber { get; set; } = string.Empty;
         public string Course { get; set; } = string.Empty;
         [Required]
         public string Section { get; set; } = string.Empty;
@@ -87,8 +85,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         [Required]
         public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string? PhoneNumber { get; set; }
     }
     public class RegisterAdminDto : RegisterUserDto
     {
@@ -97,7 +93,5 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         [Required]
         public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string? PhoneNumber { get; set; }
     }
 }
