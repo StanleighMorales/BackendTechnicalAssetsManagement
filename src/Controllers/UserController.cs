@@ -80,10 +80,11 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                return Conflict(ex.Message);
                 // Log the exception ex
-                return StatusCode(500, "An unexpected error occurred.");
+                //return StatusCode(500, "An unexpected error occurred.", ex.Message);
             }
         }
 

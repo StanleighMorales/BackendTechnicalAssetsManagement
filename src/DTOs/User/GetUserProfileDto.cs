@@ -53,7 +53,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
         public string StudentIdNumber { get; set; } = string.Empty;
-        public int PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         public string Section { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;
