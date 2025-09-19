@@ -1,6 +1,6 @@
 using AutoMapper;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Models;
+using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Services;
 using Microsoft.AspNetCore.Hosting;

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Utils;
 using TechnicalAssetManagementApi.Dtos.Item;
 

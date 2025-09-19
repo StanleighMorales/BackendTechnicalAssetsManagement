@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.IdentityModel.Tokens;
 using TechnicalAssetManagementApi.Dtos.Item;

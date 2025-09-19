@@ -1,7 +1,7 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using TechnicalAssetManagementApi.Dtos.Item;
 
-namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
+namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IItemService
     {

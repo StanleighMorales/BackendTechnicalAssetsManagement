@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+﻿using BackendTechnicalAssetsManagement.src.IService;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {

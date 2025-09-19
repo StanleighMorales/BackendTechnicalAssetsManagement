@@ -2,7 +2,7 @@
 using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 
-namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
+namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IAuthService
     {

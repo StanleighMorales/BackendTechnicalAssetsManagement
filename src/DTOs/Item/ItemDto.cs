@@ -1,4 +1,4 @@
-﻿using static BackendTechnicalAssetsManagement.src.Models.Enums;
+﻿using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.DTOs.Item
 {

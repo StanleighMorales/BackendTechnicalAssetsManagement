@@ -1,6 +1,6 @@
-﻿using BackendTechnicalAssetsManagement.src.Models;
+﻿using BackendTechnicalAssetsManagement.src.Classes;
 
-namespace BackendTechnicalAssetsManagement.src.Interfaces.IRepository
+namespace BackendTechnicalAssetsManagement.src.IRepository
 {
     public interface IUserRepository
     {

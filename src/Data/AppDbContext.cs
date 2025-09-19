@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Models;
+﻿using BackendTechnicalAssetsManagement.src.Classes;
 using Microsoft.EntityFrameworkCore;
 
 

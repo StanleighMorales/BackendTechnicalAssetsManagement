@@ -1,7 +1,9 @@
-﻿using static BackendTechnicalAssetsManagement.src.Models.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.Models
+namespace BackendTechnicalAssetsManagement.src.Classes
 {
+    [Index(nameof(SerialNumber), IsUnique = true)]
     public class Item
     {
         public Guid Id { get; set; } = Guid.NewGuid();

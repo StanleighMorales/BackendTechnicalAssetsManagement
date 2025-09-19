@@ -5,12 +5,12 @@ using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using BackendTechnicalAssetsManagement.src.Services;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using System.Threading.Tasks;
 using Xunit;
+using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 namespace Test
 {
     public class AuthServiceTests

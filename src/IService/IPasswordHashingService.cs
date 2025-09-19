@@ -1,4 +1,4 @@
-﻿namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
+﻿namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IPasswordHashingService
     {

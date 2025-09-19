@@ -1,6 +1,6 @@
-﻿using BackendTechnicalAssetsManagement.src.Data;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Models;
+﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Data;
+using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.Repository

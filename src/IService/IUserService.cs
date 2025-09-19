@@ -1,7 +1,7 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 
-namespace BackendTechnicalAssetsManagement.src.Interfaces.IService
+namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IUserService
     {
