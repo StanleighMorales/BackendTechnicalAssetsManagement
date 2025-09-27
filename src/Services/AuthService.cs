@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
-using BackendTechnicalAssetsManagement.Models;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
-using BackendTechnicalAssetsManagement.src.Models;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +13,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using static BackendTechnicalAssetsManagement.src.Models.Enums;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {

@@ -1,9 +1,10 @@
-﻿using static BackendTechnicalAssetsManagement.src.Models.Enums;
+﻿using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.Models
+namespace BackendTechnicalAssetsManagement.src.Classes
 {
     public class User
     {
+
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Username { get; set; } = string.Empty;
         public string? PasswordHash { get; set; } = string.Empty;

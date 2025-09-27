@@ -1,5 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;

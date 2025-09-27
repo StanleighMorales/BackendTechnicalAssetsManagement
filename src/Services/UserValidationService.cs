@@ -1,8 +1,8 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 
-namespace BackendTechnicalAssetsManagement.src.Validations
+namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserValidationService : IUserValidationService
     {

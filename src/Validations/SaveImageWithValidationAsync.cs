@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+﻿using BackendTechnicalAssetsManagement.src.IValidations;
 using Microsoft.Extensions.Hosting;
 
 namespace BackendTechnicalAssetsManagement.src.Validations

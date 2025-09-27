@@ -1,4 +1,4 @@
-﻿namespace BackendTechnicalAssetsManagement.src.Interfaces.IValidations
+﻿namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IUserValidationService
     {

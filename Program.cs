@@ -1,14 +1,12 @@
 using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Interfaces.IValidations;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Profiles;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
-using BackendTechnicalAssetsManagement.src.Validations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;

@@ -1,9 +1,9 @@
-﻿using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+﻿using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
 using AutoMapper;
-using static BackendTechnicalAssetsManagement.src.Models.Enums;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService

@@ -1,5 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.Item;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
+using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Services;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalAssetManagementApi.Dtos.Item;

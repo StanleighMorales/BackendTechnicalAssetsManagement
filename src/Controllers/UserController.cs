@@ -1,14 +1,14 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Interfaces.IRepository;
-using BackendTechnicalAssetsManagement.src.Interfaces.IService;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
-using static BackendTechnicalAssetsManagement.src.Models.Enums;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.IRepository;
+using BackendTechnicalAssetsManagement.src.IService;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {

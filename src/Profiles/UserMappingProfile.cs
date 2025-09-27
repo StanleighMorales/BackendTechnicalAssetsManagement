@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
-using BackendTechnicalAssetsManagement.src.Models;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Utils;
 using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
