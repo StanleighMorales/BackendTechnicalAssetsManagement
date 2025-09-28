@@ -23,13 +23,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<Teacher, TeacherDto>()
                 .Include<Student, StudentDto>()
                 .Include<Staff, StaffDto>()
-                .Include<Manager, ManagerDto>()
                 .Include<Admin, AdminDto>()
                 .IncludeAllDerived();
 
             CreateMap<Staff, StaffDto>();
             CreateMap<Teacher, TeacherDto>();
-            CreateMap<Manager, ManagerDto>();
             CreateMap<Admin, AdminDto>();
 
             // Specific mapping for Student to handle converting the image byte[] to a base64 string for the client.
@@ -46,7 +44,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<Student, GetStudentProfileDto>()
                 .Include<Teacher, GetTeacherProfileDto>()
                 .Include<Staff, GetStaffProfileDto>()
-                .Include<Manager, GetManagerProfileDto>()
                 .Include<Admin, GetAdminProfileDto>();
 
             CreateMap<Student, GetStudentProfileDto>()
@@ -59,7 +56,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             CreateMap<Teacher, GetTeacherProfileDto>();
             CreateMap<Staff, GetStaffProfileDto>();
-            CreateMap<Manager, GetManagerProfileDto>();
             CreateMap<Admin, GetAdminProfileDto>();
 
             #endregion
@@ -77,13 +73,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<RegisterUserDto, Student>()
                 .Include<RegisterUserDto, Teacher>()
                 .Include<RegisterUserDto, Staff>()
-                .Include<RegisterUserDto, Manager>()
                 .Include<RegisterUserDto, Admin>();
 
             CreateMap<RegisterUserDto, Student>();
             CreateMap<RegisterUserDto, Teacher>();
             CreateMap<RegisterUserDto, Staff>();
-            CreateMap<RegisterUserDto, Manager>();
             CreateMap<RegisterUserDto, Admin>();
 
             // --- User Profile Updates ---
@@ -104,7 +98,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             CreateMap<UpdateTeacherProfileDto, Teacher>();
             CreateMap<UpdateStaffProfileDto, Staff>();
-            CreateMap<UpdateManagerProfileDto, Manager>();
             CreateMap<UpdateAdminProfileDto, Admin>();
 
             // --- Generic DTO to Model ---
@@ -113,13 +106,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<TeacherDto, Teacher>()
                 .Include<StudentDto, Student>()
                 .Include<StaffDto, Staff>()
-                .Include<ManagerDto, Manager>()
                 .Include<AdminDto, Admin>();
 
             CreateMap<StaffDto, Staff>();
             CreateMap<TeacherDto, Teacher>();
             CreateMap<StudentDto, Student>();
-            CreateMap<ManagerDto, Manager>();
             CreateMap<AdminDto, Admin>();
 
             #endregion

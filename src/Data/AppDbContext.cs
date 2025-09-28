@@ -16,8 +16,9 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<Student> Students { get; set; }
         public DbSet<Staff> Staff {  get; set; }
         public DbSet<Admin> Admins { get; set; }
-        public DbSet<Manager> Manager { get; set; }
         public DbSet<Item> Items { get; set; }
+
+        public DbSet<ItemsLent> ItemsLents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,7 +41,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Teacher>().ToTable("Teachers");
             modelBuilder.Entity<Admin>().ToTable("Admins");
             modelBuilder.Entity<Staff>().ToTable("Staff");
-            modelBuilder.Entity<Manager>().ToTable("Managers");
 
 
             // TODO: Understand more about this later

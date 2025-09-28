@@ -61,9 +61,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 case UserRole.Staff:
                     newUser = _mapper.Map<Staff>(request);
                     break;
-                case UserRole.Manager:
-                    newUser = _mapper.Map<Manager>(request);
-                    break;
                 case UserRole.Admin:
                     newUser = _mapper.Map<Admin>(request);
                     break;

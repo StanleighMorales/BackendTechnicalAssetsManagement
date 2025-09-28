@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250918084504_InitialCreate")]
+    [Migration("20250928062112_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Item", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Item", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -65,17 +65,20 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("SerialNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SerialNumber")
+                        .IsUnique();
+
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.User", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -112,9 +115,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Admin", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Admin", b =>
                 {
-                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -133,9 +136,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Admins", (string)null);
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Manager", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Manager", b =>
                 {
-                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -154,9 +157,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Managers", (string)null);
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Staff", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
                 {
-                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -178,9 +181,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Staff", (string)null);
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Student", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Student", b =>
                 {
-                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<byte[]>("BackStudentIdPicture")
                         .HasColumnType("varbinary(max)");
@@ -240,9 +243,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Students", (string)null);
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Teacher", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Teacher", b =>
                 {
-                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Models.User");
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
@@ -264,47 +267,47 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Teachers", (string)null);
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Admin", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Admin", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
                         .WithOne()
-                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Admin", "Id")
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Admin", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Manager", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Manager", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
                         .WithOne()
-                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Manager", "Id")
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Manager", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Staff", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
                         .WithOne()
-                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Staff", "Id")
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Staff", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Student", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Student", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
                         .WithOne()
-                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Student", "Id")
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Student", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Models.Teacher", b =>
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Teacher", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Models.User", null)
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
                         .WithOne()
-                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Models.Teacher", "Id")
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Teacher", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

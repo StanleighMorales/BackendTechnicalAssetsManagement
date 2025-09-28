@@ -7,7 +7,7 @@
 
         public enum ItemCategory { Electronics, Keys, MediaEquipment, Tools, Miscellaneous }
 
-        public enum UserRole { Admin, Manager, Staff, Teacher, Student }
+        public enum UserRole { Admin, Staff, Teacher, Student }
 
         }
 }

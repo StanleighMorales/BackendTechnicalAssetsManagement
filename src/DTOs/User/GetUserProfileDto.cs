@@ -19,14 +19,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string PhoneNumber { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
     }
-    public class GetManagerProfileDto : BaseProfileDto
-    {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-
-        public string PhoneNumber { get; set; } = string.Empty;
-    }
     public class GetAdminProfileDto : BaseProfileDto
     {
         public string LastName { get; set; } = string.Empty;
