@@ -74,10 +74,12 @@ builder.Services.AddAutoMapper(cfg => {
 // Repository
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILentItemsRepository, LentItemsRepository>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 #endregion

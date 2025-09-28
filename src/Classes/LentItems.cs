@@ -1,6 +1,6 @@
 ﻿namespace BackendTechnicalAssetsManagement.src.Classes
 {
-    public class ItemsLent
+    public class LentItems
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
