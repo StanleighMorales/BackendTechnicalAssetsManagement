@@ -1,11 +1,11 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes;
+﻿using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.IService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/lentItems")]
     public class LentItemsController : ControllerBase
     {
         private readonly ILentItemsService _service;
@@ -15,7 +15,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _service = service;
         }
 
-        // GET: api/lentitems
+        // GET: api/v1/lentitems
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -23,7 +23,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(items);
         }
 
-        // GET: api/lentitems/{id}
+        // GET: api/v1/lentitems/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -32,7 +32,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(item);
         }
 
-        // GET: api/lentitems/date/{dateTime}
+        // GET: api/v1/lentitems/date/{dateTime}
         [HttpGet("date/{dateTime}")]
         public async Task<IActionResult> GetByDateTime(DateTime dateTime)
         {
@@ -41,25 +41,25 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(item);
         }
 
-        // POST: api/lentitems
+        // POST: api/v1/lentitems
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] LentItems item)
+        public async Task<IActionResult> Add([FromBody] CreateLentItemDto dto)
         {
-            var created = await _service.AddAsync(item);
+            var created = await _service.AddAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PUT: api/lentitems/{id}
+        // PUT: api/v1/lentitems/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] LentItems item)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
-            if (id != item.Id) return BadRequest("ID mismatch");
+            if (id != dto.Id) return BadRequest("ID mismatch");
 
-            await _service.UpdateAsync(item);
+            await _service.UpdateAsync(dto);
             return NoContent();
         }
 
-        // DELETE (soft): api/lentitems/{id}
+        // DELETE (soft): api/v1/lentitems/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDelete(Guid id)
         {

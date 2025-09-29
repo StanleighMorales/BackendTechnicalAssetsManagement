@@ -42,6 +42,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserRole = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TokenCreated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TokenExpires = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -56,9 +59,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -71,14 +71,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
             migrationBuilder.CreateTable(
                 name: "Staff",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Position = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -99,9 +97,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProfilePicture = table.Column<byte[]>(type: "varbinary(max)", nullable: true),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StudentIdNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Course = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -130,9 +125,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Department = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -147,11 +139,54 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "LentItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TeacherId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    BorrowerFullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BorrowerRole = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Room = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubjectTimeSchedule = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReturnedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LentItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LentItems_Teachers_TeacherId",
+                        column: x => x.TeacherId,
+                        principalTable: "Teachers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_LentItems_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Items_SerialNumber",
                 table: "Items",
                 column: "SerialNumber",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LentItems_TeacherId",
+                table: "LentItems",
+                column: "TeacherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LentItems_UserId",
+                table: "LentItems",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -162,6 +197,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
             migrationBuilder.DropTable(
                 name: "Items");
+
+            migrationBuilder.DropTable(
+                name: "LentItems");
 
             migrationBuilder.DropTable(
                 name: "Staff");

@@ -159,7 +159,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return NoContent();
         }
-        [HttpPut("Staff/{id}/profile")]
+        [HttpPut("staff/{id}/profile")]
         public async Task<IActionResult> UpdateStaffProfile(Guid id, [FromForm] UpdateStaffProfileDto staffDto)
         {
             var userIdFromTokenString = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -179,7 +179,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return NoContent();
         }
-        [HttpPut("Admin/{id}/profile")]
+        [HttpPut("admin/{id}/profile")]
         public async Task<IActionResult> UpdateAdminProfile(Guid id, [FromBody] UpdateAdminProfileDto adminDto)
         {
             var userIdFromTokenString = User.FindFirstValue(ClaimTypes.NameIdentifier);

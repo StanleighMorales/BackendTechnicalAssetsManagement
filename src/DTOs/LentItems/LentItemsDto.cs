@@ -1,30 +1,26 @@
-﻿namespace BackendTechnicalAssetsManagement.src.Classes
+﻿namespace BackendTechnicalAssetsManagement.src.DTOs
 {
-    public class LentItems
+    public class LentItemsDto
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
-
+        public Guid Id { get; set; }
         public Guid ItemId { get; set; }
-
         public Guid? UserId { get; set; }
-        public User? User { get; set; }
-
         public Guid? TeacherId { get; set; }
-        public Teacher? Teacher { get; set; }
 
-        // Denormalized fields
+        // Flattened fields
         public string BorrowerFullName { get; set; } = string.Empty;
         public string BorrowerRole { get; set; } = string.Empty;
+        public string? TeacherFullName { get; set; }
 
         public string Room { get; set; } = string.Empty;
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
-        public DateTime LentAt { get; set; } = DateTime.Now;
+        public DateTime LentAt { get; set; }
         public DateTime? ReturnedAt { get; set; }
 
         public string Remarks { get; set; } = string.Empty;
 
         public DateTime? DeletedAt { get; set; }
-        public bool? IsDeleted { get; set; } = false;
+        public bool? IsDeleted { get; set; }
     }
 }

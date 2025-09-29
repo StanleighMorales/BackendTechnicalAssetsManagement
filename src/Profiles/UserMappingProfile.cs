@@ -114,6 +114,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<AdminDto, Admin>();
 
             #endregion
+
         }
     }
 }

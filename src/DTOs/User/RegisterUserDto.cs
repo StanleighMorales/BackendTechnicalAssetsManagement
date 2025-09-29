@@ -9,6 +9,11 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         [Required]
         public required string Username { get; set; }
         [Required]
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
         [EmailAddress]
         [RegularExpression(@"^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$", ErrorMessage = "Please enter a valid email address. user")]
         [MaxLength(254, ErrorMessage = "The email address cannot exceed 254 characters.")]
@@ -31,11 +36,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 
     public class RegisterStaffDto : RegisterUserDto
     {
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
+
 
         public string? Position { get; set; }
     }

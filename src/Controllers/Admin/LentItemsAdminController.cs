@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/admin/[controller]")]
+    [Route("api/v1/admin/lentItemsAdmin")]
     [Authorize(Roles = "Admin")]
     public class LentItemsAdminController : ControllerBase
     {

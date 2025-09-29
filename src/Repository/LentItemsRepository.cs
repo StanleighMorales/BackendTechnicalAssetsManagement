@@ -21,7 +21,11 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<IEnumerable<LentItems>> GetAllAsync()
         {
-            return await _context.LentItems.ToListAsync();
+            return await _context.LentItems
+                .Include(li => li.User)
+                .Include(li => li.Teacher)
+                .ToListAsync();
+
         }
 
         public async Task<LentItems?> GetByDateTime(DateTime dateTime)
@@ -31,7 +35,10 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<LentItems?> GetByIdAsync(Guid id)
         {
-            return await _context.LentItems.FirstOrDefaultAsync(li => li.Id == id);
+            return await _context.LentItems
+                .Include(li => li.User)
+                .Include(li => li.Teacher)
+                .FirstOrDefaultAsync(li => li.Id == id);
         }
 
         public async Task<bool> SaveChangesAsync()

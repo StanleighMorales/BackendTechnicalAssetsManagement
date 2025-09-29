@@ -13,15 +13,16 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public UserRole UserRole { get; set; } = UserRole.Staff;
 
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+
         public string? RefreshToken { get; set; }
         public DateTime? TokenCreated { get; set; }
         public DateTime? TokenExpires { get; set; }
     }
     public class Teacher : User
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public string? Department { get; set; }
     }
@@ -29,9 +30,6 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     {
         public byte[]? ProfilePicture { get; set; }
 
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string StudentIdNumber { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public string Course { get; set; } = string.Empty;
@@ -48,17 +46,11 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     }
     public class Staff : User
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public string? Position { get; set; }
     }
     public class Admin : User
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
     }
 

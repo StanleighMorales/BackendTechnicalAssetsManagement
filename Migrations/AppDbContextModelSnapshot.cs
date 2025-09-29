@@ -81,6 +81,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BorrowerFullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BorrowerRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
@@ -116,7 +124,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ItemsLents");
+                    b.HasIndex("TeacherId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LentItems");
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.User", b =>
@@ -127,6 +139,17 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
@@ -160,17 +183,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                 {
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -180,17 +192,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
                 {
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
@@ -216,19 +217,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<byte[]>("FrontStudentIdPicture")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
@@ -270,21 +260,25 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Teachers", (string)null);
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId");
+
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Teacher");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Admin", b =>

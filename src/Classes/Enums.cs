@@ -9,6 +9,8 @@
 
         public enum UserRole { Admin, Staff, Teacher, Student }
 
-        }
+        public enum LentItemRemarks { Borrowed, Returned, Lost, Damaged, UnderRepair }
+
+    }
 }
     

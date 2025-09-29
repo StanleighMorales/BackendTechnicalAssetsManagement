@@ -65,10 +65,11 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // Manual AutoMapper Registration
-builder.Services.AddAutoMapper(cfg => {
-    cfg.AddProfile<ItemMappingProfile>();
-    cfg.AddProfile<UserMappingProfile>();
-});
+//builder.Services.AddAutoMapper(cfg => {
+//    cfg.AddProfile<ItemMappingProfile>();
+//    cfg.AddProfile<UserMappingProfile>();
+//});
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 #region DI Registrations
 // Repository
