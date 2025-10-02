@@ -11,8 +11,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using DotNetEnv;
+
+Env.Load(); // Load .env file
+
 
 var builder = WebApplication.CreateBuilder(args);
+//.env 
+builder.Configuration
+       .AddEnvironmentVariables();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
