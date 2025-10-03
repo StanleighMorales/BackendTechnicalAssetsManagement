@@ -42,8 +42,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Admin>().ToTable("Admins");
             modelBuilder.Entity<Staff>().ToTable("Staff");
 
-            //FILTER
-            modelBuilder.Entity<LentItems>().HasQueryFilter(li => li.IsDeleted == false);
 
             // TODO: Understand more about this later
         }

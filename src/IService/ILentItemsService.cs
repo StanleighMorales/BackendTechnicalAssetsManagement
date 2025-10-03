@@ -1,4 +1,5 @@
 ﻿    using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 
     namespace BackendTechnicalAssetsManagement.src.IService
     {
@@ -7,6 +8,7 @@
             // Create
             Task<LentItemsDto> AddAsync(CreateLentItemDto dto);
 
+            Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto);
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<LentItemsDto?> GetByIdAsync(Guid id);
@@ -22,10 +24,5 @@
             // Persistence
             Task<bool> SaveChangesAsync();
 
-            //Admin-only methods
-            Task<IEnumerable<LentItemsDto>> GetAllIncludingDeletedAsync();
-            Task<IEnumerable<LentItemsDto>> GetDeletedAsync();
-            Task<LentItemsDto?> GetDeletedByIdAsync(Guid id);
-            Task<bool> RestoreAsync(Guid id);
         }
     }

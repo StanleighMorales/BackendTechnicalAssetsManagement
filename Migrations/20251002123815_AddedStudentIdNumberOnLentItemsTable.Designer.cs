@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251002123815_AddedStudentIdNumberOnLentItemsTable")]
+    partial class AddedStudentIdNumberOnLentItemsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,6 +92,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
@@ -111,9 +120,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("SubjectTimeSchedule")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TeacherFullName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("TeacherId")

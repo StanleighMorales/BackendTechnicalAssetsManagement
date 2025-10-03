@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 
 namespace BackendTechnicalAssetsManagement.src.Profiles
 {
@@ -10,24 +11,30 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         {
             // Entity -> DTO
             CreateMap<LentItems, LentItemsDto>()
-                .ForMember(dest => dest.BorrowerFullName,
-                    opt => opt.MapFrom(src => src.User != null
-                        ? $"{src.User.FirstName} {src.User.LastName}"
-                        : string.Empty))
-                .ForMember(dest => dest.BorrowerRole,
-                    opt => opt.MapFrom(src => src.User != null
-                        ? src.User.UserRole.ToString()
-                        : string.Empty))
+                //.ForMember(dest => dest.BorrowerFullName,
+                //    opt => opt.MapFrom(src => src.User != null
+                //        ? $"{src.User.FirstName} {src.User.LastName}"
+                //        : string.Empty))
+                //.ForMember(dest => dest.BorrowerRole,
+                //    opt => opt.MapFrom(src => src.User != null
+                //        ? src.User.UserRole.ToString()
+                //        : string.Empty))
+                //.ForMember(dest => dest.TeacherFullName,
+                //    opt => opt.MapFrom(src => src.Teacher != null
+                //        ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
+                //        : null));
                 .ForMember(dest => dest.TeacherFullName,
-                    opt => opt.MapFrom(src => src.Teacher != null
-                        ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
-                        : null));
+                opt => opt.MapFrom(src => src.Teacher != null
+                    ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
+                    : null));
 
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>();
 
             // DTO -> Entity (for update)
             CreateMap<UpdateLentItemDto, LentItems>();
+
+            CreateMap<CreateLentItemsForGuestDto, LentItems>();
         }
     }
 }

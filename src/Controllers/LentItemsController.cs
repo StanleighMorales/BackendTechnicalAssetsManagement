@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,6 +47,19 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public async Task<IActionResult> Add([FromBody] CreateLentItemDto dto)
         {
             var created = await _service.AddAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+        [HttpPost("guests")]
+        public async Task<IActionResult> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
+        {
+            // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
+            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
+            {
+                return BadRequest("Student ID number is required for students.");
+            }
+
+            var created = await _service.AddForGuestAsync(dto);
+            // You can still use GetById to retrieve the newly created item
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
