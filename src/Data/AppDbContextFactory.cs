@@ -8,13 +8,14 @@ namespace BackendTechnicalAssetsManagement.src.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            DotNetEnv.Env.Load();
             // Load configuration from appsettings + user-secrets
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true)
                 .AddJsonFile("appsettings.Development.json", optional: true)
-                .AddUserSecrets<Program>(optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();

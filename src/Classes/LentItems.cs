@@ -15,6 +15,8 @@
         // Denormalized fields
         public string BorrowerFullName { get; set; } = string.Empty;
         public string BorrowerRole { get; set; } = string.Empty;
+        public string? StudentIdNumber { get; set; }
+        public string? TeacherFullName { get; set; } = string.Empty;
 
         public string Room { get; set; } = string.Empty;
         public string SubjectTimeSchedule { get; set; } = string.Empty;
@@ -24,7 +26,5 @@
 
         public string Remarks { get; set; } = string.Empty;
 
-        public DateTime? DeletedAt { get; set; }
-        public bool? IsDeleted { get; set; } = false;
     }
 }

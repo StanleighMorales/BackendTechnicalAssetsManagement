@@ -15,11 +15,5 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task PermaDeleteAsync(Guid id);
 
         Task<bool> SaveChangesAsync();
-
-        // Admin-only methods
-        Task<IEnumerable<LentItems>> GetAllIncludingDeletedAsync();
-        Task<IEnumerable<LentItems>> GetDeletedAsync();
-        Task<LentItems?> GetDeletedByIdAsync(Guid id);
-        Task RestoreAsync(Guid id);
     }
 }

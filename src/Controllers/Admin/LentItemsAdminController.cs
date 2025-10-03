@@ -16,39 +16,6 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _service = service;
         }
 
-        // GET: api/admin/lentitems
-        [HttpGet]
-        public async Task<IActionResult> GetAllIncludingDeleted()
-        {
-            var items = await _service.GetAllIncludingDeletedAsync();
-            return Ok(items);
-        }
-
-        // GET: api/admin/lentitems/deleted
-        [HttpGet("deleted")]
-        public async Task<IActionResult> GetDeleted()
-        {
-            var items = await _service.GetDeletedAsync();
-            return Ok(items);
-        }
-
-        // GET: api/admin/lentitems/deleted/{id}
-        [HttpGet("deleted/{id}")]
-        public async Task<IActionResult> GetDeletedById(Guid id)
-        {
-            var item = await _service.GetDeletedByIdAsync(id);
-            if (item == null) return NotFound();
-            return Ok(item);
-        }
-
-        // PATCH: api/admin/lentitems/restore/{id}
-        [HttpPatch("restore/{id}")]
-        public async Task<IActionResult> Restore(Guid id)
-        {
-            var success = await _service.RestoreAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
-        }
 
         // DELETE (hard): api/admin/lentitems/{id}
         [HttpDelete("{id}")]

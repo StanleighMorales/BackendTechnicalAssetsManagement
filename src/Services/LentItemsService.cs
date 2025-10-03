@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 
@@ -31,6 +32,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     lentItem.BorrowerFullName = $"{user.FirstName} {user.LastName}";
                     lentItem.BorrowerRole = user.UserRole.ToString();
+
+                    if (user is Student student)
+                    {
+                        lentItem.StudentIdNumber = student.StudentIdNumber;
+                    }
                 }
                 else
                 {
@@ -61,6 +67,40 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.SaveChangesAsync();
             return _mapper.Map<LentItemsDto>(lentItem);
         }
+        // In Services/LentItemsService.cs
+
+        public async Task<LentItemsDto> AddForGuestAsync(CreateLentItemsForGuestDto dto)
+        {
+            // 1. This line maps the properties with matching names from the DTO 
+            //    (e.g., ItemId, Room, SubjectTimeSchedule).
+            //    At this point, lentItem.BorrowerFullName and lentItem.BorrowerRole are still string.Empty.
+            var lentItem = _mapper.Map<LentItems>(dto);
+
+            // 2. *** THIS IS THE CRUCIAL PART THAT WAS LIKELY MISSING ***
+            //    We now manually populate the fields that AutoMapper couldn't figure out.
+            //    This overwrites the empty default values.
+            lentItem.BorrowerFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
+            lentItem.BorrowerRole = dto.BorrowerRole;
+            lentItem.TeacherFullName = $"{dto.TeacherFirstName} {dto.TeacherLastName}";
+
+            // 3. Set User and Teacher IDs to null for a "guest"
+            lentItem.UserId = null;
+            lentItem.TeacherId = null;
+
+            // Optional: Enhance the remarks as we discussed before
+            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
+            {
+                lentItem.StudentIdNumber = dto.StudentIdNumber;
+            }
+
+            // 4. Add the fully-populated object to the repository and save.
+            await _repository.AddAsync(lentItem);
+            await _repository.SaveChangesAsync();
+
+            // 5. Map the final, saved entity back to a DTO to be returned.
+            return _mapper.Map<LentItemsDto>(lentItem);
+        }
+
 
         // Read
         public async Task<IEnumerable<LentItemsDto>> GetAllAsync()
@@ -107,29 +147,5 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _repository.SaveChangesAsync();
         }
 
-        // 🔹 Admin-only methods
-        public async Task<IEnumerable<LentItemsDto>> GetAllIncludingDeletedAsync()
-        {
-            var items = await _repository.GetAllIncludingDeletedAsync();
-            return _mapper.Map<IEnumerable<LentItemsDto>>(items);
-        }
-
-        public async Task<IEnumerable<LentItemsDto>> GetDeletedAsync()
-        {
-            var items = await _repository.GetDeletedAsync();
-            return _mapper.Map<IEnumerable<LentItemsDto>>(items);
-        }
-
-        public async Task<LentItemsDto?> GetDeletedByIdAsync(Guid id)
-        {
-            var item = await _repository.GetDeletedByIdAsync(id);
-            return _mapper.Map<LentItemsDto?>(item);
-        }
-
-        public async Task<bool> RestoreAsync(Guid id)
-        {
-            await _repository.RestoreAsync(id);
-            return await _repository.SaveChangesAsync();
-        }
     }
 }
