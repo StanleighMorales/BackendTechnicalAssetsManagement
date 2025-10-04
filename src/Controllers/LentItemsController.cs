@@ -19,15 +19,16 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAll()
         {
             var items = await _service.GetAllAsync();
-            return Ok(items);
+            var response = ApiResponse<IEnumerable<LentItemsDto>>.SuccessResponse(items, "Items retrieved successfully.");
+            return Ok(response);
         }
 
         // GET: api/v1/lentitems/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetById(Guid id)
         {
             var item = await _service.GetByIdAsync(id);
             if (item == null)
@@ -41,37 +42,46 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems/date/{dateTime}
         [HttpGet("date/{dateTime}")]
-        public async Task<IActionResult> GetByDateTime(DateTime dateTime)
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByDateTime(DateTime dateTime)
         {
             var item = await _service.GetByDateTimeAsync(dateTime);
-            if (item == null) return NotFound();
-            return Ok(item);
+            if (item == null)
+            {
+                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Item not found for the specified date and time.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Item retrieved successfully.");
+            return Ok(successResponse);
         }
 
         // POST: api/v1/lentitems
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] CreateLentItemDto dto)
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Add([FromBody] CreateLentItemDto dto)
         {
             var created = await _service.AddAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "User - Item Listed Successfully.");
+
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }
         [HttpPost("guests")]
-        public async Task<IActionResult> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
         {
             // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
             if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
             {
-                return BadRequest("Student ID number is required for students.");
+                var badRequestResponse = ApiResponse<LentItemsDto>.FailResponse("Student ID number is required for students.");
+                return BadRequest(badRequestResponse);
             }
 
             var created = await _service.AddForGuestAsync(dto);
             // You can still use GetById to retrieve the newly created item
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Guest - Item Listed Successfully.");
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }
 
-        // PUT: api/v1/lentitems/{id}
+        // PATCH: api/v1/lentitems/{id}
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLentItemDto dto)
+        public async Task<ActionResult<ApiResponse<object>>> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
             // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.
             // The 'id' from the URL is now the single source of truth.
@@ -80,20 +90,27 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             if (!success)
             {
-                return NotFound(); // Or BadRequest("Update failed");
+                var errorResponse = ApiResponse<object>.FailResponse("Update failed. Item not found or no changes made.");
+                return NotFound(errorResponse); // Or BadRequest("Update failed");
             }
 
             // Return NoContent for a successful update, or you could return the updated object.
-            return NoContent();
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
+            return Ok(successResponse);
         }
 
         // DELETE (soft): api/v1/lentitems/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> SoftDelete(Guid id)
+        public async Task<ActionResult<ApiResponse<object>>> SoftDelete(Guid id)
         {
             var success = await _service.SoftDeleteAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse("Soft delete failed. Item not found.");
+                return NotFound(errorResponse); // Or BadRequest("Soft delete failed");
+            }
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item soft-deleted successfully.");
+            return Ok(successResponse);
         }
     }
 }

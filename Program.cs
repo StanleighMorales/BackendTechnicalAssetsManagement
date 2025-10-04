@@ -3,7 +3,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
-using BackendTechnicalAssetsManagement.src.Profiles;
+using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
@@ -148,6 +148,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 app.UseHttpsRedirection();
+app.UseMiddleware<GlobalExceptionHandler>();
 app.UseCors("AllowReactApp");
 
 app.UseStaticFiles();

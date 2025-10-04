@@ -12,7 +12,7 @@ using BackendTechnicalAssetsManagement.src.IService;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/users")]
     [ApiController]
     [Authorize]
     public class UserController : ControllerBase
@@ -27,35 +27,6 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _mapper = mapper;
         }
 
-        //[HttpGet("me")]
-        //public async Task<ActionResult<BaseProfileDto>> GetMyProfile()
-        //{
-        //    try
-        //    {
-                
-        //        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-        //        if (!Guid.TryParse(userIdString, out var userId))
-        //        {
-        //            // This means the token's ID claim is not a valid integer.
-        //            return BadRequest("Invalid user ID format in token.");
-        //        }
-
-        //        var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
-
-        //        return Ok(userProfile);
-        //    }
-        //    catch (KeyNotFoundException ex)
-        //    {
-        //        return NotFound(new { message = ex.Message });
-        //    }
-        //    catch (Exception)
-        //    {
-        //        // Log the exception ex
-        //        return StatusCode(500, "An unexpected error occurred.");
-        //    }
-        //}
         [HttpGet("me")]
         // Change the return type here from ActionResult<BaseProfileDto> to IActionResult
         public async Task<IActionResult> GetMyProfile()
