@@ -13,9 +13,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         [Required]
         public string BorrowerLastName { get; set; } = string.Empty;
 
-        // General fields
         [Required]
-        public string BorrowerRole { get; set; } //"Student" or "Teacher"
+        public string BorrowerRole { get; set; } 
 
         public string? TeacherFirstName { get; set; } = string.Empty;
         public string? TeacherLastName { get; set; } = string.Empty;
@@ -29,7 +28,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         public string Remarks { get; set; } = string.Empty;
 
 
-        // Student-specific fields (nullable if the borrower is a Teacher)
         public string? StudentIdNumber { get; set; }
     }
 }

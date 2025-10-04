@@ -30,7 +30,10 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<LentItems?> GetByDateTime(DateTime dateTime)
         {
-            return await _context.LentItems.FirstOrDefaultAsync(li => li.LentAt == dateTime);
+            return await _context.LentItems
+                .Include(li => li.User)
+                .Include(li => li.Teacher)
+                .FirstOrDefaultAsync(li => li.LentAt == dateTime);
         }
 
         public async Task<LentItems?> GetByIdAsync(Guid id)
