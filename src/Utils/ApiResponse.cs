@@ -1,6 +1,6 @@
 ﻿namespace BackendTechnicalAssetsManagement.src.Utils
 {
-    public class ApiResponseUtils<T>
+    public class ApiResponse<T>
     {
         public bool Success { get; set; }
         public string Message { get; set; }
@@ -8,9 +8,9 @@
         public List<string>? Errors { get; set; }
 
         // Static factory method for a success response
-        public static ApiResponseUtils<T> SuccessResponse(T data, string message = "Request successful.")
+        public static ApiResponse<T> SuccessResponse(T data, string message = "Request successful.")
         {
-            return new ApiResponseUtils<T>
+            return new ApiResponse<T>
             {
                 Success = true,
                 Message = message,
@@ -20,9 +20,9 @@
         }
 
         // Static factory method for a failure response
-        public static ApiResponseUtils<T> FailResponse(string message, List<string>? errors = null)
+        public static ApiResponse<T> FailResponse(string message, List<string>? errors = null)
         {
-            return new ApiResponseUtils<T>
+            return new ApiResponse<T>
             {
                 Success = false,
                 Message = message,
