@@ -1,6 +1,7 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
@@ -29,8 +30,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var item = await _service.GetByIdAsync(id);
-            if (item == null) return NotFound();
-            return Ok(item);
+            if (item == null)
+            {
+                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Item not found.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Item retrieved successfully.");
+            return Ok(successResponse);
         }
 
         // GET: api/v1/lentitems/date/{dateTime}
