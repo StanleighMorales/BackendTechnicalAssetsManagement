@@ -55,6 +55,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     // This ensures the navigation property is loaded for the subsequent mapping.
                     lentItem.Teacher = teacher;
+                    lentItem.TeacherFullName = $"{teacher.FirstName} {teacher.LastName}";
                 }
                 else
                 {
@@ -65,7 +66,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync();
-            return _mapper.Map<LentItemsDto>(lentItem);
+
+            var createdItem = await _repository.GetByIdAsync(lentItem.Id);
+            return _mapper.Map<LentItemsDto>(createdItem);
         }
         // In Services/LentItemsService.cs
 
@@ -87,7 +90,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             lentItem.UserId = null;
             lentItem.TeacherId = null;
 
-            // Optional: Enhance the remarks as we discussed before
             if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
             {
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
@@ -97,8 +99,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync();
 
-            // 5. Map the final, saved entity back to a DTO to be returned.
-            return _mapper.Map<LentItemsDto>(lentItem);
+            var createdItem = await _repository.GetByIdAsync(lentItem.Id);
+            return _mapper.Map<LentItemsDto>(createdItem);
         }
 
 

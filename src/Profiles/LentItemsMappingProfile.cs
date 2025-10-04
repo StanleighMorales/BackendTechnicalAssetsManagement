@@ -24,9 +24,12 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 //        ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
                 //        : null));
                 .ForMember(dest => dest.TeacherFullName,
-                opt => opt.MapFrom(src => src.Teacher != null
-                    ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
-                    : null));
+                    opt => opt.MapFrom(src =>
+                        // Priority 1: If the related Teacher object is loaded, use it.
+                        src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
+                        // Priority 2 (Fallback): Otherwise, use the name we stored directly in the table.
+                        : src.TeacherFullName
+                    ));
 
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>();

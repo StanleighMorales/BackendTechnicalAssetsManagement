@@ -7,7 +7,6 @@
         public Guid? UserId { get; set; }
         public Guid? TeacherId { get; set; }
 
-        // Flattened fields
         public string BorrowerFullName { get; set; } = string.Empty;
         public string BorrowerRole { get; set; } = string.Empty;
         public string? TeacherFullName { get; set; }
@@ -20,7 +19,5 @@
 
         public string Remarks { get; set; } = string.Empty;
 
-        public DateTime? DeletedAt { get; set; }
-        public bool? IsDeleted { get; set; }
     }
 }
