@@ -15,7 +15,7 @@ using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
             Task<LentItemsDto?> GetByDateTimeAsync(DateTime dateTime);
 
             // Update
-            Task UpdateAsync(UpdateLentItemDto dto);
+            Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
 
             // Delete
             Task<bool> SoftDeleteAsync(Guid id);

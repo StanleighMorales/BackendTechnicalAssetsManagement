@@ -35,7 +35,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<CreateLentItemDto, LentItems>();
 
             // DTO -> Entity (for update)
-            CreateMap<UpdateLentItemDto, LentItems>();
+            CreateMap<UpdateLentItemDto, LentItems>()
+                .ForMember(dest => dest.ItemId, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CreateLentItemsForGuestDto, LentItems>();
         }
