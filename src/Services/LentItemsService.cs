@@ -124,11 +124,29 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         // Update
-        public async Task UpdateAsync(UpdateLentItemDto dto)
+        public async Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto)
         {
-            var entity = _mapper.Map<LentItems>(dto);
+            // 1. Fetch the existing entity from the database
+            var entity = await _repository.GetByIdAsync(id);
+
+            // 2. Check if it exists
+            if (entity == null)
+            {
+                // Return false or throw a KeyNotFoundException, your choice
+                return false;
+            }
+
+            // 3. Apply the DTO properties onto the fetched entity
+            // This special overload of AutoMapper is designed for this exact purpose.
+            // It will only update the properties that are not null in the DTO.
+            _mapper.Map(dto, entity);
+
+            // Note: If you need complex logic (like updating BorrowerFullName when UserId changes),
+            // you would add that logic here before saving.
+
+            // 4. Update the entity in the context and save
             await _repository.UpdateAsync(entity);
-            await _repository.SaveChangesAsync();
+            return await _repository.SaveChangesAsync();
         }
 
         // Delete (soft & hard)

@@ -64,12 +64,20 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // PUT: api/v1/lentitems/{id}
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
-            if (id != dto.Id) return BadRequest("ID mismatch");
+            // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.
+            // The 'id' from the URL is now the single source of truth.
 
-            await _service.UpdateAsync(dto);
+            var success = await _service.UpdateAsync(id, dto);
+
+            if (!success)
+            {
+                return NotFound(); // Or BadRequest("Update failed");
+            }
+
+            // Return NoContent for a successful update, or you could return the updated object.
             return NoContent();
         }
 
