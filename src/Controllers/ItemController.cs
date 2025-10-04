@@ -7,7 +7,7 @@ using TechnicalAssetManagementApi.Dtos.Item;
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/items")]
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;

@@ -1,13 +1,17 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
-using Humanizer;
+using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
-    [Route("api/v1/Auth")]
+    /// <summary>
+    /// This controller handles all authentication-related actions,
+    /// such as user registration, login, and token management.
+    /// </summary>
+    [Route("api/v1/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -15,155 +19,70 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public AuthController(IAuthService authService)
         {
             _authService = authService;
-
         }
 
+        /// <summary>
+        /// Registers a new user in the system.
+        /// </summary>
+        /// <param name="request">The user's registration details, including username and password.</param>
+        /// <returns>An ApiResponse containing the newly created user's public data (without the password).</returns>
+        /// <remarks>
+        /// On success, returns HTTP 201 Created.
+        /// If the username or email already exists, the service will throw an exception,
+        /// and the global error handler middleware will return a 4xx or 500 error.
+        /// </remarks>
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterUserDto request)
+        public async Task<ActionResult<ApiResponse<UserDto>>> Register(RegisterUserDto request)
         {
-            try
-            {
-                var newUser = await _authService.Register(request);
+            var newUser = await _authService.Register(request);
+            var successResponse = ApiResponse<UserDto>.SuccessResponse(newUser, "User Registered Successfully.");
 
-                return Ok(new { message = "User Registered Successfully." });
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return StatusCode(201, successResponse);
         }
-        #region Refractored API
-        //[HttpPost("staff/register")]
-        //public async Task<IActionResult> RegisterStaff([FromBody]RegisterStaffDto staffDto)
-        //{
-        //    // The [ApiController] attribute helps handle this, but an explicit check is good.
-        //    // This checks if required fields are missing, email format is wrong, etc.
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
 
-        //    try
-        //    {
-        //        var newUser = await _authService.RegisterStaffAsync(staffDto);
-        //        return Ok(new { message = "Staff Registered Successfully." });
-        //    }catch(Exception ex)
-        //    {
-        //        return Conflict(new { message = ex.Message });
-        //    }
-        //}
-        //[HttpPost("teacher/register")]
-        //public async Task<IActionResult> RegisterTeacher([FromBody]RegisterTeacherDto teacherDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    try
-        //    {
-        //        var newUser = await _authService.RegisterTeacherAsync(teacherDto);
-        //        return Ok(new { message = " Teacher Registered Successfully." });
-        //    } catch(Exception ex)
-        //    {
-        //        return Conflict(new {message = ex.Message});
-        //    }
-        //}
-        //[HttpPost("student/register")]
-        //public async Task <IActionResult> RegisterStudent([FromForm]RegisterStudentDto studentDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-        //    try
-        //    {
-        //        var newUser = await _authService.RegisterStudentAsync(studentDto);
-        //        return Ok(new { message = "Student Registered Successfully." });
-        //    }catch (Exception ex)
-        //    {
-        //        return Conflict(new { message = ex.Message });
-        //    }
-        //}
-
-        //[HttpPost("managers/register")]
-        //public async Task<IActionResult> RegisterManager([FromBody]RegisterManagerDto managerDto)
-        //{
-        //    if(!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-        //    try
-        //    {
-        //        var newUser = await _authService.RegisterManagerAsync(managerDto);
-        //        return Ok(new { message = "Manager Registered Successfully." });
-        //    }catch(Exception ex)
-        //    {
-        //        return Conflict(new { message = ex.Message });
-        //    }
-        //}
-        //[HttpPost("admin/register")]
-        //public async Task<IActionResult> RegisterAdmin([FromBody]RegisterAdminDto adminDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-        //    try
-        //    {
-        //        var newUser = await _authService.RegisterAdminAsync(adminDto);
-        //        return Ok(new { message = "Admin Added Success." });
-
-        //    }catch(Exception ex)
-        //    {
-        //        return Conflict(new {message = ex.Message});
-        //    }
-        //}
-        #endregion
         #region Login/Logout
+        /// <summary>
+        /// Authenticates a user and returns a JSON Web Token (JWT).
+        /// </summary>
+        /// <param name="request">The user's login credentials (e.g., username and password).</param>
+        /// <returns>An ApiResponse containing the JWT access token as a string.</returns>
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginUserDto request)
+        public async Task<ActionResult<ApiResponse<string>>> Login(LoginUserDto request)
         {
-            try
-            {
-                string accessToken = await _authService.Login(request);
-                return Ok(new { accessToken });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            string accessToken = await _authService.Login(request);
+            var successResponse = ApiResponse<string>.SuccessResponse(accessToken, "Login Successful.");
+            return Ok(successResponse);
         }
+
+        /// <summary>
+        /// Logs out the currently authenticated user.
+        /// </summary>
+        /// <returns>An ApiResponse with a success message and no data.</returns>
+        /// <remarks>This endpoint requires the user to be authenticated.</remarks>
         [HttpPost("logout")]
         [Authorize]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult<ApiResponse<object>>> Logout()
         {
-            try
-            {
-                await _authService.Logout();
-                return Ok(new { message = "Logout Successful." });
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            await _authService.Logout();
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Logout Successful.");
+            return Ok(successResponse);
         }
         #endregion
+
         #region Refresh Token
+        /// <summary>
+        /// Generates a new access token using a valid refresh token.
+        /// </summary>
+        /// <returns>An ApiResponse containing a new JWT access token as a string.</returns>
+        /// <remarks>
+        /// The refresh token is typically sent via a secure, http-only cookie.
+        /// </remarks>
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<ActionResult<ApiResponse<string>>> RefreshToken()
         {
-            try
-            {
-                var newAccessToken = await _authService.RefreshToken();
-                return Ok(new { AccessToken = newAccessToken });
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+            var newAccessToken = await _authService.RefreshToken();
+            var successResponse = ApiResponse<string>.SuccessResponse(newAccessToken, "Token Refreshed Successfully.");
+            return Ok(successResponse);
         }
         #endregion
     }
