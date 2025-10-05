@@ -77,54 +77,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
-            var itemName = existingItem.ItemName;
-            UpdateChecker.UpdatePropertyIfProvided(ref itemName, updateItemDto.ItemName);
-            existingItem.ItemName = itemName;
+            // 2. Use AutoMapper to apply all the non-null properties from the DTO.
+            // This one line replaces all your UpdateChecker calls!
+            _mapper.Map(updateItemDto, existingItem);
 
-            var serialNumber = existingItem.SerialNumber;
-            UpdateChecker.UpdatePropertyIfProvided(ref serialNumber, updateItemDto.SerialNumber);
-            existingItem.SerialNumber = serialNumber;
-
-            var itemType = existingItem.ItemType;
-            UpdateChecker.UpdatePropertyIfProvided(ref itemType, updateItemDto.ItemType);
-            existingItem.ItemType = itemType;
-
-            var itemModel = existingItem.ItemModel;
-            UpdateChecker.UpdatePropertyIfProvided(ref itemModel, updateItemDto.ItemModel);
-            existingItem.ItemModel = itemModel;
-
-            var itemMake = existingItem.ItemMake;
-            UpdateChecker.UpdatePropertyIfProvided(ref itemMake, updateItemDto.ItemMake);
-            existingItem.ItemMake = itemMake;
-
-            var description = existingItem.Description;
-            UpdateChecker.UpdatePropertyIfProvided(ref description, updateItemDto.Description);
-            existingItem.Description = description;
-
-            var category = existingItem.Category;
-            UpdateChecker.UpdatePropertyIfProvided(ref category, updateItemDto.Category);
-            existingItem.Category = category;
-
-            var condition = existingItem.Condition;
-            UpdateChecker.UpdatePropertyIfProvided(ref condition, updateItemDto.Condition);
-            existingItem.Condition = condition;
-
-            if (updateItemDto.Image != null && updateItemDto.Image.Length > 0)
+            // 3. Handle specific logic that AutoMapper can't do, like file uploads. (Same as before)
+            if (updateItemDto.Image != null)
             {
-                // No need to delete an old file, we will just overwrite the database field.
-
-                // 1. Validate the new image
                 _imageFileManager.ValidateImage(updateItemDto.Image);
-
-                // 2. Convert the new image to byte[]
                 var newImageBytes = await _imageFileManager.GetImageBytesAsync(updateItemDto.Image);
-
-                // 3. Update the database record with the new byte[] data
-                //    This fixes error CS0029
                 existingItem.Image = newImageBytes;
             }
 
-
+            // 4. Update the timestamp and save. (Same as before)
             existingItem.UpdatedAt = DateTime.UtcNow;
 
             await _itemRepository.UpdateAsync(existingItem);
