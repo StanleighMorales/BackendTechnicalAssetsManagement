@@ -5,14 +5,15 @@ namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IUserService
     {
-        Task<BaseProfileDto> GetUserProfileByIdAsync(Guid userId);
-
+        Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId);
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<UserDto?> GetUserByIdAsync(Guid id);
 
-        Task<bool> UpdateUserAsync(int id, UserDto userDto);
-
-        Task<bool> DeleteUserAsync(int id);
+        // --- WRITE operations ---
+        // The service will handle the "Fetch, Apply, Save" logic.
+        // The controller will just pass the ID and the DTO.
+        Task<bool> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
+        Task<bool> DeleteUserAsync(Guid id);
 
 
     }
