@@ -20,7 +20,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return user;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var userToDelete = await _context.Users.FindAsync(id);
             if (userToDelete != null)

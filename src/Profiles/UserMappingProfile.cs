@@ -80,7 +80,46 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<RegisterUserDto, Staff>();
             CreateMap<RegisterUserDto, Admin>();
 
+            CreateMap<UpdateStudentProfileDto, Student>()
+               // Rule 1: Handle the image properties with specific logic first.
+               .ForMember(dest => dest.ProfilePicture, opt => {
+                   opt.Condition(src => src.ProfilePicture != null);
+                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture));
+               })
+               .ForMember(dest => dest.FrontStudentIdPicture, opt => {
+                   opt.Condition(src => src.FrontStudentIdPicture != null);
+                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture));
+               })
+               .ForMember(dest => dest.BackStudentIdPicture, opt => {
+                   opt.Condition(src => src.BackStudentIdPicture != null);
+                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture));
+               })
+               // Rule 2: Handle all other properties with the general "ignore nulls" rule.
+               .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // The other update DTOs are simpler as they don't have images.
+            CreateMap<UpdateTeacherProfileDto, Teacher>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateStaffProfileDto, Staff>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateAdminProfileDto, Admin>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             // --- User Profile Updates ---
+            CreateMap<UpdateStudentProfileDto, Student>()
+                // First, handle all the simple properties that aren't files.
+                // This rule applies to everything EXCEPT the properties we define special rules for below.
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UpdateTeacherProfileDto, Teacher>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            // ... and so on for Staff and Admin ...
+            CreateMap<UpdateStaffProfileDto, Staff>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<UpdateAdminProfileDto, Admin>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             // Handles the second step where a user completes their profile with detailed information.
             CreateMap<UpdateStudentProfileDto, Student>()
                 .ForMember(dest => dest.ProfilePicture, opt => {
