@@ -20,8 +20,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<CreateItemDto, Item>()
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.Image)));
 
-            CreateMap<UpdateItemDto, Item>();
-               
+            CreateMap<UpdateItemDto, Item>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         }
     }
 }
