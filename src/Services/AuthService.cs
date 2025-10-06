@@ -27,9 +27,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IUserRepository _userRepository;
         private readonly IUserValidationService _userValidationService;
-        
+        private readonly IWebHostEnvironment _env;
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService)
+
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env)
         {
             _context = context;
             _configuration = configuration;
@@ -38,6 +39,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userRepository = userRepository;
             _userValidationService = userValidationService;
             _mapper = mapper;
+            _env = env;
         }
 
         public async Task<UserDto> Register(RegisterUserDto request)
@@ -76,114 +78,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<UserDto>(newUser);
         }
 
-        //public async Task<UserDto> RegisterStaffAsync(RegisterStaffDto staffDto)
-        //{
-        //    if (await _userRepository.GetByUsernameAsync(staffDto.Username) != null)
-        //    {
-        //        // Throw an exception that the controller can catch.
-        //        // This prevents creating duplicate usernames.
-        //        throw new Exception($"Username '{staffDto.Username}' is already taken.");
-        //    }
-        //    if (await _userRepository.GetByEmailAsync(staffDto.Email) != null)
-        //    {
-        //        throw new Exception($"Email '{staffDto.Email}' already exist.");
-        //    }
-        //    if (await _userRepository.GetByPhoneNumberAsync(staffDto.PhoneNumber) != null)
-        //    {
-        //        throw new Exception($"Phone Number already used.");
-
-        //    }
-
-
-        //    var staffModel = _mapper.Map<Staff>(staffDto);
-
-        //    staffModel.PasswordHash = _passwordHashingService.HashPassword(staffDto.Password);
-
-        //    await _userRepository.AddAsync(staffModel);
-        //    await _userRepository.SaveChangesAsync();
-
-        //    return _mapper.Map<UserDto>(staffModel);
-        //}
-        //public async Task<UserDto> RegisterTeacherAsync(RegisterTeacherDto teacherDto)
-        //{ 
-        //    await _userValidationService.ValidateUniqueUserAsync(
-        //        teacherDto.Username,
-        //        teacherDto.Email,
-        //        teacherDto.PhoneNumber
-        //        );
-
-        //    var teacherModel = _mapper.Map<Teacher>(teacherDto);
-        //    teacherModel.PasswordHash = _passwordHashingService.HashPassword(teacherDto.Password);
-
-        //    await _userRepository.AddAsync(teacherModel);
-        //    await _userRepository.SaveChangesAsync(); 
-
-        //    return _mapper.Map<UserDto>(teacherModel);
-        //}
-        //public async Task<UserDto> RegisterStudentAsync(RegisterStudentDto studentDto)
-        //{
-        //    await _userValidationService.ValidateUniqueUserAsync(
-        //        studentDto.Username,
-        //        studentDto.Email,
-        //        studentDto.PhoneNumber
-        //        );
-
-        //    var studentModel = _mapper.Map<Student>(studentDto);
-
-        //    ValidateImageUtil.ValidateImage(studentDto.FrontStudentIdPicture);
-        //    ValidateImageUtil.ValidateImage(studentDto.BackStudentIdPicture);
-        //    ValidateImageUtil.ValidateImage(studentDto.ProfilePicture);
-
-        //    studentModel.PasswordHash = _passwordHashingService.HashPassword(studentDto.Password);
-
-        //    await _userRepository.AddAsync(studentModel);
-        //    await _userRepository.SaveChangesAsync();
-
-        //    return _mapper.Map<UserDto>(studentModel);
-
-        //}
-
-        //public async Task<UserDto> RegisterManagerAsync(RegisterManagerDto managerDto)
-        //{
-        //    await _userValidationService.ValidateUniqueUserAsync(
-        //        managerDto.Username,
-        //        managerDto.Email,
-        //        managerDto.PhoneNumber
-        //        );
-
-        //    var managerModel = _mapper.Map<Manager>(managerDto);
-
-        //    managerModel.PasswordHash = _passwordHashingService.HashPassword(managerDto.Password);
-
-        //    await _userRepository.AddAsync(managerModel);
-        //    await _userRepository.SaveChangesAsync();
-
-        //    return _mapper.Map<UserDto>(managerModel);
-        //}
-
-        //public async Task<UserDto> RegisterAdminAsync(RegisterAdminDto adminDto)
-        //{
-        //    await _userValidationService.ValidateUniqueUserAsync(
-        //        adminDto.Username,
-        //        adminDto.Email,
-        //        adminDto.PhoneNumber
-        //        );
-        //    var adminModel = _mapper.Map<Admin>(adminDto);
-        //    adminModel.PasswordHash = _passwordHashingService.HashPassword(adminDto.Password);
-
-        //    await _userRepository.AddAsync(adminModel);
-        //    await _userRepository.SaveChangesAsync();
-
-        //    return _mapper.Map<UserDto>(adminDto);
-        //}
         #region Login/Logout
-        public async Task<string> Login(LoginUserDto loginDto)
+        public async Task<UserDto> Login(LoginUserDto loginDto)
         {
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
-
                 throw new Exception("Invalid username or password.");
             }
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
@@ -191,12 +92,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("Invalid username or password.");
             }
 
+            // 1. Create both tokens
             string accessToken = CreateAccessToken(user);
-
             var refreshToken = GenerateRefreshToken();
 
-            SetRefreshTokenCookie(refreshToken);
+            // 2. Set both tokens in secure HttpOnly cookies
+            SetTokenCookies(accessToken, refreshToken);
 
+            // 3. Update the user record in the database with the new refresh token
             user.RefreshToken = refreshToken.Token;
             user.TokenCreated = refreshToken.Created;
             user.TokenExpires = refreshToken.Expires;
@@ -204,36 +107,31 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             await _userRepository.SaveChangesAsync();
 
-            return accessToken;
+            // 4. Return the UserDto, NOT the access token
+            return _mapper.Map<UserDto>(user);
         }
+
 
         public async Task Logout()
         {
+            // Your existing Logout logic is good, but let's make it more robust
+            // by clearing both cookies.
             var userIdString = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString))
+            if (!string.IsNullOrEmpty(userIdString) && Guid.TryParse(userIdString, out Guid userId))
             {
-                throw new Exception("User ID not found in token");
+                var user = await _userRepository.GetByIdAsync(userId); // Use repository
+                if (user != null)
+                {
+                    user.RefreshToken = null;
+                    user.TokenCreated = null;
+                    user.TokenExpires = null;
+                    user.Status = "Inactive";
+                    await _userRepository.SaveChangesAsync();
+                }
             }
 
-            var user = await _context.Users.FindAsync(Guid.Parse(userIdString));
-            if (user == null)
-            {
-                throw new Exception("User not found");
-            }
-
-            user.RefreshToken = null;
-            user.TokenCreated = new DateTime();
-            user.TokenExpires = new DateTime();
-            user.Status = "Inactive";
-
-            await _context.SaveChangesAsync();
-
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Expires = DateTime.UtcNow.AddDays(-1)
-            };
-            _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", "", cookieOptions);
+            // Clear the cookies from the browser
+            ClearTokenCookies();
         }
         #endregion
         #region Token Generations/Set
@@ -294,18 +192,41 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 Created = DateTime.Now
             };
         }
-        
 
-        private void SetRefreshTokenCookie(RefreshToken newRefreshToken)
+
+        private void SetTokenCookies(string accessToken, RefreshToken refreshToken)
         {
-            var cookieOptions = new CookieOptions
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            var isDevelopment = _env.IsDevelopment();
+
+            var accessTokenCookieOptions = new CookieOptions
             {
-                HttpOnly = true,
+                HttpOnly = !isDevelopment,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = newRefreshToken.Expires
+                Expires = DateTime.UtcNow.AddMinutes(15)
             };
-            _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
+            httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
+
+            var refreshTokenCookieOptions = new CookieOptions
+            {
+                HttpOnly = !isDevelopment,
+                Secure = true, // Ensure this is true in production
+                SameSite = SameSiteMode.Strict,
+                Expires = refreshToken.Expires
+            };
+            httpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, refreshTokenCookieOptions);
+        }
+        private void ClearTokenCookies()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            // To clear a cookie, you instruct the browser to delete it.
+            httpContext.Response.Cookies.Delete("accessToken");
+            httpContext.Response.Cookies.Delete("refreshToken");
         }
         #endregion
 

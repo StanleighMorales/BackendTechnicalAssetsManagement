@@ -11,7 +11,17 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
         {
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
-            {
+            { 
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        //read the token from the cookie.
+                        context.Token = context.Request.Cookies["accessToken"];
+                        return Task.CompletedTask;
+                    }
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
@@ -20,7 +30,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromSeconds(30) // TimeSpan.Zero
+                    ClockSkew = TimeSpan.Zero
                 };
             });
 

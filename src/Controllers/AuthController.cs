@@ -16,9 +16,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        public AuthController(IAuthService authService)
+        private readonly IWebHostEnvironment _env;
+        private readonly ILogger _logger;
+        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger logger)
         {
             _authService = authService;
+            _env = env;
+            _logger = logger;
         }
 
         /// <summary>
@@ -47,11 +51,18 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <param name="request">The user's login credentials (e.g., username and password).</param>
         /// <returns>An ApiResponse containing the JWT access token as a string.</returns>
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<string>>> Login(LoginUserDto request)
+        public async Task<ActionResult<ApiResponse<UserDto>>> Login(LoginUserDto request) // Change return type
         {
-            string accessToken = await _authService.Login(request);
-            var successResponse = ApiResponse<string>.SuccessResponse(accessToken, "Login Successful.");
-            return Ok(successResponse);
+            UserDto user = await _authService.Login(request);
+            var response = ApiResponse<UserDto>.SuccessResponse(user, "Login successful.");
+
+            // Optionally log or include debug info only in development
+            if (_env.IsDevelopment())
+            {
+                _logger.LogInformation("User {Email} logged in during development.", user.Email);
+            }
+
+            return Ok(response);
         }
 
         /// <summary>
