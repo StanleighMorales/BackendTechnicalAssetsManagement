@@ -101,7 +101,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Your SetTokenCookies method will need to accept the entity.
             SetTokenCookies(accessToken, refreshTokenEntity);
 
-            user.Status = "Active";
+            user.Status = "InActive";
             await _context.SaveChangesAsync(); // Save both user and new token.
 
             return _mapper.Map<UserDto>(user);

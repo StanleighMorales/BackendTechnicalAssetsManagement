@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251006162847_SeedData")]
+    partial class SeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,31 +80,31 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("b859a050-631c-4c35-b165-a85145662e54"),
+                            Id = new Guid("17ab667c-6223-4f3e-af98-def86d4df41b"),
                             Category = "Electronics",
                             Condition = "New",
-                            CreatedAt = new DateTime(2025, 10, 6, 16, 35, 19, 13, DateTimeKind.Utc).AddTicks(9220),
+                            CreatedAt = new DateTime(2025, 10, 6, 16, 28, 46, 846, DateTimeKind.Utc).AddTicks(3910),
                             Description = "High-performance laptop for students.",
                             ItemMake = "Dell",
                             ItemModel = "XPS 15",
                             ItemName = "Laptop",
                             ItemType = "Electronic",
                             SerialNumber = "SN123456",
-                            UpdatedAt = new DateTime(2025, 10, 6, 16, 35, 19, 13, DateTimeKind.Utc).AddTicks(9220)
+                            UpdatedAt = new DateTime(2025, 10, 6, 16, 28, 46, 846, DateTimeKind.Utc).AddTicks(3911)
                         },
                         new
                         {
-                            Id = new Guid("8cbe9212-f645-48ec-ad38-1f46a164bb8e"),
+                            Id = new Guid("44f49436-802a-4123-a7e3-56a6d6698f51"),
                             Category = "MediaEquipment",
                             Condition = "Good",
-                            CreatedAt = new DateTime(2025, 10, 6, 16, 35, 19, 13, DateTimeKind.Utc).AddTicks(9225),
+                            CreatedAt = new DateTime(2025, 10, 6, 16, 28, 46, 846, DateTimeKind.Utc).AddTicks(3916),
                             Description = "Portable projector for classroom use.",
                             ItemMake = "Epson",
                             ItemModel = "PowerLite 1781W",
                             ItemName = "Projector",
                             ItemType = "Electronic",
                             SerialNumber = "SN654321",
-                            UpdatedAt = new DateTime(2025, 10, 6, 16, 35, 19, 13, DateTimeKind.Utc).AddTicks(9226)
+                            UpdatedAt = new DateTime(2025, 10, 6, 16, 28, 46, 846, DateTimeKind.Utc).AddTicks(3916)
                         });
                 });
 
@@ -163,18 +166,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("6407e5d5-b669-41ea-9c80-ae3a77a2801e"),
+                            Id = new Guid("4246f7b7-9fc4-42c2-a76c-0149d66cee13"),
                             BorrowerFullName = "Peter Jones",
                             BorrowerRole = "Student",
-                            ItemId = new Guid("b859a050-631c-4c35-b165-a85145662e54"),
-                            LentAt = new DateTime(2025, 10, 6, 16, 35, 19, 13, DateTimeKind.Utc).AddTicks(9294),
+                            ItemId = new Guid("17ab667c-6223-4f3e-af98-def86d4df41b"),
+                            LentAt = new DateTime(2025, 10, 6, 16, 28, 46, 846, DateTimeKind.Utc).AddTicks(3997),
                             Remarks = "Borrowed",
                             Room = "Room 101",
                             StudentIdNumber = "2023-0001",
                             SubjectTimeSchedule = "MWF 10:00-11:00 AM",
                             TeacherFullName = "Mary Williams",
-                            TeacherId = new Guid("1636bb97-afcd-41a1-848b-c233dfa18b02"),
-                            UserId = new Guid("d50e3a99-5a6f-4252-95bb-92615e460d23")
+                            TeacherId = new Guid("d569775c-6b95-40c4-be66-15cfdebbf9c9"),
+                            UserId = new Guid("346f47a0-beb7-4582-9d4e-9132795ea136")
                         });
                 });
 
@@ -266,24 +269,24 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("4ac0d1ef-5215-4bf7-91d2-70f774848f1e"),
+                            Id = new Guid("1801f88e-918f-40f3-bf4e-4ac76484c45c"),
                             Email = "superadmin@example.com",
                             FirstName = "Super",
                             LastName = "Admin",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHZIJEyncO6f5OUnDawy1X9XtS6v4IJNpd5DAbWRL5IpNnoHdCf5BR6g/T5zlaMPrw==",
-                            Status = "",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIDZpIPp5QDoSU8KhzHfi05O70LaVthMRcBpDDQs/xR1IC4ZmBn59cMLHt/kqoDGBA==",
+                            Status = "Active",
                             UserRole = "SuperAdmin",
                             Username = "superadmin",
                             PhoneNumber = "999-999-9999"
                         },
                         new
                         {
-                            Id = new Guid("57258329-3957-4836-ab7e-1e88cb653a28"),
+                            Id = new Guid("deb6d5e4-9c80-4d8c-a0ab-038a6183c983"),
                             Email = "admin@gmail.com",
                             FirstName = "admin",
                             LastName = "admin",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHszbpaEq+0czhhGgObqjByQG5jvgyY/xYJJqChT1blmG56CU2DoMRUEDxNAFBGY4g==",
-                            Status = "",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJzXqsq8R3h5N6bH3hKgaGG2wB0bGZcNcZC4lG5/4lWzuHKY1biVz+cNOw1rL48CqQ==",
+                            Status = "Active",
                             UserRole = "Admin",
                             Username = "admin",
                             PhoneNumber = "123-456-7890"
@@ -305,12 +308,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("9017663a-bfc2-4992-9283-68f1f150f5bc"),
+                            Id = new Guid("4594b00d-9a8a-497f-8193-132def803275"),
                             Email = "staff@example.com",
                             FirstName = "Jane",
                             LastName = "Smith",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBp07o4v5NIgT8uVTMUNy0oWicdW37UQezm6cCdiq3zBMP6yBIk2515ORyPkEmvWjw==",
-                            Status = "",
+                            PasswordHash = "AQAAAAIAAYagAAAAELZHgzdFAxWmjzPRhWRweyULh9rQTT3vWlNSAMwPn0ZESCVBS0QarTJjKY140sRFAA==",
+                            Status = "Active",
                             UserRole = "Staff",
                             Username = "staff",
                             PhoneNumber = "098-765-4321",
@@ -371,12 +374,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d50e3a99-5a6f-4252-95bb-92615e460d23"),
+                            Id = new Guid("346f47a0-beb7-4582-9d4e-9132795ea136"),
                             Email = "student@example.com",
                             FirstName = "Peter",
                             LastName = "Jones",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPtUXxu9JusVhxgRLISGTe3G6AxjGBfYYPkw9Yv9VCLymjQpFIpuc4lkx59iXRXZqQ==",
-                            Status = "",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL8ABoVGUq3eaqfKm320Gcdg/9JVoMp5i8cCPL4O5y1rCPR9w27NLcdFdVvJPo59mQ==",
+                            Status = "Active",
                             UserRole = "Student",
                             Username = "student",
                             CityMunicipality = "Anytown",
@@ -406,12 +409,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("1636bb97-afcd-41a1-848b-c233dfa18b02"),
+                            Id = new Guid("d569775c-6b95-40c4-be66-15cfdebbf9c9"),
                             Email = "teacher@example.com",
                             FirstName = "Mary",
                             LastName = "Williams",
-                            PasswordHash = "AQAAAAIAAYagAAAAECfwNds9P07oWEVF+iKJUwUw0EN4rZ6mWSZ1yiSg6YTBmHUqzHtdZFawDb7GThTxXw==",
-                            Status = "",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFDaeC+8/CUAwZoMoKKe0I/bH+M048clO4El8Noo0J3/hXWFCdXIS0cOhtTCBr6b5Q==",
+                            Status = "Active",
                             UserRole = "Teacher",
                             Username = "teacher",
                             Department = "Information Technology",
