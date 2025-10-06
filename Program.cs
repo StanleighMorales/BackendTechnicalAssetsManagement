@@ -1,4 +1,5 @@
 using AutoMapper;
+using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -7,11 +8,11 @@ using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
-using DotNetEnv;
 
 Env.Load(); // Load .env file
 
@@ -91,6 +92,9 @@ builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 #endregion
+
+// Background Services
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 // Utilities
 builder.Services.AddScoped<ImageFileManager>();

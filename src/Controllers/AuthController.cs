@@ -17,8 +17,8 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IWebHostEnvironment _env;
-        private readonly ILogger _logger;
-        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger logger)
+        private readonly ILogger<AuthController> _logger;
+        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger)
         {
             _authService = authService;
             _env = env;

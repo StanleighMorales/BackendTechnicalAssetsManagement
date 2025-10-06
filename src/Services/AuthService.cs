@@ -2,10 +2,10 @@
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
+using BackendTechnicalAssetsManagement.src.Exceptions;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
-using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -92,67 +92,87 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("Invalid username or password.");
             }
 
-            // 1. Create both tokens
             string accessToken = CreateAccessToken(user);
-            var refreshToken = GenerateRefreshToken();
+            var refreshTokenEntity = GenerateRefreshToken();
 
-            // 2. Set both tokens in secure HttpOnly cookies
-            SetTokenCookies(accessToken, refreshToken);
+            refreshTokenEntity.UserId = user.Id;
+            await _context.RefreshTokens.AddAsync(refreshTokenEntity);
 
-            // 3. Update the user record in the database with the new refresh token
-            user.RefreshToken = refreshToken.Token;
-            user.TokenCreated = refreshToken.Created;
-            user.TokenExpires = refreshToken.Expires;
+            // Your SetTokenCookies method will need to accept the entity.
+            SetTokenCookies(accessToken, refreshTokenEntity);
+
             user.Status = "Active";
+            await _context.SaveChangesAsync(); // Save both user and new token.
 
-            await _userRepository.SaveChangesAsync();
-
-            // 4. Return the UserDto, NOT the access token
             return _mapper.Map<UserDto>(user);
         }
 
 
         public async Task Logout()
         {
-            // Your existing Logout logic is good, but let's make it more robust
-            // by clearing both cookies.
-            var userIdString = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userIdString) && Guid.TryParse(userIdString, out Guid userId))
+            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
             {
-                var user = await _userRepository.GetByIdAsync(userId); // Use repository
-                if (user != null)
-                {
-                    user.RefreshToken = null;
-                    user.TokenCreated = null;
-                    user.TokenExpires = null;
-                    user.Status = "Inactive";
-                    await _userRepository.SaveChangesAsync();
-                }
+                // If there's no token, there's nothing to do
+                return;
             }
 
-            // Clear the cookies from the browser
-            ClearTokenCookies();
+            var tokenEntity = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+            if (tokenEntity != null)
+            {
+                tokenEntity.IsRevoked = true;
+                tokenEntity.RevokedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
+            ClearTokenCookies(); // Your method to expire the cookies
         }
         #endregion
+
         #region Token Generations/Set
         public async Task<string> RefreshToken()
         {
             var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-
-            if (refreshToken is null)
+            if (string.IsNullOrEmpty(refreshToken))
             {
-                throw new Exception("Refresh token not found.");
+                throw new RefreshTokenException("Refresh token not found.");
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            // Find the token in the DB, including the user data
+            var tokenEntity = await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
-            if (user is null || user.RefreshToken != refreshToken || user.TokenExpires < DateTime.Now)
+            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
             {
-                throw new Exception("Invalid or expired refresh token.");
+                throw new RefreshTokenException("Invalid or expired refresh token.");
             }
 
+            // Revoke the old token
+            tokenEntity.IsRevoked = true;
+            tokenEntity.RevokedAt = DateTime.UtcNow;
+
+            // --- SIMPLIFIED CODE ---
+            var user = tokenEntity.User;
             string newAccessToken = CreateAccessToken(user);
+
+            // 1. Generate the new complete RefreshToken entity.
+            var newRefreshTokenEntity = GenerateRefreshToken();
+
+            // 2. Assign the UserId to it.
+            newRefreshTokenEntity.UserId = user.Id;
+
+            // 3. Add it to the database.
+            await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+
+            await _context.SaveChangesAsync();
+
+            SetTokenCookies(newAccessToken, newRefreshTokenEntity);
+
             return newAccessToken;
+
         }
 
         private string CreateAccessToken(User user)
@@ -176,7 +196,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(15),
+                expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: creds
             );
 
@@ -188,8 +208,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                Expires = DateTime.Now.AddDays(7),
-                Created = DateTime.Now
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -215,7 +235,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 HttpOnly = !isDevelopment,
                 Secure = true, // Ensure this is true in production
                 SameSite = SameSiteMode.Strict,
-                Expires = refreshToken.Expires
+                Expires = refreshToken.ExpiresAt
             };
             httpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, refreshTokenCookieOptions);
         }

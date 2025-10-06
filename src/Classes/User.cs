@@ -18,10 +18,12 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string FirstName { get; set; } = string.Empty;
 
         public string? Status { get; set; } = string.Empty;
-        public string? RefreshToken { get; set; }
-        public DateTime? TokenCreated { get; set; }
-        public DateTime? TokenExpires { get; set; }
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
     }
+    
+    
     public class Teacher : User
     {
         public string? PhoneNumber { get; set; }
