@@ -17,6 +17,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
 
+        public string? Status { get; set; } = string.Empty;
         public string? RefreshToken { get; set; }
         public DateTime? TokenCreated { get; set; }
         public DateTime? TokenExpires { get; set; }

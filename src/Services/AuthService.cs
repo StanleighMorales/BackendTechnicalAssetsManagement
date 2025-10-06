@@ -200,6 +200,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             user.RefreshToken = refreshToken.Token;
             user.TokenCreated = refreshToken.Created;
             user.TokenExpires = refreshToken.Expires;
+            user.Status = "Active";
 
             await _userRepository.SaveChangesAsync();
 
@@ -223,6 +224,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             user.RefreshToken = null;
             user.TokenCreated = new DateTime();
             user.TokenExpires = new DateTime();
+            user.Status = "Inactive";
 
             await _context.SaveChangesAsync();
 
