@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -101,7 +102,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Your SetTokenCookies method will need to accept the entity.
             SetTokenCookies(accessToken, refreshTokenEntity);
 
-            user.Status = "InActive";
+            user.Status = "Active";
             await _context.SaveChangesAsync(); // Save both user and new token.
 
             return _mapper.Map<UserDto>(user);
@@ -117,17 +118,29 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return;
             }
 
+            // Include the User entity when fetching the token
             var tokenEntity = await _context.RefreshTokens
+                .Include(rt => rt.User) // Eagerly load the related User
                 .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
             if (tokenEntity != null)
             {
+                // Revoke the token
                 tokenEntity.IsRevoked = true;
                 tokenEntity.RevokedAt = DateTime.UtcNow;
+
+                // Check if the user exists and update their status
+                if (tokenEntity.User != null)
+                {
+                    tokenEntity.User.Status = "Inactive";
+                }
+
+                // Save changes for both the token and the user status
                 await _context.SaveChangesAsync();
             }
 
-            ClearTokenCookies(); // Your method to expire the cookies
+            // Clear the cookies from the client's browser
+            ClearTokenCookies();
         }
         #endregion
 
