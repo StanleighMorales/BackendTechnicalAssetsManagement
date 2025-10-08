@@ -3,9 +3,14 @@ using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
+    /// <summary>
+    /// API controller for retrieving statistical summaries and dashboard data.
+    /// All endpoints in this controller require authorization for users who are Admins or Staff.
+    /// </summary>
     [ApiController]
     [Route("api/summary")]
     [Authorize(Policy = "AdminOrStaff")]
@@ -13,11 +18,24 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     {
         private readonly ISummaryService _summaryService;
 
-        // Our service is "injected" into the controller's constructor.
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SummaryController"/> class.
+        /// </summary>
+        /// <param name="summaryService">The summary service injected via dependency injection.</param>
         public SummaryController(ISummaryService summaryService)
         {
             _summaryService = summaryService;
         }
+
+        /// <summary>
+        /// Retrieves a high-level, overall summary of the system's core entities.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint provides the total counts for items, lending transactions, and active users.
+        /// <br/>
+        /// **Endpoint:** `GET /api/summary`
+        /// </remarks>
+        /// <returns>An ApiResponse containing the overall summary data.</returns>
         [HttpGet]
         public async Task<ActionResult<ApiResponse<SummaryDto>>> GetOverallSummary()
         {
@@ -26,8 +44,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
 
-        // Endpoint #1: Gets the item counts summary
-        // URL: GET api/summary/items
+        /// <summary>
+        /// Retrieves a detailed summary of all items, categorized by condition and type.
+        /// </summary>
+        /// <remarks>
+        /// **Endpoint:** `GET /api/summary/items`
+        /// </remarks>
+        /// <returns>An ApiResponse containing the detailed item summary.</returns>
         [HttpGet("items")]
         public async Task<ActionResult<ApiResponse<ItemCount>>> GetItemSummary()
         {
@@ -36,8 +59,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
 
-        // Endpoint #2: Gets the lent items summary
-        // URL: GET api/summary/lent-items
+        /// <summary>
+        /// Retrieves a detailed summary of lent items, including currently lent and returned counts.
+        /// </summary>
+        /// <remarks>
+        /// **Endpoint:** `GET /api/summary/lent-items`
+        /// </remarks>
+        /// <returns>An ApiResponse containing the detailed lending summary.</returns>
         [HttpGet("lent-items")]
         public async Task<ActionResult<ApiResponse<LentItemsCount>>> GetLentSummary()
         {
@@ -46,8 +74,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
 
-        // Endpoint #3: Gets the active users summary
-        // URL: GET api/summary/users
+        /// <summary>
+        /// Retrieves a detailed summary of all active users, categorized by role.
+        /// </summary>
+        /// <remarks>
+        /// **Endpoint:** `GET /api/summary/users`
+        /// </remarks>
+        /// <returns>An ApiResponse containing the detailed active user summary.</returns>
         [HttpGet("users")]
         public async Task<ActionResult<ApiResponse<ActiveUserCount>>> GetUserSummary()
         {
@@ -55,7 +88,5 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var response = ApiResponse<ActiveUserCount>.SuccessResponse(summary, "Active user summary retrieved successfully.");
             return Ok(response);
         }
-        
-
     }
 }

@@ -70,14 +70,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public string PostalCode { get; set; } = string.Empty;
     }
 
-    public class ActiveUserCount 
-    {
-        public int? TotalActiveUsers { get; set; }
-        public int? TotalActiveAdmins { get; set; }
-        public int? TotalActiveStaffs { get; set; }
-        public int? TotalActiveTeachers { get; set; }
-        public int? TotalActiveStudents { get; set; }
 
-    }
 
 }
