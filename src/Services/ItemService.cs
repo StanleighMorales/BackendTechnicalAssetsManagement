@@ -33,6 +33,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto)
         {
+            createItemDto.SerialNumber = $"SN-{createItemDto.SerialNumber}";
+
+            if (!createItemDto.SerialNumber.StartsWith("SN-"))
+            {
+                createItemDto.SerialNumber = $"SN-{createItemDto.SerialNumber}";
+            }
+
             // 1. Validate for duplicate serial number
             var existingItem = await _itemRepository.GetBySerialNumberAsync(createItemDto.SerialNumber);
             if (existingItem != null)

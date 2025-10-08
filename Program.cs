@@ -100,7 +100,6 @@ builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
 
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 #endregion
 
 // Background Services
