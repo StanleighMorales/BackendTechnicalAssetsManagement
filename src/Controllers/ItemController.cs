@@ -87,7 +87,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // DELETE: /api/item/5
-        [HttpDelete("{id}")]
+        [HttpDelete("archive{id}")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteItem(Guid id)
         {
             var success = await _itemService.DeleteItemAsync(id);

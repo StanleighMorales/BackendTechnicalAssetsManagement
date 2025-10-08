@@ -2,12 +2,14 @@
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [Route("api/v1/archiveitems")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ArchiveItemsController : ControllerBase
     {
         private readonly IArchiveItemsService _archiveItemsService;
@@ -52,7 +54,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// </summary>
         /// <param name="id">The ID of the archived item to restore.</param>
         /// <returns>The newly restored item.</returns>
-        [HttpPost("restore/{id}")]
+        [HttpDelete("restore/{id}")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> RestoreArchivedItem(Guid id)
         {
             var restoredItem = await _archiveItemsService.RestoreItemAsync(id);
