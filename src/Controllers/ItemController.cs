@@ -44,7 +44,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // POST: /api/item
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemDto createItemDto)
+        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // PUT: /api/item/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemDto updateItemDto)
+        public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemsDto updateItemDto)
         {
             try
             {
@@ -87,7 +87,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // DELETE: /api/item/5
-        [HttpDelete("{id}")]
+        [HttpDelete("archive{id}")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteItem(Guid id)
         {
             var success = await _itemService.DeleteItemAsync(id);

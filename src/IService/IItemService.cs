@@ -7,8 +7,9 @@ namespace BackendTechnicalAssetsManagement.src.IService
     {
         Task<IEnumerable<ItemDto>> GetAllItemsAsync();
         Task<ItemDto?> GetItemByIdAsync(Guid id);
-        Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto); // Consistent naming
-        Task<bool> UpdateItemAsync(Guid id, UpdateItemDto updateItemDto);
+        Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto); // Consistent naming
+        Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto);
         Task<bool> DeleteItemAsync(Guid id);
+
     }
 }

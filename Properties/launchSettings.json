@@ -14,12 +14,12 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "scalar",
-      "applicationUrl": "https://localhost:8080;http://localhost:8081",
+      "applicationUrl": "https://localhost:7265;http://localhost:5278",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "https": {
+    "httpss": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

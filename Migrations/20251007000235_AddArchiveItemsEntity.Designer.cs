@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251007000235_AddArchiveItemsEntity")]
+    partial class AddArchiveItemsEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,13 +31,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Condition")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Condition")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -78,6 +79,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Item", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
@@ -125,6 +127,36 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("Items");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6524a65c-9195-4132-9a21-86b6151feb60"),
+                            Category = "Electronics",
+                            Condition = "New",
+                            CreatedAt = new DateTime(2025, 10, 7, 0, 2, 34, 228, DateTimeKind.Utc).AddTicks(8625),
+                            Description = "High-performance laptop for students.",
+                            ItemMake = "Dell",
+                            ItemModel = "XPS 15",
+                            ItemName = "Laptop",
+                            ItemType = "Electronic",
+                            SerialNumber = "SN123456",
+                            UpdatedAt = new DateTime(2025, 10, 7, 0, 2, 34, 228, DateTimeKind.Utc).AddTicks(8625)
+                        },
+                        new
+                        {
+                            Id = new Guid("982cdd99-0219-4508-a342-6d55056ef784"),
+                            Category = "MediaEquipment",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2025, 10, 7, 0, 2, 34, 228, DateTimeKind.Utc).AddTicks(8634),
+                            Description = "Portable projector for classroom use.",
+                            ItemMake = "Epson",
+                            ItemModel = "PowerLite 1781W",
+                            ItemName = "Projector",
+                            ItemType = "Electronic",
+                            SerialNumber = "SN654321",
+                            UpdatedAt = new DateTime(2025, 10, 7, 0, 2, 34, 228, DateTimeKind.Utc).AddTicks(8635)
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>
@@ -181,6 +213,23 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("LentItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("98129664-1245-47ec-ba29-c479f2113665"),
+                            BorrowerFullName = "Peter Jones",
+                            BorrowerRole = "Student",
+                            ItemId = new Guid("6524a65c-9195-4132-9a21-86b6151feb60"),
+                            LentAt = new DateTime(2025, 10, 7, 0, 2, 34, 228, DateTimeKind.Utc).AddTicks(8725),
+                            Remarks = "Borrowed",
+                            Room = "Room 101",
+                            StudentIdNumber = "2023-0001",
+                            SubjectTimeSchedule = "MWF 10:00-11:00 AM",
+                            TeacherFullName = "Mary Williams",
+                            TeacherId = new Guid("6d91578b-2030-4c59-934e-4415f9d326ab"),
+                            UserId = new Guid("0a6dfab6-b88c-4038-a2e0-afecb682ee8d")
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RefreshToken", b =>
@@ -267,6 +316,32 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Admins", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("64e0d350-8f60-4455-9f84-99136f526fa5"),
+                            Email = "superadmin@example.com",
+                            FirstName = "Super",
+                            LastName = "Admin",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMUVt1ZKxWf3yedhOzHilgy8jVbqk11hok/ewXg9v1/SWkx0yMxBMvD1w+Ctr3I9tA==",
+                            Status = "",
+                            UserRole = "SuperAdmin",
+                            Username = "superadmin",
+                            PhoneNumber = "999-999-9999"
+                        },
+                        new
+                        {
+                            Id = new Guid("55393592-65bb-4df2-bcc8-8e8225f8732e"),
+                            Email = "admin@gmail.com",
+                            FirstName = "admin",
+                            LastName = "admin",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAG9aonrSvffnOZuk9v03IZTya/FSV9dRQb+4Mv/IcgpNGD455gn257OsV81fhD9hg==",
+                            Status = "",
+                            UserRole = "Admin",
+                            Username = "admin",
+                            PhoneNumber = "123-456-7890"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
@@ -280,6 +355,21 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Staff", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("94fd2f53-95e8-4782-82ac-a364942a4c84"),
+                            Email = "staff@example.com",
+                            FirstName = "Jane",
+                            LastName = "Smith",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHLgdQ8CVwSCsQnhQsC7JTMec7cZuI0J14JfGeQ4bggb4zR78hiKNmXmhFQHk2P3kg==",
+                            Status = "",
+                            UserRole = "Staff",
+                            Username = "staff",
+                            PhoneNumber = "098-765-4321",
+                            Position = "Lab Technician"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Student", b =>
@@ -331,6 +421,28 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Students", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0a6dfab6-b88c-4038-a2e0-afecb682ee8d"),
+                            Email = "student@example.com",
+                            FirstName = "Peter",
+                            LastName = "Jones",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAqak473FFcxcRYRA/YZ8FHjXjMDvstvWropMcXMnJjED4hcYRpYmhO3ePUgqkkKZQ==",
+                            Status = "",
+                            UserRole = "Student",
+                            Username = "student",
+                            CityMunicipality = "Anytown",
+                            Course = "Computer Science",
+                            PhoneNumber = "555-123-4567",
+                            PostalCode = "12345",
+                            Province = "Anyprovince",
+                            Section = "A",
+                            Street = "123 Main St",
+                            StudentIdNumber = "2023-0001",
+                            Year = "3"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Teacher", b =>
@@ -344,6 +456,21 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable("Teachers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6d91578b-2030-4c59-934e-4415f9d326ab"),
+                            Email = "teacher@example.com",
+                            FirstName = "Mary",
+                            LastName = "Williams",
+                            PasswordHash = "AQAAAAIAAYagAAAAENJubTz/gJibKZsciCUNdXhN0cC66jDetcO69NcOO5TOztgkf40lyENPxOh20LAgPw==",
+                            Status = "",
+                            UserRole = "Teacher",
+                            Username = "teacher",
+                            Department = "Information Technology",
+                            PhoneNumber = "555-987-6543"
+                        });
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>

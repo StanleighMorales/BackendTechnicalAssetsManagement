@@ -3,7 +3,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.DTOs.Item
 {
-    public class UpdateItemDto
+    public class UpdateItemsDto
     {
         public string? SerialNumber { get; set; } 
     
