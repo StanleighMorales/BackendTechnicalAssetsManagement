@@ -10,6 +10,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
 
         public string Email { get; set; } = string.Empty;
         public UserRole UserRole { get; set; }
+
+        public string? Status { get; set; } = string.Empty;
     }
 
     public class StaffDto : UserDto

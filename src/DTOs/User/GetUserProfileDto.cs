@@ -7,6 +7,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public UserRole UserRole { get; set; }
+        public string? Status { get; set; } = string.Empty;
 
     }
     public class GetStaffProfileDto : BaseProfileDto
