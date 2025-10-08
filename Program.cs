@@ -135,6 +135,15 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
     });
+    options.AddPolicy("AllowFlutterDev", policy =>
+    {
+        policy
+            .SetIsOriginAllowed(origin =>
+                new Uri(origin).Host == "localhost" || new Uri(origin).Host == "127.0.0.1")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 #endregion
 
@@ -162,7 +171,9 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 app.UseMiddleware<GlobalExceptionHandler>();
+
 app.UseCors("AllowReactApp");
+app.UseCors("AllowFlutterDev");
 
 app.UseStaticFiles();
 app.UseAuthentication();

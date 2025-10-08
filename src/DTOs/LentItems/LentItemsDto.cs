@@ -20,4 +20,10 @@
         public string Remarks { get; set; } = string.Empty;
 
     }
+    public class LentItemsCount
+    {
+        public int? TotalLentItems { get; set; }
+        public int? CurrentlyLentItems { get; set; }
+        public int? ReturnedLentItems { get; set; }
+    }
 }
