@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
-using Microsoft.IdentityModel.Tokens;
 using TechnicalAssetManagementApi.Dtos.Item;
 
 namespace BackendTechnicalAssetsManagement.src.Services
@@ -13,15 +13,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
     {
         private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
+        private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
         private readonly ImageFileManager _imageFileManager;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, ImageFileManager imageFileManager)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, ImageFileManager imageFileManager, IArchiveItemsService archiveItemsService)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
             _imageFileManager = imageFileManager;
+            _archiveItemsService = archiveItemsService;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -29,7 +31,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             public DuplicateSerialNumberException(string message) : base(message) { }
         }
 
-        public async Task<ItemDto> CreateItemAsync(CreateItemDto createItemDto)
+        public async Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto)
         {
             // 1. Validate for duplicate serial number
             var existingItem = await _itemRepository.GetBySerialNumberAsync(createItemDto.SerialNumber);
@@ -69,7 +71,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<ItemDto>(item);
         }
 
-        public async Task<bool> UpdateItemAsync(Guid id, UpdateItemDto updateItemDto)
+        public async Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto)
         {
             var existingItem = await _itemRepository.GetByIdAsync(id);
             if (existingItem == null)
@@ -97,16 +99,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         public async Task<bool> DeleteItemAsync(Guid id)
+        //TODO: Make sure that once deleted it will be pushed into the Item Archive
         {
             var itemToDelete = await _itemRepository.GetByIdAsync(id);
             if (itemToDelete == null) return false;
 
-            // We REMOVE the call to DeleteImage. It's not needed.
-            // The image bytes will be deleted from the database when the row is deleted.
+            //// We REMOVE the call to DeleteImage. It's not needed.
+            //// The image bytes will be deleted from the database when the row is deleted.
 
+            var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
+            await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
+
+            // 4. Delete the original item from the main table
             await _itemRepository.DeleteAsync(id);
+
+            // 5. Save the deletion change. This commits the removal of the item.
             return await _itemRepository.SaveChangesAsync();
+            //await _itemRepository.DeleteAsync(id);
+            //return await _itemRepository.SaveChangesAsync();
         }
         //Remove this after the Image validation is successfully working
+
+
     }
 }

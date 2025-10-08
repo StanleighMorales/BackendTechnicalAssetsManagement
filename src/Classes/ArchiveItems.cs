@@ -1,32 +1,27 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace TechnicalAssetManagementApi.Dtos.Item
+namespace BackendTechnicalAssetsManagement.src.Classes
 {
-    public class CreateItemDto
+    public class ArchiveItems
     {
-        [Required]
-        [StringLength(50, MinimumLength = 3)]
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
+        [ForeignKey("Id")]
+        public Guid ItemId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
-        public IFormFile? Image { get; set; }
-
-        [Required]
+        public byte[]? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
-
-        [Required]
         public string ItemType { get; set; } = string.Empty;
-
         public string? ItemModel { get; set; }
-
-        [Required]
         public string ItemMake { get; set; } = string.Empty;
-
         public string? Description { get; set; }
 
-        [Required]
         public ItemCategory Category { get; set; }
-
-        [Required]
         public ItemCondition Condition { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 }

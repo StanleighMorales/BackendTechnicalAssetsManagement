@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.Utils;
 using TechnicalAssetManagementApi.Dtos.Item;
@@ -17,11 +18,21 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                     src.Image != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.Image)}" : null));
 
             // When mapping from UpdateItemDto to Item, ignore the Image property
-            CreateMap<CreateItemDto, Item>()
+            CreateMap<CreateItemsDto, Item>()
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.Image)));
 
-            CreateMap<UpdateItemDto, Item>()
+            CreateMap<UpdateItemsDto, Item>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Item, CreateArchiveItemsDto>()
+                // Explicitly map the 'Id' from the source (Item) to 'ItemId' in the destination (DTO)
+                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.Id))
+
+                // Convert the 'Category' enum from the source to a string in the destination
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()))
+
+                // Convert the 'Condition' enum from the source to a string in the destination
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()));
 
         }
     }

@@ -225,7 +225,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 HttpOnly = !isDevelopment,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddMinutes(15)
             };
             httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
@@ -234,7 +234,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 HttpOnly = !isDevelopment,
                 Secure = true, // Ensure this is true in production
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = refreshToken.ExpiresAt
             };
             httpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, refreshTokenCookieOptions);

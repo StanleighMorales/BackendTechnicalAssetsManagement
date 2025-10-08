@@ -39,5 +39,11 @@
 		<EmbeddedResource Remove="Test\**" />
 		<None Remove="Test\**" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Content Remove="appsettings.Development.json" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="appsettings.Development.json" />
+	</ItemGroup>
 
 </Project>
