@@ -17,13 +17,4 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
-    public class ItemCount
-    {
-        public int? TotalItems { get; set; }
-        public int? NewItems { get; set; }
-        public int? GoodItems { get; set; }
-        public int? DefectiveItems { get; set; }
-        public int? RefurbishedItems { get; set; }
-        public int? NeedRepairItems { get; set; }
-    }
 }

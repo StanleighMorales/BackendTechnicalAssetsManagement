@@ -98,7 +98,7 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
-
+builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 #endregion
 
