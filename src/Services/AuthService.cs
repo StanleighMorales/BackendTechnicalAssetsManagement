@@ -71,6 +71,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     // Handle cases where the role is not supported or invalid
                     throw new ArgumentException("Invalid user role specified.");
             }
+            if (string.IsNullOrWhiteSpace(request.Password) ||
+                request.Password.Length < 8 ||
+                !request.Password.Any(char.IsUpper) ||
+                !request.Password.Any(char.IsLower) ||
+                !request.Password.Any(char.IsDigit) ||
+                !request.Password.Any(ch => "!@#$%^&*()_+-=[]{}|;':\",.<>?/`~".Contains(ch)))
+            {
+                throw new ArgumentException("Password must be at least 8 characters long, and include uppercase, lowercase, number, and special character.");
+            }
             newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
 
             await _userRepository.AddAsync( newUser );

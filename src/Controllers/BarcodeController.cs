@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 using ZXing;
 using ZXing.Common;
@@ -8,6 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/barcodes")]
+    [Authorize]
     public class BarcodeController : Controller
     {
         [HttpGet("{text}")]
