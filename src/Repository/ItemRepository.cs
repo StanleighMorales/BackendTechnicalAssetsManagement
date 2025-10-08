@@ -59,5 +59,9 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             _context.Items.Update(item);
             return Task.CompletedTask;
         }
+        public async Task AddRangeAsync(IEnumerable<Item> items)
+        {
+            await _context.Items.AddRangeAsync(items);
+        }
     }
 }

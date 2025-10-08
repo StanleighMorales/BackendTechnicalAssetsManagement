@@ -5,7 +5,11 @@ using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
+using ExcelDataReader;
+using System.Data;
+using System.Text;
 using TechnicalAssetManagementApi.Dtos.Item;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -126,7 +130,96 @@ namespace BackendTechnicalAssetsManagement.src.Services
             //return await _itemRepository.SaveChangesAsync();
         }
         //Remove this after the Image validation is successfully working
+        public async Task ImportItemsFromExcelAsync(IFormFile file)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            var itemsToCreate = new List<Item>();
+
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
+
+                using (var reader = ExcelReaderFactory.CreateReader(stream))
+                {
+                    var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                    {
+                        ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                        {
+                            UseHeaderRow = true // Assumes first row is the header
+                        }
+                    });
+
+                    if (result.Tables.Count > 0)
+                    {
+                        var dataTable = result.Tables[0];
+
+                        foreach (DataRow row in dataTable.Rows)
+                        {
+                            try
+                            {
+                                // --- Data Reading and Validation ---
+                                var serialNumber = row["SerialNumber"]?.ToString();
+
+                                // Basic validation: Skip row if essential data like SerialNumber is missing
+                                if (string.IsNullOrWhiteSpace(serialNumber))
+                                {
+                                    // Optional: Log a warning that a row was skipped
+                                    continue;
+                                }
+
+                                // Add the "SN-" prefix, similar to your CreateItemAsync logic
+                                if (!serialNumber.StartsWith("SN-"))
+                                {
+                                    serialNumber = $"SN-{serialNumber}";
+                                }
+                                var existingItem = await _itemRepository.GetBySerialNumberAsync(serialNumber);
+                                if (existingItem != null)
+                                {
+                                    // TODO: Log that a duplicate was found and skipped.
+                                    continue; 
+                                }
+                                var item = new Item
+                                {
+                                    Id = Guid.NewGuid(), // Generate new ID
+                                    SerialNumber = serialNumber,
+                                    ItemName = row["ItemName"]?.ToString() ?? string.Empty,
+                                    ItemType = row["ItemType"]?.ToString() ?? string.Empty,
+                                    ItemModel = row["ItemModel"]?.ToString(),
+                                    ItemMake = row["ItemMake"]?.ToString() ?? string.Empty,
+                                    Description = row["Description"]?.ToString(),
+
+                                    // Enum Parsing with validation
+                                    Category = Enum.TryParse<ItemCategory>(row["Category"]?.ToString(), true, out var category) ? category : default,
+                                    Condition = Enum.TryParse<ItemCondition>(row["Condition"]?.ToString(), true, out var condition) ? condition : default,
+
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow
+                                };
+                                itemsToCreate.Add(item);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Optional: Log an error for the specific row that failed
+                                // and continue processing the rest of the file.
+                                // For example: Console.WriteLine($"Error processing row: {ex.Message}");
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- Database Operation ---
+            // Now that we have the list, we save it to the database.
+            if (itemsToCreate.Any())
+            {
+                // We need to add a method to our repository to handle bulk inserts.
+                await _itemRepository.AddRangeAsync(itemsToCreate);
+                await _itemRepository.SaveChangesAsync();
+            }
+        }
 
     }
 }

@@ -49,5 +49,7 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         /// </summary>
         /// <returns>True if at least one change was successfully saved; otherwise, false.</returns>
         Task<bool> SaveChangesAsync();
+
+        Task AddRangeAsync(IEnumerable<Item> items);
     }
 }

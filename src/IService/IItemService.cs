@@ -11,5 +11,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto);
         Task<bool> DeleteItemAsync(Guid id);
 
+        Task ImportItemsFromExcelAsync(IFormFile file);
+
     }
 }

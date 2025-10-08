@@ -65,6 +65,25 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 return BadRequest(response);
             }
         }
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportItemsFromExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(ApiResponse<object>.FailResponse("No file uploaded."));
+            }
+
+            try
+            {
+                await _itemService.ImportItemsFromExcelAsync(file);
+                return Ok(ApiResponse<object>.SuccessResponse(null, "Items imported successfully."));
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (ex) here with a logging framework if you have one.
+                return StatusCode(500, ApiResponse<object>.FailResponse($"An error occurred during the import process: {ex.Message}"));
+            }
+        }
 
         // PUT: /api/item/5
         [HttpPut("{id}")]

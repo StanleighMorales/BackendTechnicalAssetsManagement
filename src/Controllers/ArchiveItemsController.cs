@@ -19,18 +19,12 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _archiveItemsService = archiveItemsService;
             _logger = logger;
         }
-        [HttpPost]
-        public async Task<ActionResult<ApiResponse<ArchiveItemsDto>>> ArchiveItem([FromBody] CreateArchiveItemsDto createArchiveItemsDto)
-        {
-            var archivedItem = await _archiveItemsService.CreateItemArchiveAsync(createArchiveItemsDto);
-            var response = ApiResponse<ArchiveItemsDto>.SuccessResponse(archivedItem, "Item archived successfully.");
-            return Ok(response);
-        }
         /// <summary>
         /// Retrieves all archived items.
         /// </summary>
         /// <returns>A list of archived items.</returns>
         [HttpGet]
+        [Authorize(Roles = "Staff")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ArchiveItemsDto>>>> GetAllItemArchives()
         {
             var archivedItems = await _archiveItemsService.GetAllItemArchivesAsync();
@@ -43,6 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <param name="id">The ID of the archived item to retrieve.</param>
         /// <returns>The requested archived item.</returns>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Staff")]
         public async Task<ActionResult<ApiResponse<ArchiveItemsDto?>>> GetArchivedItemById(Guid id)
         {
             var archivedItem = await _archiveItemsService.GetItemArchiveByIdAsync(id);
