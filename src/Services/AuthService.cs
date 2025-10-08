@@ -167,6 +167,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.UtcNow;
 
+            _context.Update(tokenEntity);
+
+
             // --- SIMPLIFIED CODE ---
             var user = tokenEntity.User;
             string newAccessToken = CreateAccessToken(user);
@@ -211,7 +214,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 signingCredentials: creds
             );
 

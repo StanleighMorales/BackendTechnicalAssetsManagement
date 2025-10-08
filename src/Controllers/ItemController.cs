@@ -2,6 +2,7 @@
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalAssetManagementApi.Dtos.Item;
 
@@ -9,6 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/items")]
+    [Authorize(Policy = "AdminOrStaff")]
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
@@ -88,6 +90,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // DELETE: /api/item/5
         [HttpDelete("archive{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteItem(Guid id)
         {
             var success = await _itemService.DeleteItemAsync(id);

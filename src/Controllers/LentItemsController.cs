@@ -2,12 +2,14 @@
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/lentItems")]
+    [Authorize(Policy = "AdminOrStaff")]
     public class LentItemsController : ControllerBase
     {
         private readonly ILentItemsService _service;

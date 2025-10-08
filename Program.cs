@@ -34,6 +34,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+// Add Authentication and Authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOrStaff", policy =>
+        policy.RequireRole("Admin", "Staff"));
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
@@ -68,6 +74,7 @@ builder.Services.AddSwaggerGen(options =>
             new string[]{}
         }
     });
+
 });
 #endregion
 
@@ -93,6 +100,7 @@ builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
 
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 #endregion
 
 // Background Services
