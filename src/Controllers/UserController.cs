@@ -52,10 +52,12 @@ public class UserController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAllUsers()
+    // Change the return type here to use 'object'
+    public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> GetAllUsers()
     {
         var users = await _userService.GetAllUsersAsync();
-        var response = ApiResponse<IEnumerable<UserDto>>.SuccessResponse(users, "Users retrieved successfully.");
+        // And also here when creating the response
+        var response = ApiResponse<IEnumerable<object>>.SuccessResponse(users, "Users retrieved successfully.");
         return Ok(response);
     }
 

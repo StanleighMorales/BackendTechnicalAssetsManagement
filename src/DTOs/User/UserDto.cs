@@ -12,30 +12,25 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public UserRole UserRole { get; set; }
 
         public string? Status { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+
     }
 
     public class StaffDto : UserDto
     {
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
 
         public string PhoneNumber {  get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
     }
     public class AdminDto : UserDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
     }
     public class TeacherDto : UserDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
     }
 
@@ -44,11 +39,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public string? FrontStudentIdPicture { get; set; }
         public string? BackStudentIdPicture { get; set; }
 
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
         [Required]
         public string StudentIdNumber { get; set; } = string.Empty;
         [Required]

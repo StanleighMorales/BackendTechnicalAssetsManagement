@@ -33,9 +33,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
-            var users = await _userRepository.GetAllAsync();
-            // This correctly maps a list of User entities to a list of UserDto objects.
-            return _mapper.Map<IEnumerable<UserDto>>(users);
+            // This now calls the repository method that returns the fully-formed DTOs.
+            // The mapping logic is correctly handled in the repository layer.
+            return await _userRepository.GetAllUserDtosAsync();
         }
 
         public async Task<UserDto?> GetUserByIdAsync(Guid id)
