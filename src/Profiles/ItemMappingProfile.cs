@@ -22,7 +22,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.Image)));
 
             CreateMap<UpdateItemsDto, Item>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                 // Add the explicit mapping for Image to handle the conversion and the null check
+                 .ForMember(dest => dest.Image, opt => opt.Ignore())
+                 // Keep the AllMembers condition for all other properties 
+                 // (it will apply to other properties that should only update if not null)
+                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Item, CreateArchiveItemsDto>()
                 // Explicitly map the 'Id' from the source (Item) to 'ItemId' in the destination (DTO)
