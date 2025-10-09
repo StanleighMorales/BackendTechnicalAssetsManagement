@@ -67,7 +67,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // PUT: /api/item/5
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemsDto updateItemDto)
         {
             try
