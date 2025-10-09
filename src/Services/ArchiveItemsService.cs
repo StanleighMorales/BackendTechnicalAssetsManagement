@@ -39,12 +39,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<bool> DeleteItemArchiveAsync(Guid id)
         {
-            var itemToDelete = _archiveItemRepository.GetItemArchiveByIdAsync(id);
+            // 1. Await the repository call to get the result (ArchiveItems or null)
+            var itemToDelete = await _archiveItemRepository.GetItemArchiveByIdAsync(id);
+
+            // 2. Check if the actual item is null
             if (itemToDelete == null)
             {
-                return false;
+                return false; // Item not found
             }
 
+            // 3. Proceed with deletion
+            await _archiveItemRepository.DeleteItemArchiveAsync(id);
+
+            // 4. Save changes and return true/false based on success (i.e., if rows were affected)
             return await _archiveItemRepository.SaveChangesAsync();
         }
 
