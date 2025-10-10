@@ -29,9 +29,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IUserRepository _userRepository;
         private readonly IUserValidationService _userValidationService;
         private readonly IWebHostEnvironment _env;
+        private readonly IDevelopmentLoggerService _developmentLoggerService;
 
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env, IDevelopmentLoggerService developmentLoggerService)
         {
             _context = context;
             _configuration = configuration;
@@ -41,6 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userValidationService = userValidationService;
             _mapper = mapper;
             _env = env;
+            _developmentLoggerService = developmentLoggerService;
         }
 
         public async Task<UserDto> Register(RegisterUserDto request)
@@ -98,19 +100,40 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 throw new Exception("Invalid username or password.");
             }
+
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
                 throw new Exception("Invalid username or password.");
             }
 
+            // Revoke any existing refresh tokens for security
+            var existingTokens = await _context.RefreshTokens
+                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                                            .ToListAsync();
+            foreach (var token in existingTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
             string accessToken = CreateAccessToken(user);
             var refreshTokenEntity = GenerateRefreshToken();
-
             refreshTokenEntity.UserId = user.Id;
+
+            // Store the refresh token in the database only (server-side)
             await _context.RefreshTokens.AddAsync(refreshTokenEntity);
 
-            // Your SetTokenCookies method will need to accept the entity.
-            SetTokenCookies(accessToken, refreshTokenEntity);
+            // Set ONLY the access token cookie
+            SetAccessTokenCookie(accessToken);
+            //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(15), "ACCESS");
+            if (_env.IsDevelopment())
+            {
+                // Token is created with 15 minutes expiry. Cookie is set with 5 minutes expiry.
+                // We log the *actual* token expiry time (15m) for the warning.
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
+
+
 
             user.Status = "Online";
             await _context.SaveChangesAsync(); // Save both user and new token.
@@ -118,20 +141,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<UserDto>(user);
         }
 
-
         public async Task Logout()
         {
-            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
+            var userId = GetUserIdFromClaims();
+
+            if (userId == Guid.Empty)
             {
-                // If there's no token, there's nothing to do
+                // User is not authenticated via accessToken, nothing to do.
+                ClearAccessTokenCookie();
                 return;
             }
 
-            // Include the User entity when fetching the token
+            // Find the active refresh token for the user and revoke it.
+            // We assume the latest unrevoked token is the current one.
             var tokenEntity = await _context.RefreshTokens
-                .Include(rt => rt.User) // Eagerly load the related User
-                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+                .Include(rt => rt.User)
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .OrderByDescending(rt => rt.CreatedAt)
+                .FirstOrDefaultAsync();
 
             if (tokenEntity != null)
             {
@@ -149,56 +176,71 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 await _context.SaveChangesAsync();
             }
 
-            // Clear the cookies from the client's browser
-            ClearTokenCookies();
+            // Clear the access token cookie from the client's browser
+            ClearAccessTokenCookie();
         }
         #endregion
 
         #region Token Generations/Set
         public async Task<string> RefreshToken()
         {
-            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
+            // 1. Get UserId from the current (possibly expired but containing claims) access token
+            var userId = GetUserIdFromClaims();
+
+            if (userId == Guid.Empty)
             {
-                throw new RefreshTokenException("Refresh token not found.");
+                // This means the access token is missing, structurally invalid, or the claims are unreadable.
+                throw new RefreshTokenException("User not authenticated or access token invalid.");
             }
 
-            // Find the token in the DB, including the user data
+            // 2. Find the latest unrevoked refresh token for this user in the DB
+            // We include the User entity to use it later without another DB call
             var tokenEntity = await _context.RefreshTokens
                 .Include(rt => rt.User)
-                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .OrderByDescending(rt => rt.CreatedAt)
+                .FirstOrDefaultAsync();
 
-            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
+            // 3. Check token validity
+            if (tokenEntity == null || tokenEntity.ExpiresAt < DateTime.UtcNow)
             {
-                throw new RefreshTokenException("Invalid or expired refresh token.");
+                // If the token is missing or expired, the session is over.
+                throw new RefreshTokenException("Invalid or expired session. Please log in again.");
             }
 
-            // Revoke the old token
+            var user = tokenEntity.User;
+            if (user == null)
+            {
+                // Should not happen if foreign key is correctly set, but good defensive programming.
+                throw new RefreshTokenException("Associated user not found for refresh token.");
+            }
+
+            // --- TOKEN ROTATION & RENEWAL ---
+
+            // 4. Revoke the old refresh token (Security: Token Rotation)
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.UtcNow;
-
             _context.Update(tokenEntity);
 
-
-            // --- SIMPLIFIED CODE ---
-            var user = tokenEntity.User;
             string newAccessToken = CreateAccessToken(user);
-
-            // 1. Generate the new complete RefreshToken entity.
             var newRefreshTokenEntity = GenerateRefreshToken();
-
-            // 2. Assign the UserId to it.
             newRefreshTokenEntity.UserId = user.Id;
 
-            // 3. Add it to the database.
+            // 6. Add the new refresh token to the database
             await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
 
+            // 7. Save both changes (only new token is saved now)
             await _context.SaveChangesAsync();
 
-            SetTokenCookies(newAccessToken, newRefreshTokenEntity);
+            // 8. Set the new access token cookie
+            SetAccessTokenCookie(newAccessToken);
+            //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(5), "ACCESS");
+            if (_env.IsDevelopment())
+            {
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
 
             return newAccessToken;
-
         }
 
         private string CreateAccessToken(User user)
@@ -206,17 +248,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-
                 new Claim(ClaimTypes.Name, user.Username),
-
                 new Claim(ClaimTypes.Role, user.UserRole.ToString()),
-
-
             };
+
             if (!string.IsNullOrEmpty(user.Email))
             {
                 claims.Add(new Claim(ClaimTypes.Email, user.Email));
             }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value!));
 
@@ -224,25 +264,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
+                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
+
                 signingCredentials: creds
             );
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             return jwt;
         }
+
         private RefreshToken GenerateRefreshToken()
         {
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = DateTime.UtcNow.AddDays(7), // You might want to make this configurable
                 CreatedAt = DateTime.UtcNow
             };
         }
 
-
-        private void SetTokenCookies(string accessToken, RefreshToken refreshToken)
+        private void SetAccessTokenCookie(string accessToken)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
@@ -251,30 +293,47 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var accessTokenCookieOptions = new CookieOptions
             {
-                HttpOnly = !isDevelopment,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddMinutes(15)
-            };
-            httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
+                HttpOnly = !isDevelopment, // Keep HttpOnly logic based on environment
+                //Secure = true,             // Ensure this is true in production
+                //SameSite = SameSiteMode.None,
+                Secure = false,
+                SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
+                //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
+                Expires = DateTime.UtcNow.AddMinutes(5) // Access Token expiry time
 
-            var refreshTokenCookieOptions = new CookieOptions
-            {
-                HttpOnly = !isDevelopment,
-                Secure = true, // Ensure this is true in production
-                SameSite = SameSiteMode.None,
-                Expires = refreshToken.ExpiresAt
             };
-            httpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, refreshTokenCookieOptions);
+
+            httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
         }
-        private void ClearTokenCookies()
+
+        private void ClearAccessTokenCookie()
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
 
             // To clear a cookie, you instruct the browser to delete it.
+            // The default options are usually enough to delete, but specifying the path/domain/samesite might be needed if they were used when setting.
+            // Using Delete with no options will generally work for simple cookies.
             httpContext.Response.Cookies.Delete("accessToken");
-            httpContext.Response.Cookies.Delete("refreshToken");
+        }
+
+        /// <summary>
+        /// Extracts the UserId from the claims of the currently authenticated user (from the accessToken).
+        /// </summary>
+        /// <returns>The UserId Guid, or Guid.Empty if not found.</returns>
+        private Guid GetUserIdFromClaims()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return Guid.Empty;
+
+            var userIdClaim = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                return userId;
+            }
+
+            return Guid.Empty;
         }
         #endregion
 

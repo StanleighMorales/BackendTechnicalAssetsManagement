@@ -100,6 +100,8 @@ builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
+
+builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
 #endregion
 
 // Background Services
@@ -177,6 +179,7 @@ app.UseCors("AllowFlutterDev");
 
 app.UseStaticFiles();
 app.UseAuthentication();
+app.UseRefreshTokenMiddleware();
 app.UseAuthorization();
 app.MapControllers();
 
