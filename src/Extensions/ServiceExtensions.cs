@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -16,8 +17,15 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 {
                     OnMessageReceived = context =>
                     {
-                        //read the token from the cookie.
-                        context.Token = context.Request.Cookies["accessToken"];
+                        //read the token from the cookie
+                        var accessToken = context.Request.Cookies["accessToken"];
+
+
+                        if (!string.IsNullOrEmpty(accessToken)) // Check the local variable
+                        {
+                            context.Token = accessToken; // Assign the token
+                        }
+
                         return Task.CompletedTask;
                     }
                 };
@@ -29,7 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     configuration.GetSection("AppSettings:Token").Value!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateLifetime = true,
+                    ValidateLifetime = false,
                     ClockSkew = TimeSpan.Zero
                 };
             });
