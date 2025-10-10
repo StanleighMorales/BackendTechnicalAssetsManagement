@@ -4,35 +4,31 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 {
     public class BaseProfileDto
     {
+        public Guid Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+
         public UserRole UserRole { get; set; }
         public string? Status { get; set; } = string.Empty;
 
     }
     public class GetStaffProfileDto : BaseProfileDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
 
         public string PhoneNumber { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
     }
     public class GetAdminProfileDto : BaseProfileDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-
         public string PhoneNumber { get; set; } = string.Empty;
     }
 
     public class GetTeacherProfileDto : BaseProfileDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
     }
     public class GetStudentProfileDto : BaseProfileDto
@@ -41,9 +37,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? FrontStudentIdPicture { get; set; }
         public string? BackStudentIdPicture { get; set; }
 
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string StudentIdNumber { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public string Course { get; set; } = string.Empty;

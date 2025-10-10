@@ -41,22 +41,56 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // --- Specific Profile Mappings (for GetMyProfile endpoint) ---
             CreateMap<User, BaseProfileDto>()
-                .Include<Student, GetStudentProfileDto>()
-                .Include<Teacher, GetTeacherProfileDto>()
-                .Include<Staff, GetStaffProfileDto>()
-                .Include<Admin, GetAdminProfileDto>();
+             // REMOVE THIS LINE: .Include<Student, GetStudentProfileDto>()
+             .Include<Teacher, GetTeacherProfileDto>()
+             .Include<Staff, GetStaffProfileDto>()
+             .Include<Admin, GetAdminProfileDto>();
 
+            //CreateMap<Student, GetStudentProfileDto>()
+            //    .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
+            //        src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
+            //    .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+            //        src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
+            //    .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
+            //        src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
             CreateMap<Student, GetStudentProfileDto>()
+                // 1. Force it to include the base mapping
+                .IncludeBase<User, BaseProfileDto>()
+
+                // 2. Explicitly map the image properties with custom logic (THIS IS FINE)
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
                 .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
+                    src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null))
 
-            CreateMap<Teacher, GetTeacherProfileDto>();
-            CreateMap<Staff, GetStaffProfileDto>();
-            CreateMap<Admin, GetAdminProfileDto>();
+                // 3. Explicitly map ALL derived properties
+                // Because the Entity properties have `= string.Empty` (are non-nullable at runtime),
+                // we should use a simple MapFrom and let the entity's non-nullable nature handle the default value.
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
+                .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
+                .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
+                .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
+                .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
+                .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode));
+
+            // The other derived maps should look similar (just with their specific fields):
+            CreateMap<Teacher, GetTeacherProfileDto>()
+                .IncludeBase<User, BaseProfileDto>()
+                .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department));
+
+            CreateMap<Staff, GetStaffProfileDto>()
+                .IncludeBase<User, BaseProfileDto>()
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
+                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position));
+
+            CreateMap<Admin, GetAdminProfileDto>()
+                .IncludeBase<User, BaseProfileDto>()
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
 
             #endregion
 

@@ -1,8 +1,9 @@
-﻿using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
-using AutoMapper;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService
@@ -20,14 +21,34 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
         {
+            // 1. Fetch the user object (it will be the derived type: Student, Teacher, etc.)
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                // Return null, the controller will create the 404 response.
-                return null;
+                return null; // Not found
             }
-            // AutoMapper is smart enough to see that 'user' is a Student (or Teacher, etc.)
-            // and will use the correct mapping to create a GetStudentProfileDto.
+
+            // 2. Explicitly check the runtime type and map to the specific DTO.
+            // This circumvents the occasional failure of AutoMapper's runtime polymorphism.
+            if (user is Student student)
+            {
+                return _mapper.Map<GetStudentProfileDto>(student);
+            }
+            else if (user is Teacher teacher)
+            {
+                return _mapper.Map<GetTeacherProfileDto>(teacher);
+            }
+            else if (user is Staff staff)
+            {
+                return _mapper.Map<GetStaffProfileDto>(staff);
+            }
+            else if (user is Admin admin)
+            {
+                return _mapper.Map<GetAdminProfileDto>(admin);
+            }
+
+            // Fallback: If the user is a base User or an unknown type, map to the base profile DTO.
+            // This is less likely to happen in a TPH setup, but is a safe fallback.
             return _mapper.Map<BaseProfileDto>(user);
         }
 

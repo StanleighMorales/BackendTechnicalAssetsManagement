@@ -27,26 +27,30 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("me")]
-    // FIX: The signature now correctly promises a BaseProfileDto for better documentation.
-    public async Task<ActionResult<ApiResponse<BaseProfileDto>>> GetMyProfile()
+    // FIX: Change the generic type from BaseProfileDto to object
+    public async Task<ActionResult<ApiResponse<object>>> GetMyProfile()
     {
-        // FIX: Removed the local try-catch. Let the service return null for "not found"
-        // and let the global middleware handle any unexpected errors.
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdString))
         {
-            var response = ApiResponse<BaseProfileDto>.FailResponse("Invalid Token.");
+            // Change FailResponse to use object generic type
+            var response = ApiResponse<object>.FailResponse("Invalid Token.");
             return Unauthorized(response);
         }
 
+        // userProfile is the concrete derived DTO (e.g., GetStudentProfileDto)
         var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
         if (userProfile == null)
         {
-            var notFoundResponse = ApiResponse<BaseProfileDto>.FailResponse("User profile not found.");
+            // Change FailResponse to use object generic type
+            var notFoundResponse = ApiResponse<object>.FailResponse("User profile not found.");
             return NotFound(notFoundResponse);
         }
 
-        var successResponse = ApiResponse<BaseProfileDto>.SuccessResponse(userProfile, "User profile retrieved successfully.");
+        // Change SuccessResponse to use object generic type
+        var successResponse = ApiResponse<object>.SuccessResponse(userProfile, "User profile retrieved successfully.");
+
+        // The ActionResult return type must also match the object generic type
         return Ok(successResponse);
     }
 
