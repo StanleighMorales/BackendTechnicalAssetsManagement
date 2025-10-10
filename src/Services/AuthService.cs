@@ -92,6 +92,54 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         #region Login/Logout
+        //public async Task<UserDto> Login(LoginUserDto loginDto)
+        //{
+        //    var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
+
+        //    if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+        //    {
+        //        throw new Exception("Invalid username or password.");
+        //    }
+
+        //    if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
+        //    {
+        //        throw new Exception("Invalid username or password.");
+        //    }
+
+        //    // Revoke any existing refresh tokens for security
+        //    var existingTokens = await _context.RefreshTokens
+        //                                    .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+        //                                    .ToListAsync();
+        //    foreach (var token in existingTokens)
+        //    {
+        //        token.IsRevoked = true;
+        //        token.RevokedAt = DateTime.UtcNow;
+        //    }
+
+        //    string accessToken = CreateAccessToken(user);
+        //    var refreshTokenEntity = GenerateRefreshToken();
+        //    refreshTokenEntity.UserId = user.Id;
+
+        //    // Store the refresh token in the database only (server-side)
+        //    await _context.RefreshTokens.AddAsync(refreshTokenEntity);
+
+        //    // Set ONLY the access token cookie
+        //    SetAccessTokenCookie(accessToken);
+        //    //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(15), "ACCESS");
+        //    if (_env.IsDevelopment())
+        //    {
+        //        // Token is created with 15 minutes expiry. Cookie is set with 5 minutes expiry.
+        //        // We log the *actual* token expiry time (15m) for the warning.
+        //        _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+        //    }
+
+
+
+        //    user.Status = "Online";
+        //    await _context.SaveChangesAsync(); // Save both user and new token.
+
+        //    return _mapper.Map<UserDto>(user);
+        //}
         public async Task<UserDto> Login(LoginUserDto loginDto)
         {
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
@@ -100,13 +148,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 throw new Exception("Invalid username or password.");
             }
-
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
                 throw new Exception("Invalid username or password.");
             }
 
-            // Revoke any existing refresh tokens for security
+            // Revoke any existing refresh tokens for security (common to both)
             var existingTokens = await _context.RefreshTokens
                                             .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
                                             .ToListAsync();
@@ -116,29 +163,64 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 token.RevokedAt = DateTime.UtcNow;
             }
 
-            string accessToken = CreateAccessToken(user);
-            var refreshTokenEntity = GenerateRefreshToken();
-            refreshTokenEntity.UserId = user.Id;
+            // --- SHARED LOGIC ---
+            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
 
-            // Store the refresh token in the database only (server-side)
-            await _context.RefreshTokens.AddAsync(refreshTokenEntity);
-
-            // Set ONLY the access token cookie
+            // --- WEB-SPECIFIC ACTION: Set Cookie ---
             SetAccessTokenCookie(accessToken);
-            //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(15), "ACCESS");
             if (_env.IsDevelopment())
             {
-                // Token is created with 15 minutes expiry. Cookie is set with 5 minutes expiry.
-                // We log the *actual* token expiry time (15m) for the warning.
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
             }
 
-
-
             user.Status = "Online";
-            await _context.SaveChangesAsync(); // Save both user and new token.
+            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
 
             return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<MobileLoginResponseDto> LoginMobile(LoginUserDto loginDto)
+        {
+            var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            {
+                throw new Exception("Invalid username or password.");
+            }
+            if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
+            {
+                throw new Exception("Invalid username or password.");
+            }
+
+            // Revoke any existing refresh tokens for security (common to both)
+            var existingTokens = await _context.RefreshTokens
+                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                                            .ToListAsync();
+            foreach (var token in existingTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
+            // --- SHARED LOGIC ---
+            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
+
+            // --- MOBILE-SPECIFIC ACTION: No cookie, just update status and save ---
+            user.Status = "Online";
+            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+
+            if (_env.IsDevelopment())
+            {
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
+
+            // --- MOBILE-SPECIFIC RESPONSE: Return DTO with tokens in JSON body ---
+            return new MobileLoginResponseDto
+            {
+                User = _mapper.Map<UserDto>(user),
+                AccessToken = accessToken,
+                RefreshToken = refreshTokenEntity.Token
+            };
         }
 
         public async Task Logout()
@@ -182,6 +264,69 @@ namespace BackendTechnicalAssetsManagement.src.Services
         #endregion
 
         #region Token Generations/Set
+        private (string accessToken, RefreshToken refreshTokenEntity) GenerateAndPersistTokens(User user)
+        {
+            string accessToken = CreateAccessToken(user);
+            var refreshTokenEntity = GenerateRefreshToken();
+
+            // 1. Link the Refresh Token to the user
+            refreshTokenEntity.UserId = user.Id;
+
+            // 2. Add the refresh token to the database context (will be saved later)
+            _context.RefreshTokens.Add(refreshTokenEntity);
+
+            return (accessToken, refreshTokenEntity);
+        }
+
+        public async Task<MobileLoginResponseDto> RefreshTokenMobile(string refreshToken)
+        {
+            // 1. Find the tokenEntity using the 'refreshToken' string passed in
+            var tokenEntity = await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+            // 2. Perform validity checks
+            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new RefreshTokenException("Invalid or expired refresh token.");
+            }
+
+            var user = tokenEntity.User;
+            if (user == null)
+            {
+                throw new RefreshTokenException("Associated user not found for refresh token.");
+            }
+
+            // --- CORE LOGIC: TOKEN ROTATION ---
+
+            // 3. Revoke the old refresh token (Security: Token Rotation)
+            tokenEntity.IsRevoked = true;
+            tokenEntity.RevokedAt = DateTime.UtcNow;
+            _context.Update(tokenEntity);
+
+            // 4. Generate new tokens
+            string newAccessToken = CreateAccessToken(user);
+            var newRefreshTokenEntity = GenerateRefreshToken();
+            newRefreshTokenEntity.UserId = user.Id;
+
+            // 5. Add the new refresh token to the database
+            await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+
+            // 6. Save all changes (old token revoked, new token added)
+            await _context.SaveChangesAsync();
+
+            // --- END CORE LOGIC ---
+
+            // 7. Return the new tokens in the DTO
+            return new MobileLoginResponseDto
+            {
+                User = _mapper.Map<UserDto>(user),
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshTokenEntity.Token
+            };
+        }
+
+
         public async Task<string> RefreshToken()
         {
             // 1. Get UserId from the current (possibly expired but containing claims) access token

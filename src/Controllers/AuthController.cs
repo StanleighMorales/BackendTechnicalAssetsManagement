@@ -64,6 +64,25 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return Ok(response);
         }
+        /// <summary>
+        /// Authenticates a user and returns a JSON Web Token (JWT) and Refresh Token in the response body.
+        /// Intended for use by mobile applications or pure API clients.
+        /// </summary>
+        /// <param name="request">The user's login credentials (e.g., username and password).</param>
+        /// <returns>An ApiResponse containing the user data, access token, and refresh token.</returns>
+        [HttpPost("login-mobile")]
+        public async Task<ActionResult<ApiResponse<MobileLoginResponseDto>>> LoginMobile(LoginUserDto request)
+        {
+            var data = await _authService.LoginMobile(request);
+            var response = ApiResponse<MobileLoginResponseDto>.SuccessResponse(data, "Mobile login successful.");
+
+            if (_env.IsDevelopment())
+            {
+                _logger.LogInformation("User {Email} logged in via mobile endpoint.", data.User.Email);
+            }
+
+            return Ok(response);
+        }
 
         /// <summary>
         /// Logs out the currently authenticated user.
@@ -93,6 +112,20 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             var newAccessToken = await _authService.RefreshToken();
             var successResponse = ApiResponse<string>.SuccessResponse(newAccessToken, "Token Refreshed Successfully.");
+            return Ok(successResponse);
+        }
+
+        /// <summary>
+        /// Generates a new access token and a new refresh token using a valid refresh token from the request body.
+        /// Intended for use by mobile applications or pure API clients.
+        /// </summary>
+        /// <param name="request">The RefreshTokenRequestDto containing the Refresh Token string.</param>
+        /// <returns>An ApiResponse containing a new Access Token and a new Refresh Token.</returns>
+        [HttpPost("refresh-token-mobile")] // <-- MOBILE refresh token endpoint (uses JSON body)
+        public async Task<ActionResult<ApiResponse<MobileLoginResponseDto>>> RefreshTokenMobile([FromBody] RefreshTokenDto request)
+        {
+            var data = await _authService.RefreshTokenMobile(request.RefreshToken);
+            var successResponse = ApiResponse<MobileLoginResponseDto>.SuccessResponse(data, "Token Refreshed Successfully.");
             return Ok(successResponse);
         }
         #endregion
