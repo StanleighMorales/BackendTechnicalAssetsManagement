@@ -16,6 +16,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public async Task<LentItems> AddAsync(LentItems lentItem)
         {
             await _context.LentItems.AddAsync(lentItem);
+
             return lentItem;
         }
 
@@ -24,6 +25,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.LentItems
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
+                .Include(li => li.Item)
                 .ToListAsync();
 
         }
@@ -33,6 +35,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.LentItems
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
+                .Include(li => li.Item)
                 .FirstOrDefaultAsync(li => li.LentAt == dateTime);
         }
 
@@ -41,6 +44,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.LentItems
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
+                .Include(li => li.Item)
                 .FirstOrDefaultAsync(li => li.Id == id);
         }
 

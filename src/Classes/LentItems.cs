@@ -1,10 +1,14 @@
-﻿namespace BackendTechnicalAssetsManagement.src.Classes
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+
+namespace BackendTechnicalAssetsManagement.src.Classes
 {
     public class LentItems
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public Guid ItemId { get; set; }
+        public Item? Item { get; set; }
+        public string ItemName { get; set; } = string.Empty;
 
         public Guid? UserId { get; set; }
         public User? User { get; set; }
@@ -24,7 +28,8 @@
         public DateTime LentAt { get; set; } = DateTime.Now;
         public DateTime? ReturnedAt { get; set; }
 
-        public string Remarks { get; set; } = string.Empty;
+        public string? Status { get; set; }// Possible values: "Lent", "Returned"
+        public string? Remarks { get; set; } 
 
     }
 }

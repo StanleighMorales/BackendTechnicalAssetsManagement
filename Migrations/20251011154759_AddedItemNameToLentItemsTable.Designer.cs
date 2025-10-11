@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251011154759_AddedItemNameToLentItemsTable")]
+    partial class AddedItemNameToLentItemsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,13 +148,13 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ItemName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LentAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Remarks")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ReturnedAt")
@@ -159,9 +162,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<string>("Room")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StudentIdNumber")
@@ -181,8 +181,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
 
                     b.HasIndex("TeacherId");
 
@@ -356,12 +354,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Teacher", "Teacher")
                         .WithMany()
                         .HasForeignKey("TeacherId");
@@ -369,8 +361,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
-
-                    b.Navigation("Item");
 
                     b.Navigation("Teacher");
 

@@ -6,7 +6,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
     {
         [Required]
         public Guid ItemId { get; set; }
-
+        [Required] public string ItemName { get; set; }
         [Required]
         public string BorrowerFirstName { get; set; } = string.Empty;
 
@@ -26,6 +26,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
         public string Remarks { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
 
 
         public string? StudentIdNumber { get; set; }

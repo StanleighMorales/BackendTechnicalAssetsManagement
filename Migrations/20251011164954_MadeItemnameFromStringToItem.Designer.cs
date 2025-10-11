@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251011164954_MadeItemnameFromStringToItem")]
+    partial class MadeItemnameFromStringToItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,10 +146,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LentAt")
                         .HasColumnType("datetime2");
@@ -356,7 +355,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.LentItems", b =>
                 {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "Item")
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "ItemName")
                         .WithMany()
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -370,7 +369,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .WithMany()
                         .HasForeignKey("UserId");
 
-                    b.Navigation("Item");
+                    b.Navigation("ItemName");
 
                     b.Navigation("Teacher");
 
