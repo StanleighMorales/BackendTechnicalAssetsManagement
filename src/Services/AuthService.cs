@@ -444,7 +444,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 Secure = false,
                 SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
                 //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
-                Expires = DateTime.UtcNow.AddMinutes(5) // Access Token expiry time
+                Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
 
             };
 
