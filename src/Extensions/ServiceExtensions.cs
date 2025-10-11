@@ -38,7 +38,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                         // 2. If no token in the header, try to read from the cookie (Web clients)
                         if (string.IsNullOrEmpty(token))
                         {
-                            token = context.Request.Cookies["accessToken"];
+                            token = context.Request.Cookies["4CLC-XSRF-TOKEN"];
                         }
 
                         // 3. Assign the found token for validation
@@ -47,17 +47,17 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                         return Task.CompletedTask;
                     }
                 };
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                    configuration.GetSection("AppSettings:Token").Value!)),
+                   configuration.GetSection("AppSettings:Token").Value!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateLifetime = true, //if somethings wrong try to set it to false
+                    ValidateLifetime = true, // Must be true for security!
                     ClockSkew = TimeSpan.Zero
                 };
+
             });
 
             services.AddAuthorization();

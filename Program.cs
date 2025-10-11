@@ -179,7 +179,6 @@ app.UseCors("AllowFlutterDev");
 
 app.UseStaticFiles();
 app.UseAuthentication();
-app.UseRefreshTokenMiddleware();
 app.UseAuthorization();
 app.MapControllers();
 

@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -92,54 +91,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         #region Login/Logout
-        //public async Task<UserDto> Login(LoginUserDto loginDto)
-        //{
-        //    var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
-        //    if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-        //    {
-        //        throw new Exception("Invalid username or password.");
-        //    }
-
-        //    if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
-        //    {
-        //        throw new Exception("Invalid username or password.");
-        //    }
-
-        //    // Revoke any existing refresh tokens for security
-        //    var existingTokens = await _context.RefreshTokens
-        //                                    .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
-        //                                    .ToListAsync();
-        //    foreach (var token in existingTokens)
-        //    {
-        //        token.IsRevoked = true;
-        //        token.RevokedAt = DateTime.UtcNow;
-        //    }
-
-        //    string accessToken = CreateAccessToken(user);
-        //    var refreshTokenEntity = GenerateRefreshToken();
-        //    refreshTokenEntity.UserId = user.Id;
-
-        //    // Store the refresh token in the database only (server-side)
-        //    await _context.RefreshTokens.AddAsync(refreshTokenEntity);
-
-        //    // Set ONLY the access token cookie
-        //    SetAccessTokenCookie(accessToken);
-        //    //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(15), "ACCESS");
-        //    if (_env.IsDevelopment())
-        //    {
-        //        // Token is created with 15 minutes expiry. Cookie is set with 5 minutes expiry.
-        //        // We log the *actual* token expiry time (15m) for the warning.
-        //        _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
-        //    }
-
-
-
-        //    user.Status = "Online";
-        //    await _context.SaveChangesAsync(); // Save both user and new token.
-
-        //    return _mapper.Map<UserDto>(user);
-        //}
         public async Task<UserDto> Login(LoginUserDto loginDto)
         {
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
@@ -168,6 +120,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // --- WEB-SPECIFIC ACTION: Set Cookie ---
             SetAccessTokenCookie(accessToken);
+            SetRefreshTokenCookie(refreshTokenEntity.Token, refreshTokenEntity.ExpiresAt);
             if (_env.IsDevelopment())
             {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
@@ -231,6 +184,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 // User is not authenticated via accessToken, nothing to do.
                 ClearAccessTokenCookie();
+                ClearRefreshTokenCookie();
                 return;
             }
 
@@ -244,22 +198,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (tokenEntity != null)
             {
-                // Revoke the token
+                // Revoke the token in the DB
                 tokenEntity.IsRevoked = true;
                 tokenEntity.RevokedAt = DateTime.UtcNow;
 
-                // Check if the user exists and update their status
                 if (tokenEntity.User != null)
                 {
                     tokenEntity.User.Status = "Offline";
                 }
 
-                // Save changes for both the token and the user status
                 await _context.SaveChangesAsync();
             }
 
             // Clear the access token cookie from the client's browser
             ClearAccessTokenCookie();
+            // **CHANGE: Clear the Refresh Token Cookie**
+            ClearRefreshTokenCookie();
         }
         #endregion
 
@@ -329,57 +283,79 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<string> RefreshToken()
         {
-            // 1. Get UserId from the current (possibly expired but containing claims) access token
-            var userId = GetUserIdFromClaims();
-
-            if (userId == Guid.Empty)
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
             {
-                // This means the access token is missing, structurally invalid, or the claims are unreadable.
-                throw new RefreshTokenException("User not authenticated or access token invalid.");
+                throw new RefreshTokenException("HttpContext not available.");
             }
 
-            // 2. Find the latest unrevoked refresh token for this user in the DB
-            // We include the User entity to use it later without another DB call
+            // 1. Get the Refresh Token string from the HttpOnly cookie
+            // The client MUST send this cookie to the /refresh-token endpoint.
+            var refreshTokenString = httpContext.Request.Cookies["4CLC-Auth-SRT"];
+
+            if (string.IsNullOrEmpty(refreshTokenString))
+            {
+                // This is now the entry point for an expired session.
+                throw new RefreshTokenException("Refresh token cookie is missing. Please log in again.");
+            }
+
+            // 2. Find the token entity in the database
             var tokenEntity = await _context.RefreshTokens
                 .Include(rt => rt.User)
-                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
-                .OrderByDescending(rt => rt.CreatedAt)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(rt => rt.Token == refreshTokenString);
 
-            // 3. Check token validity
-            if (tokenEntity == null || tokenEntity.ExpiresAt < DateTime.UtcNow)
+            // 3. Perform Validity Checks
+            if (tokenEntity == null)
             {
-                // If the token is missing or expired, the session is over.
-                throw new RefreshTokenException("Invalid or expired session. Please log in again.");
+                // This means the token in the cookie doesn't match a record.
+                throw new RefreshTokenException("Invalid refresh token. No matching record found.");
+            }
+            if (tokenEntity.IsRevoked)
+            {
+                // **DETECTED A REPLAY ATTACK / SECURITY ISSUE (optional defense)**
+                // If a revoked token is used, it often means the token was stolen and used after the user logged out.
+                // You might choose to revoke ALL tokens for this user and log it.
+                // Clear the cookie for safety
+                ClearRefreshTokenCookie();
+                throw new RefreshTokenException("Refresh token is revoked. Please log in again.");
+            }
+            if (tokenEntity.ExpiresAt < DateTime.UtcNow)
+            {
+                // The long-lived RT has finally expired.
+                ClearRefreshTokenCookie(); // Clear the expired cookie
+                throw new RefreshTokenException("Expired session. Please log in again.");
             }
 
             var user = tokenEntity.User;
             if (user == null)
             {
-                // Should not happen if foreign key is correctly set, but good defensive programming.
+                // Defensive check
                 throw new RefreshTokenException("Associated user not found for refresh token.");
             }
 
-            // --- TOKEN ROTATION & RENEWAL ---
+            // --- CORE LOGIC: SECURE TOKEN ROTATION ---
 
             // 4. Revoke the old refresh token (Security: Token Rotation)
+            // This ensures a stolen token can only be used ONCE.
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.UtcNow;
             _context.Update(tokenEntity);
 
+            // 5. Generate NEW tokens (AT and RT)
             string newAccessToken = CreateAccessToken(user);
-            var newRefreshTokenEntity = GenerateRefreshToken();
+            var newRefreshTokenEntity = GenerateRefreshToken(); // Generates a completely new RT string
             newRefreshTokenEntity.UserId = user.Id;
 
             // 6. Add the new refresh token to the database
             await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
 
-            // 7. Save both changes (only new token is saved now)
+            // 7. Save all changes (old token revoked, new token added)
             await _context.SaveChangesAsync();
 
-            // 8. Set the new access token cookie
+            // 8. Set the NEW Access Token cookie AND the NEW Refresh Token cookie
             SetAccessTokenCookie(newAccessToken);
-            //_developmentLoggerService.LogTokenCountdown(TimeSpan.FromMinutes(5), "ACCESS");
+            SetRefreshTokenCookie(newRefreshTokenEntity.Token, newRefreshTokenEntity.ExpiresAt);
+
             if (_env.IsDevelopment())
             {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
@@ -448,7 +424,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             };
 
-            httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
+            httpContext.Response.Cookies.Append("4CLC-XSRF-TOKEN", accessToken, accessTokenCookieOptions);
         }
 
         private void ClearAccessTokenCookie()
@@ -459,9 +435,33 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // To clear a cookie, you instruct the browser to delete it.
             // The default options are usually enough to delete, but specifying the path/domain/samesite might be needed if they were used when setting.
             // Using Delete with no options will generally work for simple cookies.
-            httpContext.Response.Cookies.Delete("accessToken");
+            httpContext.Response.Cookies.Delete("4CLC-XSRF-TOKEN");
         }
+        private void ClearRefreshTokenCookie()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
 
+            // To clear, you just call Delete
+            httpContext.Response.Cookies.Delete("4CLC-Auth-SRT");
+        }
+        private void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            var isDevelopment = _env.IsDevelopment();
+
+            var refreshTokenCookieOptions = new CookieOptions
+            {
+                HttpOnly = true,           // Critical: ALWAYS HttpOnly
+                Secure = !isDevelopment,   // Critical: Use Secure=true in Production (HTTPS)
+                SameSite = SameSiteMode.Lax, // Recommended for security
+                Expires = expiresAt        // Use the token's actual expiry time (e.g., 7 days)
+            };
+
+            httpContext.Response.Cookies.Append("4CLC-Auth-SRT", refreshToken, refreshTokenCookieOptions);
+        }
         /// <summary>
         /// Extracts the UserId from the claims of the currently authenticated user (from the accessToken).
         /// </summary>
