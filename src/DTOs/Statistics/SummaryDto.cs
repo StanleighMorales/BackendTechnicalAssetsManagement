@@ -23,6 +23,11 @@
         /// </summary>
         /// <example>42</example>
         public int? TotalActiveUsers { get; set; }
+        /// <summary>
+        /// The total number of category used for items.
+        /// </summary>
+        /// <example>5</example>
+        public int? TotalItemsCategories { get; set; }
     }
 
     /// <summary>

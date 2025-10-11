@@ -30,12 +30,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var allItems = await _itemRepository.GetAllAsync();
             var allLentRecords = await _lentItemRepository.GetAllAsync();
             var allUsers = await _userRepository.GetAllAsync();
+            var allCategories = Enum.GetValues(typeof(ItemCategory)).Cast<ItemCategory>();
 
             return new SummaryDto
             {
                 TotalItems = allItems.Count(),
                 TotalLentItems = allLentRecords.Count(),
-                TotalActiveUsers = allUsers.Count(u => u.Status == "Online")
+                TotalActiveUsers = allUsers.Count(u => u.Status == "Online"),
+                TotalItemsCategories = allCategories.Count()
             };
         }
 
