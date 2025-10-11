@@ -10,7 +10,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         public ArchiveItemsMappingProfile()
         {
             // Entity -> DTO
-            CreateMap<ArchiveItems, ArchiveItemsDto>();
+            CreateMap<ArchiveItems, ArchiveItemsDto>()
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src =>
+                src.Image != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.Image)}" : null))
+                // FIX: Map String (Entity) to Enum (DTO)
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category.ToString())))
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())));
+
             CreateMap<ArchiveItems, CreateArchiveItemsDto>();
             CreateMap<ArchiveItems, UpdateArchiveItemsDto>();
 
@@ -18,9 +24,8 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<ArchiveItems, Item>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ItemId));
             // The Category and Condition properties will be mapped automatically
-            // because they have the same name and type in both classes.
-            // The incorrect Enum.Parse calls have been removed.
-       
+            // because they have the same name and type in both classes 
+            // and the Item entity expects Enums.
 
             // DTO -> Entity
             CreateMap<ArchiveItemsDto, ArchiveItems>();
