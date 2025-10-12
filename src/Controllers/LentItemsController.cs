@@ -2,8 +2,10 @@
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
@@ -98,6 +100,18 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             // Return NoContent for a successful update, or you could return the updated object.
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
+            return Ok(successResponse); 
+        }
+        [HttpPatch("scan/{id}")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(Guid id, [FromBody] ScanLentItemDto dto)
+        {
+            var success = await _service.UpdateStatusAsync(id, dto);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse("Status update failed. Item not found or no changes made.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item status updated successfully.");
             return Ok(successResponse);
         }
 

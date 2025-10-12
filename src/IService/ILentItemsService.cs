@@ -1,5 +1,6 @@
 ﻿    using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
     namespace BackendTechnicalAssetsManagement.src.IService
     {
@@ -16,9 +17,10 @@ using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 
             // Update
             Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
+            Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto);
 
-            // Delete
-            Task<bool> SoftDeleteAsync(Guid id);
+        // Delete
+        Task<bool> SoftDeleteAsync(Guid id);
             Task<bool> PermaDeleteAsync(Guid id);
 
             // Persistence

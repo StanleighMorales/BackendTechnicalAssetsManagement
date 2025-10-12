@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -148,7 +149,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.UpdateAsync(entity);
             return await _repository.SaveChangesAsync();
         }
-
         // Delete (soft & hard)
         public async Task<bool> SoftDeleteAsync(Guid id)
         {
@@ -166,6 +166,34 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             return await _repository.SaveChangesAsync();
         }
+        public async Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                return false;
+            }
 
+            var scanTimestamp = DateTime.UtcNow;
+
+            entity.Status = dto.LentItemsStatus.ToString();
+
+            // Check the new status to decide which field to update
+            if (dto.LentItemsStatus == LentItemsStatus.Returned)
+            {
+                // Set the ReturnedAt time to the current server UTC time
+                entity.ReturnedAt = scanTimestamp;
+            }
+            else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
+            {
+                // Set the LentAt time to the current server UTC time
+                entity.LentAt = scanTimestamp;
+            }
+            // Note: No action is needed for Pending or Canceled, 
+            // but the status property is still updated above.
+
+            await _repository.UpdateAsync(entity);
+            return await _repository.SaveChangesAsync();
+        }
     }
 }
