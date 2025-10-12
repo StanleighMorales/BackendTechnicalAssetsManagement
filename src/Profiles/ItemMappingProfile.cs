@@ -31,6 +31,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<UpdateItemsDto, Item>()
                  // Add the explicit mapping for Image to handle the conversion and the null check
                  .ForMember(dest => dest.Image, opt => opt.Ignore())
+                      .ForMember(dest => dest.SerialNumber, opt => opt.Ignore())
+
+                 // *** ADD THESE LINES ***
+                 .ForMember(dest => dest.Barcode, opt => opt.Ignore())
+                 .ForMember(dest => dest.BarcodeImage, opt => opt.Ignore())
                  // Keep the AllMembers condition for all other properties 
                  // (it will apply to other properties that should only update if not null)
                  .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
