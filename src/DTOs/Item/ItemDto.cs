@@ -6,6 +6,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
     {
         public Guid Id { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
+        public string? Barcode { get; set; }
+        public string? BarcodeImage { get; set; }
         public string? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;

@@ -26,6 +26,14 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task<IEnumerable<Item>> GetAllAsync();
 
         /// <summary>
+        /// Gets Item By Barcode from the database.
+        /// </summary>
+        /// <param name="barcode"></param>
+        /// <returns></returns>
+        Task<Item?> GetByBarcodeAsync(string barcode);
+
+
+        /// <summary>
         /// Adds a new item to the database context. This does not save to the database yet.
         /// </summary>
         /// <param name="item">The new item to add.</param>

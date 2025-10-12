@@ -33,36 +33,42 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto)
         {
-            createItemDto.SerialNumber = $"SN-{createItemDto.SerialNumber}";
+            // A. **Standardize the SerialNumber with "SN-" prefix only if it's missing**
+            if (string.IsNullOrEmpty(createItemDto.SerialNumber))
+            {
+                throw new ArgumentException("SerialNumber cannot be empty.");
+            }
 
-            if (!createItemDto.SerialNumber.StartsWith("SN-"))
+            // Check if it already has the prefix (assuming case-insensitivity might be safer)
+            if (!createItemDto.SerialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
             {
                 createItemDto.SerialNumber = $"SN-{createItemDto.SerialNumber}";
             }
 
-            // 1. Validate for duplicate serial number
+            // B. Validate for duplicate serial number (using the standardized number)
             var existingItem = await _itemRepository.GetBySerialNumberAsync(createItemDto.SerialNumber);
             if (existingItem != null)
             {
                 throw new DuplicateSerialNumberException($"An item with serial number '{createItemDto.SerialNumber}' already exists.");
             }
 
+            string barcodeText = BarcodeGenerator.GenerateItemBarcode(createItemDto.SerialNumber);
+
+            // 2. Generate the Barcode IMAGE bytes
+            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+
+            // 3. Map the DTO (Input) to the new Item (Entity)
             var newItem = _mapper.Map<Item>(createItemDto);
-            _imageFileManager.ValidateImage(createItemDto.Image);
-            if (createItemDto.Image != null)
-            {
-                newItem.Image = await _imageFileManager.GetImageBytesAsync(createItemDto.Image);
-            }
-            // 4. Manually set properties not handled by AutoMapper
 
-            newItem.CreatedAt = DateTime.UtcNow;
-            newItem.UpdatedAt = DateTime.UtcNow;
+            // 4. MANUALLY SET the auto-generated values on the ENTITY
+            newItem.Barcode = barcodeText;
+            newItem.BarcodeImage = barcodeImageBytes;
 
-            // 5. Save to database via repository
+            // ... rest of the saving code ...
             await _itemRepository.AddAsync(newItem);
             await _itemRepository.SaveChangesAsync();
 
-            // 6. Map the final result back to a DTO to return
+            // 5. Map the final ENTITY (which now has Barcode and BarcodeImage) to the ItemDto (Output)
             return _mapper.Map<ItemDto>(newItem);
         }
 
@@ -77,6 +83,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var item = await _itemRepository.GetByIdAsync(id);
             return _mapper.Map<ItemDto>(item);
         }
+        public async Task<ItemDto?> GetItemByBarcodeAsync(string barcode)
+        {
+            var item = await _itemRepository.GetByBarcodeAsync(barcode);
+
+            // Use the existing mapper instance to convert Item to ItemDto
+            return _mapper.Map<ItemDto>(item);
+        }
 
         public async Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto)
         {
@@ -86,11 +99,49 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
+            // Check if the SerialNumber has changed
+            if (existingItem.SerialNumber != updateItemDto.SerialNumber)
+            {
+                // 1. Update the serial number
+                // NOTE: If updateItemDto.SerialNumber might not have the "SN-" prefix, 
+                // you should standardize it here too, similar to CreateItemAsync.
+
+                // --- START Standardization check (Recommended) ---
+                string newSerialNumber = updateItemDto.SerialNumber;
+                if (!string.IsNullOrEmpty(newSerialNumber) &&
+                    !newSerialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
+                {
+                    newSerialNumber = $"SN-{newSerialNumber}";
+                }
+                existingItem.SerialNumber = newSerialNumber;
+                // --- END Standardization check ---
+
+
+                // **The Critical Step: Re-generate the Barcode TEXT and IMAGE**
+                if (!string.IsNullOrEmpty(existingItem.SerialNumber))
+                {
+                    // 2. Generate the Barcode TEXT value (e.g., "ITEM-SN-12345")
+                    string barcodeText = BarcodeGenerator.GenerateItemBarcode(existingItem.SerialNumber);
+
+                    // 3. Store the text for searching/debugging (Recommended, uses the old slot)
+                    existingItem.Barcode = barcodeText;
+
+                    // 4. Generate the Barcode IMAGE bytes and store in the new slot
+                    existingItem.BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+                }
+                else
+                {
+                    // Handle scenario where SerialNumber is cleared
+                    existingItem.Barcode = null;
+                    existingItem.BarcodeImage = null; // Clear the image as well
+                }
+            }
+
             // 2. Use AutoMapper to apply all the non-null properties from the DTO.
-            // This one line replaces all your UpdateChecker calls!
+            // NOTE: existingItem.BarcodeImage is NOT overwritten here, as it's not in the DTO.
             _mapper.Map(updateItemDto, existingItem);
 
-            // 3. Handle specific logic that AutoMapper can't do, like file uploads. (Same as before)
+            // 3. Handle specific logic (image upload)
             if (updateItemDto.Image != null)
             {
                 _imageFileManager.ValidateImage(updateItemDto.Image);
@@ -98,7 +149,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 existingItem.Image = newImageBytes;
             }
 
-            // 4. Update the timestamp and save. (Same as before)
+            // 4. Update the timestamp and save.
             existingItem.UpdatedAt = DateTime.UtcNow;
 
             await _itemRepository.UpdateAsync(existingItem);

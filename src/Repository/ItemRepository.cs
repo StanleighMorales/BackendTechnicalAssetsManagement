@@ -44,6 +44,11 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.Items
                 .FirstOrDefaultAsync(i => i.SerialNumber.ToLower() == serialNumber.ToLower());
         }
+        public async Task<Item?> GetByBarcodeAsync(string barcode)
+        {
+            return await _context.Items
+                .FirstOrDefaultAsync(i => i.Barcode == barcode);
+        }
 
         public async Task<bool> SaveChangesAsync()
         {

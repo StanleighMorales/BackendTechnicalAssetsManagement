@@ -15,8 +15,15 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<Item, ItemDto>()
 
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src =>
-                    src.Image != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.Image)}" : null));
+                    src.Image != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.Image)}" : null))
+                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
+                    src.BarcodeImage != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
+                    null));
 
+
+            CreateMap<ItemDto, Item>()
+                .ForMember(dest => dest.BarcodeImage, opt => opt.Ignore());
             // When mapping from UpdateItemDto to Item, ignore the Image property
             CreateMap<CreateItemsDto, Item>()
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.Image)));

@@ -43,6 +43,41 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
             return Ok(successResponse);
         }
+        [HttpGet("getBarcode/{barcodeText}")]
+        public async Task<IActionResult> GenerateBarcode(string barcodeText)
+        {
+            var item = await _itemService.GetItemByBarcodeAsync(barcodeText);
+
+            if (item == null || string.IsNullOrEmpty(item.BarcodeImage))
+            {
+                // Use a direct ActionResult return that does NOT use ApiResponse
+                return NotFound();
+            }
+
+            // --- START BASE64 DECODING ---
+            string base64String = item.BarcodeImage;
+            const string prefix = "data:image/png;base64,";
+
+            if (base64String.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                base64String = base64String.Substring(prefix.Length);
+            }
+
+            byte[] imageBytes;
+            try
+            {
+                imageBytes = Convert.FromBase64String(base64String);
+            }
+            catch (FormatException)
+            {
+                return BadRequest();
+            }
+            // --- END BASE64 DECODING ---
+
+            // 3. Return the byte array as a PNG file
+            // Now you are passing a byte[] (imageBytes) to the File() method.
+            return File(imageBytes, "image/png");
+        }
 
         // POST: /api/item
         [HttpPost]

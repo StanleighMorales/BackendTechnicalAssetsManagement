@@ -9,6 +9,9 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public Guid Id { get; set; } = Guid.NewGuid();
         public string SerialNumber { get; set; } = string.Empty;
         public byte[]? Image { get; set; }
+        public string? Barcode { get; set; }
+
+        public byte[]? BarcodeImage { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;
         public string? ItemModel { get; set; }
