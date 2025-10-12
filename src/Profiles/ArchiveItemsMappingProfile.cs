@@ -13,6 +13,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<ArchiveItems, ArchiveItemsDto>()
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src =>
                 src.Image != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.Image)}" : null))
+
+                // **NEW MAPPING for Barcode Image**
+                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
+                    src.BarcodeImage != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
+                    null))
+
                 // FIX: Map String (Entity) to Enum (DTO)
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category.ToString())))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())));
@@ -34,6 +41,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<UpdateArchiveItemsDto, ArchiveItems>()
                  .ForMember(dest => dest.ItemId, opt => opt.Ignore())
                  .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Item, CreateArchiveItemsDto>()
+                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()))
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+                .ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode))
+                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src => src.BarcodeImage));         
 
         }
 

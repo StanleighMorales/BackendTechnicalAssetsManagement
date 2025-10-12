@@ -11,6 +11,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         [ForeignKey("Id")]
         public Guid ItemId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
+        public string? Barcode { get; set; }
+        public byte[]? BarcodeImage { get; set; }
         public byte[]? Image { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string ItemType { get; set; } = string.Empty;
