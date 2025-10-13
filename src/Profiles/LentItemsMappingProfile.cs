@@ -11,6 +11,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         {
             // Entity -> DTO
             CreateMap<LentItems, LentItemsDto>()
+                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.ItemId))
                 .ForMember(dest => dest.TeacherFullName,
                     opt => opt.MapFrom(src =>
                         // Priority 1: If the related Teacher object is loaded, use it.
@@ -28,7 +29,13 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                             // 3. Fallback: If not, use the denormalized string property
                             : src.ItemName));
             // DTO -> Entity (for create)
-            CreateMap<CreateLentItemDto, LentItems>();
+            CreateMap<CreateLentItemDto, LentItems>()
+                .ForMember(dest => dest.LentAt, opt => opt.MapFrom(_ => DateTime.Now)) // Set the creation timestamp
+                .ForMember(dest => dest.ItemName, opt => opt.Ignore()) // ItemName must be looked up in the service layer
+                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore()) // Denormalized fields are set in the service layer
+                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherFullName, opt => opt.Ignore());
 
             // DTO -> Entity (for update)
             CreateMap<UpdateLentItemDto, LentItems>()

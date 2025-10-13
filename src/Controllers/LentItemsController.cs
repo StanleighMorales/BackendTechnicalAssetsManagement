@@ -11,7 +11,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/lentItems")]
-    [Authorize(Policy = "AdminOrStaff")]
+    [Authorize]
     public class LentItemsController : ControllerBase
     {
         private readonly ILentItemsService _service;
@@ -23,6 +23,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems
         [HttpGet]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAll()
         {
             var items = await _service.GetAllAsync();
@@ -32,6 +33,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems/{id}
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetById(Guid id)
         {
             var item = await _service.GetByIdAsync(id);
@@ -46,6 +48,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems/date/{dateTime}
         [HttpGet("date/{dateTime}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByDateTime(DateTime dateTime)
         {
             var item = await _service.GetByDateTimeAsync(dateTime);
@@ -68,6 +71,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
         }
         [HttpPost("guests")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
         {
             // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
@@ -85,6 +89,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // PATCH: api/v1/lentitems/{id}
         [HttpPatch("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
             // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.
@@ -103,6 +108,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse); 
         }
         [HttpPatch("scan/{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(Guid id, [FromBody] ScanLentItemDto dto)
         {
             var success = await _service.UpdateStatusAsync(id, dto);
@@ -117,6 +123,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // DELETE (soft): api/v1/lentitems/{id}
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> SoftDelete(Guid id)
         {
             var success = await _service.SoftDeleteAsync(id);

@@ -68,16 +68,19 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
                 .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
                 .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
-                .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode));
+                .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode))
+                .ForMember(dest => dest.LentItemsHistory, opt => opt.MapFrom(src => src.LentItems));
 
             CreateMap<Teacher, GetTeacherProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()
-                .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department));
+                .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department))
+                .ForMember(dest => dest.LentItemsHistory, opt => opt.MapFrom(src => src.LentItems));
 
             CreateMap<Staff, GetStaffProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
-                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position));
+                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position))
+                .ForMember(dest => dest.LentItemsHistory, opt => opt.MapFrom(src => src.LentItems));
 
             CreateMap<Admin, GetAdminProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()

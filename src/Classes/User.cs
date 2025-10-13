@@ -20,6 +20,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? Status { get; set; } = string.Empty;
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<LentItems> LentItems { get; set; } = new List<LentItems>();
 
     }
     

@@ -123,9 +123,21 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
         }
 
+        //public async Task<User?> GetByIdAsync(Guid id)
+        //{
+        //    return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        //}
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            // NEW: Eagerly load the LentItems collection and its required navigation properties
+            return await _context.Users
+                .Include(u => u.LentItems)
+                    // If you need Item or Teacher details for the LentItemsDto mapping
+                    // you must include them here. 
+                    .ThenInclude(li => li.Item) // Include the Item details for the LentItemsDto mapping
+                .Include(u => u.LentItems)
+                    .ThenInclude(li => li.Teacher) // Include the Teacher details for the LentItemsDto mapping
+                .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<User?> GetByIdentifierAsync(string identifier)

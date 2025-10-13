@@ -1,4 +1,5 @@
-﻿using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 {
@@ -21,6 +22,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 
         public string PhoneNumber { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
     public class GetAdminProfileDto : BaseProfileDto
     {
@@ -30,6 +32,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     public class GetTeacherProfileDto : BaseProfileDto
     {
         public string Department { get; set; } = string.Empty;
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
     public class GetStudentProfileDto : BaseProfileDto
     {
@@ -47,6 +50,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string CityMunicipality { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
+
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
 
 }
