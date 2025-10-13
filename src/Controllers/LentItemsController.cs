@@ -1,10 +1,12 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
@@ -134,6 +136,23 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item soft-deleted successfully.");
             return Ok(successResponse);
+        }
+
+        [HttpPatch("{lentItemId}/hide")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<object>>> HideFromHistory(Guid lentItemId)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // 1. Service verifies: Does the LentItems record exist AND does it belong to this userId?
+            var success = await _service.UpdateHistoryVisibility(lentItemId, userId, true);
+
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.FailResponse("Item not found or not authorized."));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Item hidden from history."));
         }
     }
 }

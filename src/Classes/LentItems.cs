@@ -29,7 +29,9 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public DateTime? ReturnedAt { get; set; }
 
         public string? Status { get; set; }// Possible values: "Lent", "Returned"
-        public string? Remarks { get; set; } 
+        public string? Remarks { get; set; }
+
+        public bool IsHiddenFromUser { get; set; } = false;
 
     }
 }

@@ -131,11 +131,15 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             // NEW: Eagerly load the LentItems collection and its required navigation properties
             return await _context.Users
-                .Include(u => u.LentItems)
+                .Include(u => u.LentItems
+                .Where(li => !li.IsHiddenFromUser).OrderByDescending(li => li.LentAt))
+                    
                     // If you need Item or Teacher details for the LentItemsDto mapping
                     // you must include them here. 
                     .ThenInclude(li => li.Item) // Include the Item details for the LentItemsDto mapping
-                .Include(u => u.LentItems)
+                .Include(u => u.LentItems
+                    .Where(li => !li.IsHiddenFromUser) // <--- CRITICAL FIX: Add the filter to this chain
+                    .OrderByDescending(li => li.LentAt))
                     .ThenInclude(li => li.Teacher) // Include the Teacher details for the LentItemsDto mapping
                 .FirstOrDefaultAsync(u => u.Id == id);
         }

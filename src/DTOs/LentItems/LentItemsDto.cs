@@ -20,7 +20,7 @@
         public string Status { get; set; } = string.Empty;
 
         public string Remarks { get; set; } = string.Empty;
-
+        public bool IsHiddenFromUser { get; set; }
     }
 
 }

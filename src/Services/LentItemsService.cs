@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Repository;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
@@ -193,6 +194,40 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // but the status property is still updated above.
 
             await _repository.UpdateAsync(entity);
+            return await _repository.SaveChangesAsync();
+        }
+        public async Task<bool> UpdateHistoryVisibility(Guid lentItemId, Guid userId, bool isHidden)
+        {
+            // 1. Fetch the LentItems record by ID.
+            var lentItem = await _repository.GetByIdAsync(lentItemId);
+
+            if (lentItem == null)
+            {
+                return false; // Item not found.
+            }
+
+            // 2. Authorization check: Ensure the item belongs to the user.
+            //    We check both UserId and TeacherId (if a teacher borrowed it for a class, 
+            //    they should still be able to hide it from their history).
+            if (lentItem.UserId != userId && lentItem.TeacherId != userId)
+            {
+                // Note: Admin/Staff management access to ALL lent items is handled 
+                // separately via the Authorize(Policy = "AdminOrStaff") on the main update endpoints.
+                // This specific method is ONLY for a user editing their *own* history, so 
+                // we enforce ownership check.
+                return false; // Not authorized (item does not belong to this user).
+            }
+
+            // 3. Update the visibility flag only if it's changing (to avoid unnecessary save)
+            if (lentItem.IsHiddenFromUser == isHidden)
+            {
+                return true; // Already in the desired state.
+            }
+
+            lentItem.IsHiddenFromUser = isHidden;
+
+            // 4. Save the changes to the database.
+            await _repository.UpdateAsync(lentItem);
             return await _repository.SaveChangesAsync();
         }
     }
