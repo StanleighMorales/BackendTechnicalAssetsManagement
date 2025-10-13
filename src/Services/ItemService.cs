@@ -15,14 +15,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
-        private readonly ImageFileManager _imageFileManager;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, ImageFileManager imageFileManager, IArchiveItemsService archiveItemsService)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
-            _imageFileManager = imageFileManager;
             _archiveItemsService = archiveItemsService;
         }
 
@@ -45,6 +43,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 createItemDto.SerialNumber = $"SN-{createItemDto.SerialNumber}";
             }
 
+            ImageConverterUtils.ValidateImage(createItemDto.Image);
+
             // B. Validate for duplicate serial number (using the standardized number)
             var existingItem = await _itemRepository.GetBySerialNumberAsync(createItemDto.SerialNumber);
             if (existingItem != null)
@@ -54,22 +54,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             string barcodeText = BarcodeGenerator.GenerateItemBarcode(createItemDto.SerialNumber);
 
-    // 2. Generate the Barcode IMAGE bytes
-    byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+            // 2. Generate the Barcode IMAGE bytes
+            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
-    // 3. Map the DTO (Input) to the new Item (Entity)
-    var newItem = _mapper.Map<Item>(createItemDto);
+            // 3. Map the DTO (Input) to the new Item (Entity)
+            var newItem = _mapper.Map<Item>(createItemDto);
 
-    // 4. MANUALLY SET the auto-generated values on the ENTITY
-    newItem.Barcode = barcodeText;
-    newItem.BarcodeImage = barcodeImageBytes;
+            // 4. MANUALLY SET the auto-generated values on the ENTITY
+            newItem.Barcode = barcodeText;
+            newItem.BarcodeImage = barcodeImageBytes;
 
-    // ... rest of the saving code ...
-    await _itemRepository.AddAsync(newItem);
-    await _itemRepository.SaveChangesAsync();
+            if (createItemDto.Image != null)
+            {
+                newItem.ImageMimeType = createItemDto.Image.ContentType;
+            }
 
-    // 5. Map the final ENTITY (which now has Barcode and BarcodeImage) to the ItemDto (Output)
-    return _mapper.Map<ItemDto>(newItem);
+            // ... rest of the saving code ...
+            await _itemRepository.AddAsync(newItem);
+            await _itemRepository.SaveChangesAsync();
+
+            // 5. Map the final ENTITY (which now has Barcode and BarcodeImage) to the ItemDto (Output)
+            return _mapper.Map<ItemDto>(newItem);
         }
 
         public async Task<IEnumerable<ItemDto>> GetAllItemsAsync()
@@ -98,6 +103,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 return false;
             }
+            ImageConverterUtils.ValidateImage(updateItemDto.Image);
 
             // Check if the SerialNumber has changed
             if (updateItemDto.SerialNumber != null && existingItem.SerialNumber != updateItemDto.SerialNumber)
@@ -133,6 +139,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
             // ELSE: If updateItemDto.SerialNumber is null, the existing SerialNumber, Barcode, and BarcodeImage are preserved.
 
+            if (updateItemDto.Image != null)
+            {
+                // ImageConverterUtils is used by the Create flow and converts IFormFile to byte[].
+                existingItem.Image = ImageConverterUtils.ConvertIFormFileToByteArray(updateItemDto.Image);
+                existingItem.ImageMimeType = updateItemDto.Image.ContentType;
+            }
 
             // 2. Use AutoMapper to apply all the *other* non-null properties from the DTO.
             // The AutoMapper ignore rules for SerialNumber, Barcode, and BarcodeImage are still necessary

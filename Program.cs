@@ -7,7 +7,6 @@ using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
-using BackendTechnicalAssetsManagement.src.Utils;
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -24,7 +23,7 @@ builder.Configuration
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+    serverOptions.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
 });
 
 // Add services to the container.
@@ -107,8 +106,6 @@ builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerServic
 // Background Services
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
-// Utilities
-builder.Services.AddScoped<ImageFileManager>();
 
 //Singleton Services
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();

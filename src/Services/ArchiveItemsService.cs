@@ -15,15 +15,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _hostEnvironment;
-        private readonly ImageFileManager _imageFileManager;
 
-        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, ImageFileManager imageFileManager)
+        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment)
         {
             _archiveItemRepository = archiveItemRepository;
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
-            _imageFileManager = imageFileManager;
         }
         public async Task<ArchiveItemsDto> CreateItemArchiveAsync(CreateArchiveItemsDto createItemArchive)
         {
