@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿// File: BackendTechnicalAssetsManagement.src.Profiles/UserMappingProfile.cs
+
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
@@ -12,13 +14,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         public UserMappingProfile()
         {
             #region Model to DTO Mappings (For API Responses)
-
-            // This region defines how to map your internal database models to the DTOs
-            // that your API sends back to the client.
-
-            // --- Base Output Mappings ---
-            // Configures the base mapping for all user types to their corresponding DTOs.
-            // AutoMapper will correctly use the more specific map (e.g., Student -> StudentDto) when needed.
+            /// <summary>
+            /// Configures base mapping for all derived User types to their DTOs (e.g., Student -> StudentDto).
+            /// Handles base properties like Id, Username, Email, etc.
+            /// </summary>
             CreateMap<User, UserDto>()
                 .Include<Teacher, TeacherDto>()
                 .Include<Student, StudentDto>()
@@ -30,7 +29,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<Teacher, TeacherDto>();
             CreateMap<Admin, AdminDto>();
 
-            // Specific mapping for Student to handle converting the image byte[] to a base64 string for the client.
+            /// <summary>
+            /// Specific mapping for Student to handle converting image byte[] fields to base64 strings for the client.
+            /// </summary>
             CreateMap<Student, StudentDto>()
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
@@ -39,35 +40,26 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
                     src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
 
-            // --- Specific Profile Mappings (for GetMyProfile endpoint) ---
+            /// <summary>
+            /// Configures base mapping for all derived User types to their specific Profile DTOs (for 'GetMyProfile').
+            /// </summary>
             CreateMap<User, BaseProfileDto>()
-             // REMOVE THIS LINE: .Include<Student, GetStudentProfileDto>()
              .Include<Teacher, GetTeacherProfileDto>()
              .Include<Staff, GetStaffProfileDto>()
-             .Include<Admin, GetAdminProfileDto>();
+             .Include<Admin, GetAdminProfileDto>()
+             .Include<Student, GetStudentProfileDto>(); // Added Include for Student for completeness
 
-            //CreateMap<Student, GetStudentProfileDto>()
-            //    .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
-            //        src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
-            //    .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
-            //        src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
-            //    .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
-            //        src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null));
+            /// <summary>
+            /// Specific profile mapping for Student, converting images to base64 and mapping all specific fields.
+            /// </summary>
             CreateMap<Student, GetStudentProfileDto>()
-                // 1. Force it to include the base mapping
                 .IncludeBase<User, BaseProfileDto>()
-
-                // 2. Explicitly map the image properties with custom logic (THIS IS FINE)
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" : null))
                 .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
                     src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null))
-
-                // 3. Explicitly map ALL derived properties
-                // Because the Entity properties have `= string.Empty` (are non-nullable at runtime),
-                // we should use a simple MapFrom and let the entity's non-nullable nature handle the default value.
                 .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
                 .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
@@ -78,7 +70,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
                 .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode));
 
-            // The other derived maps should look similar (just with their specific fields):
             CreateMap<Teacher, GetTeacherProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()
                 .ForMember(dest => dest.Department, opt => opt.MapFrom(src => src.Department));
@@ -97,25 +88,29 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             #region DTO to Model Mappings (For API Requests)
 
-            // This region defines how to map incoming DTOs from client requests into your
-            // internal database models for creation or updates.
-
-            // --- Initial User Registration ---
-            // Handles the first step of registration, using the minimal RegisterUserDto.
+            /// <summary>
+            /// Configures base mapping for all derived Register DTOs to their User models (for registration).
+            /// </summary>
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.Role))
-                .Include<RegisterUserDto, Student>()
-                .Include<RegisterUserDto, Teacher>()
-                .Include<RegisterUserDto, Staff>()
-                .Include<RegisterUserDto, Admin>();
+                .Include<RegisterStudentDto, Student>() // Use specific DTOs
+                .Include<RegisterTeacherDto, Teacher>()
+                .Include<RegisterStaffDto, Staff>()
+                .Include<RegisterAdminDto, Admin>();
 
-            CreateMap<RegisterUserDto, Student>();
-            CreateMap<RegisterUserDto, Teacher>();
-            CreateMap<RegisterUserDto, Staff>();
-            CreateMap<RegisterUserDto, Admin>();
+            // Explicit maps for derived types from the base RegisterUserDto
+            CreateMap<RegisterStudentDto, Student>();
+            CreateMap<RegisterTeacherDto, Teacher>();
+            CreateMap<RegisterStaffDto, Staff>();
+            CreateMap<RegisterAdminDto, Admin>();
 
+            /// <summary>
+            /// Consolidated mapping for Student profile updates. 
+            /// 1. Converts IFormFile to byte[] ONLY if the file is provided.
+            /// 2. Ignores all other null properties for partial updates.
+            /// </summary>
             CreateMap<UpdateStudentProfileDto, Student>()
-               // Rule 1: Handle the image properties with specific logic first.
+               // Rule 1: Handle the image properties with specific logic
                .ForMember(dest => dest.ProfilePicture, opt => {
                    opt.Condition(src => src.ProfilePicture != null);
                    opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture));
@@ -128,53 +123,29 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                    opt.Condition(src => src.BackStudentIdPicture != null);
                    opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture));
                })
-               // Rule 2: Handle all other properties with the general "ignore nulls" rule.
+               // Rule 2: Handle all other properties (e.g., LastName, Course) to ignore nulls for partial updates.
                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // The other update DTOs are simpler as they don't have images.
+            /// <summary>
+            /// Mapping for Teacher profile updates, ignoring null properties for partial updates.
+            /// </summary>
             CreateMap<UpdateTeacherProfileDto, Teacher>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+            /// <summary>
+            /// Mapping for Staff profile updates, ignoring null properties for partial updates.
+            /// </summary>
             CreateMap<UpdateStaffProfileDto, Staff>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
+            /// <summary>
+            /// Mapping for Admin profile updates, ignoring null properties for partial updates.
+            /// </summary>
             CreateMap<UpdateAdminProfileDto, Admin>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            // --- User Profile Updates ---
-            CreateMap<UpdateStudentProfileDto, Student>()
-                // First, handle all the simple properties that aren't files.
-                // This rule applies to everything EXCEPT the properties we define special rules for below.
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            CreateMap<UpdateTeacherProfileDto, Teacher>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // ... and so on for Staff and Admin ...
-            CreateMap<UpdateStaffProfileDto, Staff>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            CreateMap<UpdateAdminProfileDto, Admin>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-            // Handles the second step where a user completes their profile with detailed information.
-            CreateMap<UpdateStudentProfileDto, Student>()
-                .ForMember(dest => dest.ProfilePicture, opt => {
-                    opt.Condition(src => src.ProfilePicture != null); // Only update if a new picture is provided
-                    opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture));
-                })
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => {
-                    opt.Condition(src => src.FrontStudentIdPicture != null);
-                    opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture));
-                })
-                .ForMember(dest => dest.BackStudentIdPicture, opt => {
-                    opt.Condition(src => src.BackStudentIdPicture != null);
-                    opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture));
-                });
-
-            CreateMap<UpdateTeacherProfileDto, Teacher>();
-            CreateMap<UpdateStaffProfileDto, Staff>();
-            CreateMap<UpdateAdminProfileDto, Admin>();
-
-            // --- Generic DTO to Model ---
-            // Potentially used for generic update operations if needed elsewhere in the application.
+            // --- Generic DTO to Model (used for generic mapping like in repository or service layer) ---
             CreateMap<UserDto, User>()
                 .Include<TeacherDto, Teacher>()
                 .Include<StudentDto, Student>()
@@ -187,7 +158,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<AdminDto, Admin>();
 
             #endregion
-
         }
     }
 }

@@ -80,6 +80,18 @@ public class UserController : ControllerBase
         {
             return NotFound(ApiResponse<object>.FailResponse("Student not found."));
         }
+        try
+        {
+            ImageConverterUtils.ValidateImage(studentDto.ProfilePicture);
+            ImageConverterUtils.ValidateImage(studentDto.FrontStudentIdPicture);
+            ImageConverterUtils.ValidateImage(studentDto.BackStudentIdPicture);
+        }
+        catch (ArgumentException ex)
+        {
+            // If validation fails, return a 400 Bad Request with the error message
+            return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
+        }
+        // ----------------------------------------------------
 
         _mapper.Map(studentDto, student);
         await _userRepository.UpdateAsync(student);
