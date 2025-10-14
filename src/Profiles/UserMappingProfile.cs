@@ -33,6 +33,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// Specific mapping for Student to handle converting image byte[] fields to base64 strings for the client.
             /// </summary>
             CreateMap<Student, StudentDto>()
+                .IncludeBase<User, UserDto>()
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
@@ -96,16 +97,20 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// </summary>
             CreateMap<RegisterUserDto, User>()
                 .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.Role))
-                .Include<RegisterStudentDto, Student>() // Use specific DTOs
+                .Include<RegisterStudentDto, Student>() // Use specific     
                 .Include<RegisterTeacherDto, Teacher>()
                 .Include<RegisterStaffDto, Staff>()
                 .Include<RegisterAdminDto, Admin>();
 
             // Explicit maps for derived types from the base RegisterUserDto
-            CreateMap<RegisterStudentDto, Student>();
-            CreateMap<RegisterTeacherDto, Teacher>();
-            CreateMap<RegisterStaffDto, Staff>();
-            CreateMap<RegisterAdminDto, Admin>();
+            CreateMap<RegisterStudentDto, Student>()
+            .IncludeBase<RegisterUserDto, User>();
+            CreateMap<RegisterTeacherDto, Teacher>()
+                .IncludeBase<RegisterUserDto, User>();
+            CreateMap<RegisterStaffDto, Staff>()
+                .IncludeBase<RegisterUserDto, User>();
+            CreateMap<RegisterAdminDto, Admin>()
+                .IncludeBase<RegisterUserDto, User>();
 
             /// <summary>
             /// Consolidated mapping for Student profile updates. 

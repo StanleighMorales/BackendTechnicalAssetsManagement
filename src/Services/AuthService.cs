@@ -44,6 +44,51 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _developmentLoggerService = developmentLoggerService;
         }
 
+        //public async Task<UserDto> Register(RegisterUserDto request)
+        //{
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        request.Username,
+        //        request.Email,
+        //        request.PhoneNumber
+        //        );
+
+        //    User newUser;
+
+        //    switch (request.Role)
+        //    {
+        //        case UserRole.Student:
+        //            newUser = _mapper.Map<Student>(request);
+        //            break;
+        //        case UserRole.Teacher:
+        //            newUser = _mapper.Map<Teacher>(request);
+        //            break;
+        //        case UserRole.Staff:
+        //            newUser = _mapper.Map<Staff>(request);
+        //            break;
+        //        case UserRole.Admin:
+        //            newUser = _mapper.Map<Admin>(request);
+        //            break;
+        //        default:
+        //            // Handle cases where the role is not supported or invalid
+        //            throw new ArgumentException("Invalid user role specified.");
+        //    }
+        //    if (string.IsNullOrWhiteSpace(request.Password) ||
+        //        request.Password.Length < 8 ||
+        //        !request.Password.Any(char.IsUpper) ||
+        //        !request.Password.Any(char.IsLower) ||
+        //        !request.Password.Any(char.IsDigit) ||
+        //        !request.Password.Any(ch => "!@#$%^&*()_+-=[]{}|;':\",.<>?/`~".Contains(ch)))
+        //    {
+        //        throw new ArgumentException("Password must be at least 8 characters long, and include uppercase, lowercase, number, and special character.");
+        //    }
+        //    newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
+
+        //    newUser.Status = "Offline";
+        //    await _userRepository.AddAsync( newUser );
+        //    await _userRepository.SaveChangesAsync();
+
+        //    return _mapper.Map<UserDto>(newUser);
+        //}
         public async Task<UserDto> Register(RegisterUserDto request)
         {
             await _userValidationService.ValidateUniqueUserAsync(
@@ -54,24 +99,31 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             User newUser;
 
+            // FIX: Manually instantiate the correct derived class (no mapping yet)
             switch (request.Role)
             {
                 case UserRole.Student:
-                    newUser = _mapper.Map<Student>(request);
+                    newUser = new Student(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Teacher:
-                    newUser = _mapper.Map<Teacher>(request);
+                    newUser = new Teacher(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Staff:
-                    newUser = _mapper.Map<Staff>(request);
+                    newUser = new Staff(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Admin:
-                    newUser = _mapper.Map<Admin>(request);
+                    newUser = new Admin(); // <--- MANUALLY INSTANTIATE
                     break;
                 default:
                     // Handle cases where the role is not supported or invalid
                     throw new ArgumentException("Invalid user role specified.");
             }
+
+            // NEW: Use AutoMapper to map the DTO *over* the instantiated object.
+            // This is the map-over signature: _mapper.Map(source, destination)
+            // This uses the correct map (RegisterStudentDto to Student) but doesn't cause the cast error.
+            _mapper.Map(request, newUser); // <--- THIS REPLACES THE PROBLEM LINES
+
             if (string.IsNullOrWhiteSpace(request.Password) ||
                 request.Password.Length < 8 ||
                 !request.Password.Any(char.IsUpper) ||
@@ -81,10 +133,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 throw new ArgumentException("Password must be at least 8 characters long, and include uppercase, lowercase, number, and special character.");
             }
+
+            // The rest of the logic remains the same
             newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
 
             newUser.Status = "Offline";
-            await _userRepository.AddAsync( newUser );
+            await _userRepository.AddAsync(newUser);
             await _userRepository.SaveChangesAsync();
 
             return _mapper.Map<UserDto>(newUser);
