@@ -1,9 +1,11 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
@@ -16,13 +18,42 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<AuthController> _logger;
-        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger)
+        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger, IUserService userService)
         {
             _authService = authService;
             _env = env;
             _logger = logger;
+            _userService = userService;
+        }
+        [HttpGet("me")]
+        // FIX: Change the generic type from BaseProfileDto to object
+        public async Task<ActionResult<ApiResponse<object>>> GetMyProfile()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                // Change FailResponse to use object generic type
+                var response = ApiResponse<object>.FailResponse("Invalid Token.");
+                return Unauthorized(response);
+            }
+
+            // userProfile is the concrete derived DTO (e.g., GetStudentProfileDto)
+            var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
+            if (userProfile == null)
+            {
+                // Change FailResponse to use object generic type
+                var notFoundResponse = ApiResponse<object>.FailResponse("User profile not found.");
+                return NotFound(notFoundResponse);
+            }
+
+            // Change SuccessResponse to use object generic type
+            var successResponse = ApiResponse<object>.SuccessResponse(userProfile, "User profile retrieved successfully.");
+
+            // The ActionResult return type must also match the object generic type
+            return Ok(successResponse);
         }
 
         /// <summary>
