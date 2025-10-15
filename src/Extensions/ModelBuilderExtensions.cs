@@ -43,32 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
             // Seed a SuperAdmin user. This user has the highest level of privileges
             // and is intended for system-wide configuration and user management.
-            modelBuilder.Entity<Admin>().HasData(new Admin
-            {
-                Id = superAdminId,
-                FirstName = "Super",
-                LastName = "Admin",
-                Email = "superadmin@example.com",
-                Username = "superadmin",
-                PasswordHash = passwordHasher.HashPassword(null, "SuperAdmin!@#$"),
-                UserRole = Enums.UserRole.SuperAdmin,
-                Status = "",
-                PhoneNumber = "999-999-9999"
-            });
-
-            // Seed a regular Admin user for day-to-day administrative tasks.
-            modelBuilder.Entity<Admin>().HasData(new Admin
-            {
-                Id = adminId,
-                FirstName = "admin",
-                LastName = "admin",
-                Email = "admin@gmail.com",
-                Username = "admin",
-                PasswordHash = passwordHasher.HashPassword(null, "Admin@123"),
-                UserRole = Enums.UserRole.Admin,
-                Status = "",
-                PhoneNumber = "123-456-7890"
-            });
+            
 
             // Seed a Staff user, representing a non-teaching employee like a lab technician.
             modelBuilder.Entity<Staff>().HasData(new Staff

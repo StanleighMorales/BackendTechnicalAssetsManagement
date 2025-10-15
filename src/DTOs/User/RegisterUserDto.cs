@@ -61,8 +61,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         [Required]
         public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string StudentIdNumber { get; set; } = string.Empty;
+        public string? StudentIdNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         [Required]
         public string Section { get; set; } = string.Empty;

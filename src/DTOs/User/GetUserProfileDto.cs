@@ -1,8 +1,15 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using System.Text.Json.Serialization;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+
+    [JsonDerivedType(typeof(GetStudentProfileDto), typeDiscriminator: "Student")]
+    [JsonDerivedType(typeof(GetTeacherProfileDto), typeDiscriminator: "Teacher")]
+    [JsonDerivedType(typeof(GetStaffProfileDto), typeDiscriminator: "Staff")]
+    [JsonDerivedType(typeof(GetAdminProfileDto), typeDiscriminator: "Admin")]
     public class BaseProfileDto
     {
         public Guid Id { get; set; }

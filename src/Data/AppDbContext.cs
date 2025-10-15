@@ -34,7 +34,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Staff> Staff { get; set; }
-        public DbSet<Admin> Admins { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<LentItems> LentItems { get; set; }
 
@@ -83,7 +82,6 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // ('Students', 'Teachers', etc.) store the fields specific to each derived type.
             modelBuilder.Entity<Student>().ToTable("Students");
             modelBuilder.Entity<Teacher>().ToTable("Teachers");
-            modelBuilder.Entity<Admin>().ToTable("Admins");
             modelBuilder.Entity<Staff>().ToTable("Staff");
 
 
@@ -108,7 +106,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
                 entity.HasIndex(e => e.SerialNumber).IsUnique();
             });
-
+            modelBuilder.Entity<Student>()
+               .HasIndex(s => s.StudentIdNumber)
+               .IsUnique()
+               .HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
 
             // TODO: This is a good place to add more advanced configurations in the future, such as:
             // - Defining complex relationships (many-to-many).

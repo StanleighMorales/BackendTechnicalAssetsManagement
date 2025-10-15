@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251015080141_FixStudentIdNumberUniqueIndex")]
+    partial class FixStudentIdNumberUniqueIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,9 +273,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
@@ -291,9 +291,22 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Admin", b =>
+                {
+                    b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Admins", (string)null);
+                });
+
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>
                 {
                     b.HasBaseType("BackendTechnicalAssetsManagement.src.Classes.User");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
@@ -318,6 +331,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.Property<byte[]>("FrontStudentIdPicture")
                         .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
@@ -359,6 +375,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.ToTable("Teachers", (string)null);
                 });
 
@@ -394,6 +413,15 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Admin", b =>
+                {
+                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.User", null)
+                        .WithOne()
+                        .HasForeignKey("BackendTechnicalAssetsManagement.src.Classes.Admin", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Staff", b =>

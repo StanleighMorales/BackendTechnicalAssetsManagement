@@ -16,6 +16,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
 
         public string? Status { get; set; } = string.Empty;
 
@@ -27,15 +28,13 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     
     public class Teacher : User
     {
-        public string? PhoneNumber { get; set; }
         public string? Department { get; set; }
     }
     public class Student : User
     {
         public byte[]? ProfilePicture { get; set; }
 
-        public string StudentIdNumber { get; set; } = string.Empty;
-        public string? PhoneNumber { get; set; }
+        public string? StudentIdNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;
         public string Section { get; set; } = string.Empty;
@@ -50,12 +49,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     }
     public class Staff : User
     {
-        public string? PhoneNumber { get; set; }
         public string? Position { get; set; }
-    }
-    public class Admin : User
-    {
-        public string? PhoneNumber { get; set; }
     }
 
 }

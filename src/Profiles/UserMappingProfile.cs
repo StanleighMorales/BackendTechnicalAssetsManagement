@@ -22,18 +22,26 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .Include<Teacher, TeacherDto>()
                 .Include<Student, StudentDto>()
                 .Include<Staff, StaffDto>()
-                .Include<Admin, AdminDto>()
                 .IncludeAllDerived();
 
             CreateMap<Staff, StaffDto>();
             CreateMap<Teacher, TeacherDto>();
-            CreateMap<Admin, AdminDto>();
 
             /// <summary>
             /// Specific mapping for Student to handle converting image byte[] fields to base64 strings for the client.
             /// </summary>
             CreateMap<Student, StudentDto>()
                 .IncludeBase<User, UserDto>()
+                // FIX: Add explicit mapping for StudentIdNumber and all other Student-specific fields 
+                // to ensure they show up in the response.
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
+                .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
+                .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
+                .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
+                .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
+                .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode))
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
@@ -47,7 +55,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<User, BaseProfileDto>()
              .Include<Teacher, GetTeacherProfileDto>()
              .Include<Staff, GetStaffProfileDto>()
-             .Include<Admin, GetAdminProfileDto>()
              .Include<Student, GetStudentProfileDto>(); // Added Include for Student for completeness
 
             /// <summary>
@@ -62,7 +69,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom(src =>
                     src.BackStudentIdPicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.BackStudentIdPicture)}" : null))
                 .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src => src.StudentIdNumber))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
                 .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.Course))
                 .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
                 .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
@@ -79,13 +85,9 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             CreateMap<Staff, GetStaffProfileDto>()
                 .IncludeBase<User, BaseProfileDto>()
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
                 .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position))
                 .ForMember(dest => dest.LentItemsHistory, opt => opt.MapFrom(src => src.LentItems));
 
-            CreateMap<Admin, GetAdminProfileDto>()
-                .IncludeBase<User, BaseProfileDto>()
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber));
 
             #endregion
 
@@ -96,20 +98,29 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// Configures base mapping for all derived Register DTOs to their User models (for registration).
             /// </summary>
             CreateMap<RegisterUserDto, User>()
-                .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.Role))
-                .Include<RegisterStudentDto, Student>() // Use specific     
-                .Include<RegisterTeacherDto, Teacher>()
-                .Include<RegisterStaffDto, Staff>()
-                .Include<RegisterAdminDto, Admin>();
+                .ForMember(dest => dest.UserRole, opt => opt.MapFrom(src => src.Role));
 
             // Explicit maps for derived types from the base RegisterUserDto
             CreateMap<RegisterStudentDto, Student>()
-            .IncludeBase<RegisterUserDto, User>();
+                // IncludeBase is now optional, but let's keep it to handle base User properties like Username, Email
+                .IncludeBase<RegisterUserDto, User>()
+
+
+                // And all the other derived properties (which also includes the DTO-to-Model logic)
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src =>
+                    string.IsNullOrEmpty(src.StudentIdNumber) ? null : src.StudentIdNumber))
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src =>
+                    string.IsNullOrEmpty(src.Course) ? null : src.Course))
+                // ... (All other derived Student properties) ...
+                .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
+                .ForMember(dest => dest.Section, opt => opt.MapFrom(src => src.Section))
+                .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
+                .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
+                .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
+                .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode));
             CreateMap<RegisterTeacherDto, Teacher>()
                 .IncludeBase<RegisterUserDto, User>();
             CreateMap<RegisterStaffDto, Staff>()
-                .IncludeBase<RegisterUserDto, User>();
-            CreateMap<RegisterAdminDto, Admin>()
                 .IncludeBase<RegisterUserDto, User>();
 
             /// <summary>
@@ -149,21 +160,17 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             /// <summary>
             /// Mapping for Admin profile updates, ignoring null properties for partial updates.
             /// </summary>
-            CreateMap<UpdateAdminProfileDto, Admin>()
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
 
             // --- Generic DTO to Model (used for generic mapping like in repository or service layer) ---
             CreateMap<UserDto, User>()
                 .Include<TeacherDto, Teacher>()
                 .Include<StudentDto, Student>()
-                .Include<StaffDto, Staff>()
-                .Include<AdminDto, Admin>();
+                .Include<StaffDto, Staff>();
 
             CreateMap<StaffDto, Staff>();
             CreateMap<TeacherDto, Teacher>();
             CreateMap<StudentDto, Student>();
-            CreateMap<AdminDto, Admin>();
 
             #endregion
         }

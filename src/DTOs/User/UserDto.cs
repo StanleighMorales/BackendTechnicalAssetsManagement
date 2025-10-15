@@ -1,8 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.DTOs.User
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(StudentDto), typeDiscriminator: "Student")]
+    [JsonDerivedType(typeof(TeacherDto), typeDiscriminator: "Teacher")]
+    [JsonDerivedType(typeof(StaffDto), typeDiscriminator: "Staff")]
+    [JsonDerivedType(typeof(AdminDto), typeDiscriminator: "Admin")]
     public class UserDto
     {
         public Guid Id { get; set; }
@@ -27,7 +33,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     }
     public class AdminDto : UserDto
     {
-        public string? PhoneNumber { get; set; }
     }
     public class TeacherDto : UserDto
     {

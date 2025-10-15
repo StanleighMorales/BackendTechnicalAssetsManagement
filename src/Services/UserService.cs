@@ -42,10 +42,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 return _mapper.Map<GetStaffProfileDto>(staff);
             }
-            else if (user is Admin admin)
-            {
-                return _mapper.Map<GetAdminProfileDto>(admin);
-            }
 
             // Fallback: If the user is a base User or an unknown type, map to the base profile DTO.
             // This is less likely to happen in a TPH setup, but is a safe fallback.

@@ -99,21 +99,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 }).ToListAsync();
             allUsers.AddRange(staff);
 
-            // 4. Get all admins
-            var admins = await _context.Users.OfType<Admin>()
-                .Select(a => new AdminDto
-                {
-                    Id = a.Id,
-                    Username = a.Username,
-                    Email = a.Email,
-                    UserRole = a.UserRole,
-                    Status = a.Status,
-                    FirstName = a.FirstName,
-                    LastName = a.LastName,
-                    MiddleName = a.MiddleName,
-                    PhoneNumber = a.PhoneNumber
-                }).ToListAsync();
-            allUsers.AddRange(admins);
+            
 
             return allUsers;
         }
