@@ -13,19 +13,34 @@ namespace BackendTechnicalAssetsManagement.src.Services
     {
         private readonly ILentItemsRepository _repository;
         private readonly IUserRepository _userRepository;
+        private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository)
         {
             _repository = repository;
             _mapper = mapper;
             _userRepository = userRepository;
+            _itemRepository = itemRepository;
         }
 
         // Create
         public async Task<LentItemsDto> AddAsync(CreateLentItemDto dto)
         {
             var lentItem = _mapper.Map<LentItems>(dto);
+            if(dto.ItemId != Guid.Empty)
+            {
+                var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+                if (item != null)
+                {
+                    lentItem.ItemName = item.ItemName;
+                }
+                else
+                {
+
+                    throw new KeyNotFoundException($"Item with ID {dto.ItemId} not found.");
+                }
+            }
             if (dto.UserId.HasValue)
             {
                 // You need a method in your user repository to get a user by ID.
@@ -64,6 +79,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
+            
 
 
             await _repository.AddAsync(lentItem);
