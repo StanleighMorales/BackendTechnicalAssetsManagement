@@ -26,34 +26,6 @@ public class UserController : ControllerBase
         _mapper = mapper;
     }
 
-    [HttpGet("me")]
-    // FIX: Change the generic type from BaseProfileDto to object
-    public async Task<ActionResult<ApiResponse<object>>> GetMyProfile()
-    {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString))
-        {
-            // Change FailResponse to use object generic type
-            var response = ApiResponse<object>.FailResponse("Invalid Token.");
-            return Unauthorized(response);
-        }
-
-        // userProfile is the concrete derived DTO (e.g., GetStudentProfileDto)
-        var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
-        if (userProfile == null)
-        {
-            // Change FailResponse to use object generic type
-            var notFoundResponse = ApiResponse<object>.FailResponse("User profile not found.");
-            return NotFound(notFoundResponse);
-        }
-
-        // Change SuccessResponse to use object generic type
-        var successResponse = ApiResponse<object>.SuccessResponse(userProfile, "User profile retrieved successfully.");
-
-        // The ActionResult return type must also match the object generic type
-        return Ok(successResponse);
-    }
-
     [HttpGet]
     [Authorize(Policy = "AdminOrStaff")]
     // Change the return type here to use 'object'
@@ -104,25 +76,10 @@ public class UserController : ControllerBase
 
     // --- PATCH Endpoints (Now with full implementation) ---
     [HttpPatch("students/{id}/profile")]
+    [Authorize(Roles = "Admin,Student")]
     // Authorization Policy: Only Admin can update an arbitrary Student profile ID
     public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
     {
-        // The previous complex authorization check is GONE.
-        // The [Authorize(Roles = "Admin")] handles the only check we need now.
-        // However, for a student to update their OWN profile, we need a slight adjustment:
-        // If you want any user to update their OWN profile without an Admin token, you cannot use this simple check.
-
-        // RETHINKING: Based on your initial requirement, let's keep the original *intention* but trust the frontend.
-        // If the frontend is ALWAYS sending the correct ID, we can remove the check, BUT the authorization logic 
-        // must still prevent a student from updating another student's profile if they bypass the frontend.
-
-        // Let's go back to your original *intention* but remove the confusing Guid parsing check.
-        // If a non-Admin user is guaranteed to be sending their OWN ID, we don't need a custom policy.
-
-        // **NEW INTERPRETATION:** Let's keep the authorization only for **Admin** and let them update any ID.
-        // For *all* other users, if they send their OWN ID, the update will proceed successfully because
-        // the user is authenticated. This is a common pattern when trusting the frontend on which ID to send.
-
         try
         {
             // NO EXPLICIT AUTHORIZATION CHECK HERE - Relying on the [Authorize] attribute for Admin/Authenticated
@@ -164,6 +121,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPatch("teachers/{id}/profile")]
+    [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateTeacherProfile(Guid id, [FromBody] UpdateTeacherProfileDto teacherDto)
     {
         if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
@@ -185,6 +143,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPatch("staff/{id}/profile")]
+    [Authorize(Roles = "Admin,Staff")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateStaffProfile(Guid id, [FromBody] UpdateStaffProfileDto staffDto)
     {
         if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))

@@ -21,9 +21,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
             public string? CityMunicipality { get; set; }
             public string? Province { get; set; }
             public string? PostalCode { get; set; }
-
-            // You can handle file uploads separately or include them here.
-            // For simplicity, we'll focus on the data first.
             public IFormFile? ProfilePicture { get; set; }
             public IFormFile? FrontStudentIdPicture { get; set; }
             public IFormFile? BackStudentIdPicture { get; set; }
@@ -31,37 +28,29 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public class UpdateTeacherProfileDto
         {
            
-            public string LastName { get; set; } = string.Empty;
+            public string? LastName { get; set; }
             public string? MiddleName { get; set; }
-            public string FirstName { get; set; } = string.Empty;
-            public string Department { get; set; } = string.Empty;
+            public string? FirstName { get; set; }
+            public string? Department { get; set; }
         }
         public class UpdateStaffProfileDto
         {
-            public string LastName { get; set; } = string.Empty;
+            public string? LastName { get; set; }
 
             public string? MiddleName { get; set; }
 
-            public string FirstName { get; set; } = string.Empty;
+            public string? FirstName { get; set; }
 
             public string? Position { get; set; }
-        }
-        public class UpdateManagerProfileDto
-        {
-            public string LastName { get; set; } = string.Empty;
-
-            public string? MiddleName { get; set; }
-
-            public string FirstName { get; set; } = string.Empty;
         }
 
         public class UpdateAdminProfileDto
         {
-            public string LastName { get; set; } = string.Empty;
+            public string? LastName { get; set; }
 
             public string? MiddleName { get; set; }
 
-            public string FirstName { get; set; } = string.Empty;
+            public string? FirstName { get; set; }
         }
 
     }
