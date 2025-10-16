@@ -109,7 +109,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
             return Ok(successResponse); 
         }
-        [HttpPatch("scan/{id}/updateStatus")]
+        [HttpPatch("scan/updateStatus{id}")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(Guid id, [FromBody] ScanLentItemDto dto)
         {
@@ -124,7 +124,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         
-        [HttpDelete("{id}/archive")]
+        [HttpDelete("archive/{id}")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveLentItems(Guid id)
         {
@@ -138,7 +138,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
-        [HttpPatch("{lentItemId}/hide")]
+        [HttpPatch("hide/{lentItemId}")]
         [Authorize]
         public async Task<ActionResult<ApiResponse<object>>> HideFromHistory(Guid lentItemId)
         {

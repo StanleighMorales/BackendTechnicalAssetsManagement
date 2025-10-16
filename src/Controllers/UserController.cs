@@ -75,7 +75,7 @@ public class UserController : ControllerBase
     }
 
     // --- PATCH Endpoints (Now with full implementation) ---
-    [HttpPatch("students/{id}/profile")]
+    [HttpPatch("students/profile{id}")]
     [Authorize(Roles = "Admin,Student")]
     // Authorization Policy: Only Admin can update an arbitrary Student profile ID
     public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
@@ -120,7 +120,7 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpPatch("teachers/{id}/profile")]
+    [HttpPatch("teachers/profile{id}")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateTeacherProfile(Guid id, [FromBody] UpdateTeacherProfileDto teacherDto)
     {
@@ -142,7 +142,7 @@ public class UserController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(null, "Teacher profile updated successfully."));
     }
 
-    [HttpPatch("staff/{id}/profile")]
+    [HttpPatch("staff/profile{id}")]
     [Authorize(Roles = "Admin,Staff")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateStaffProfile(Guid id, [FromBody] UpdateStaffProfileDto staffDto)
     {
