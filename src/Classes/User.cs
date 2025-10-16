@@ -51,9 +51,4 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     {
         public string? Position { get; set; }
     }
-    public class Admin : User
-    {
-        public string? Position { get; set; }
-    }
-
 }

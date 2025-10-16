@@ -73,7 +73,35 @@ public class UserController : ControllerBase
 
         return Ok(successResponse);
     }
+    [HttpGet("students")]
+    [Authorize(Policy = "AdminOrStaff")]
+    // Use StudentDto here if your UserService is returning StudentDto
+    // (If it returns GetStudentProfileDto, use that instead)
+    public async Task<ActionResult<ApiResponse<IEnumerable<StudentDto>>>> GetAllStudents()
+    {
+        var students = await _userService.GetAllStudentsAsync();
+        // Adjusted to use StudentDto
+        var response = ApiResponse<IEnumerable<StudentDto>>.SuccessResponse(students, "Students retrieved successfully.");
+        return Ok(response);
+    }
 
+    [HttpGet("teachers")]
+    [Authorize(Policy = "AdminOrStaff")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<TeacherDto>>>> GetAllTeachers()
+    {
+        var teachers = await _userService.GetAllTeachersAsync();
+        var response = ApiResponse<IEnumerable<TeacherDto>>.SuccessResponse(teachers, "Teachers retrieved successfully.");
+        return Ok(response);
+    }
+
+    [HttpGet("staff")]
+    [Authorize(Policy = "AdminOrStaff")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<StaffDto>>>> GetAllStaff()
+    {
+        var staff = await _userService.GetAllStaffAsync();
+        var response = ApiResponse<IEnumerable<StaffDto>>.SuccessResponse(staff, "Staff retrieved successfully.");
+        return Ok(response);
+    }
     // --- PATCH Endpoints (Now with full implementation) ---
     [HttpPatch("students/profile{id}")]
     [Authorize(Roles = "Admin,Student")]

@@ -1,4 +1,6 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -9,10 +11,12 @@ namespace BackendTechnicalAssetsManagement.src.Repository
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
 
-        public UserRepository(AppDbContext context)
+        public UserRepository(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<User> AddAsync(User user)
@@ -34,6 +38,30 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
+        }
+
+        public async Task<IEnumerable<StaffDto>> GetAllStaffAsync()
+        {
+            // Use the Staff -> StaffDto mapping you defined
+            return await _context.Users.OfType<Staff>()
+                .ProjectTo<StaffDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync()
+        {
+            // Use the Student -> StudentDto mapping you defined (which includes base64 conversion)
+            return await _context.Users.OfType<Student>()
+                .ProjectTo<StudentDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<TeacherDto>> GetAllTeachersAsync()
+        {
+            // Use the Teacher -> TeacherDto mapping you defined
+            return await _context.Users.OfType<Teacher>()
+                .ProjectTo<TeacherDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<UserDto>> GetAllUserDtosAsync()

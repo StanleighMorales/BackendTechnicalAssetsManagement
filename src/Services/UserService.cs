@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using BackendTechnicalAssetsManagement.src.Repository;
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService
@@ -93,7 +94,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _userRepository.SaveChangesAsync();
         }
 
+        public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync() // Return specific DTO
+        {
+            // Assuming IUserRepository.GetAllStudentsAsync returns the correct DTO
+            return await _userRepository.GetAllStudentsAsync();
+        }
 
+        public async Task<IEnumerable<TeacherDto>> GetAllTeachersAsync() // Return specific DTO
+        {
+            // Assuming IUserRepository.GetAllTeachersAsync returns the correct DTO
+            return await _userRepository.GetAllTeachersAsync();
+        }
 
+        public async Task<IEnumerable<StaffDto>> GetAllStaffAsync() // Return specific DTO
+        {
+            // Assuming IUserRepository.GetAllStaffAsync returns the correct DTO
+            return await _userRepository.GetAllStaffAsync();
+        }
     }
 }
