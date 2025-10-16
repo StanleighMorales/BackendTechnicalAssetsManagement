@@ -94,15 +94,6 @@ public class UserController : ControllerBase
         var response = ApiResponse<IEnumerable<TeacherDto>>.SuccessResponse(teachers, "Teachers retrieved successfully.");
         return Ok(response);
     }
-
-    [HttpGet("staff")]
-    [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<StaffDto>>>> GetAllStaff()
-    {
-        var staff = await _userService.GetAllStaffAsync();
-        var response = ApiResponse<IEnumerable<StaffDto>>.SuccessResponse(staff, "Staff retrieved successfully.");
-        return Ok(response);
-    }
     // --- PATCH Endpoints (Now with full implementation) ---
     [HttpPatch("students/profile{id}")]
     [Authorize(Roles = "Admin,Student")]
@@ -170,7 +161,7 @@ public class UserController : ControllerBase
 
         return Ok(ApiResponse<object>.SuccessResponse(null, "Teacher profile updated successfully."));
     }
-    [HttpPatch("profile/technical")]
+    [HttpPatch("profile/admin-or-staff")]
     [Authorize(Policy = "AdminOrStaff")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateMyProfile([FromBody] UpdateStaffProfileDto dto)
     {
