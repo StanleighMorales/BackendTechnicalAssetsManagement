@@ -50,6 +50,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // It's a best practice to call the base method first. This ensures any configuration
             // from the base DbContext class is applied before your custom configurations.
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Seed();
 
             // This is a custom extension method that encapsulates all the data seeding logic.
             // Calling .Seed() here executes the code from your ModelBuilderExtensions class,

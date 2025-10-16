@@ -1,4 +1,5 @@
 using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Authorization;
 using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
@@ -8,6 +9,7 @@ using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
@@ -35,6 +37,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 // Add Authentication and Authorization
+builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminBypassHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOrStaff", policy =>

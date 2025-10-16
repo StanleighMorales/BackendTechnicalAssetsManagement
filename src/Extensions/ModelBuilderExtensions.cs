@@ -1,7 +1,7 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Data
 {
@@ -19,137 +19,131 @@ namespace BackendTechnicalAssetsManagement.src.Data
         /// <param name="modelBuilder">The ModelBuilder instance from Entity Framework Core's OnModelCreating method.</param>
         public static void Seed(this ModelBuilder modelBuilder)
         {
-            // --- SECTION 1: INITIAL SETUP ---
-
-            // Generate unique identifiers (GUIDs) for the entities upfront.
-            // This is essential to establish relationships between the seeded entities,
-            // for example, linking a LentItem record to a specific User and a specific Item.
-            var superAdminId = Guid.NewGuid();
-            var adminId = Guid.NewGuid();
-            var staffId = Guid.NewGuid();
-            var studentId = Guid.NewGuid();
-            var teacherId = Guid.NewGuid();
-            var itemId1 = Guid.NewGuid();
-            var itemId2 = Guid.NewGuid();
-
-            // Instantiate the PasswordHasher provided by ASP.NET Core Identity.
-            // This is the standard and secure way to hash and salt passwords before storing them.
-            // Never store plain-text passwords in the database.
             var passwordHasher = new PasswordHasher<User>();
+            string defaultPassword = "@Pass123";
 
-            // --- SECTION 2: USER SEEDING ---
-            // This section populates the database with a set of default users,
-            // each assigned a specific role and credentials for testing different access levels.
+            // Load mock image bytes
+            string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "image", "mockImage.png");
+            byte[]? mockImageBytes = File.Exists(imagePath) ? File.ReadAllBytes(imagePath) : null;
 
-            // Seed a SuperAdmin user. This user has the highest level of privileges
-            // and is intended for system-wide configuration and user management.
-            
+            // ===============================
+            // SECTION 1 — BASE USERS (Admin + SuperAdmin)
+            // ===============================
 
-            // Seed a Staff user, representing a non-teaching employee like a lab technician.
-            modelBuilder.Entity<Staff>().HasData(new Staff
-            {
-                Id = staffId,
-                FirstName = "Jane",
-                LastName = "Smith",
-                Email = "staff@example.com",
-                Username = "staff",
-                PasswordHash = passwordHasher.HashPassword(null, "Staff@123"),
-                UserRole = Enums.UserRole.Staff,
-                Status = "",
-                Position = "Lab Technician",
-                PhoneNumber = "098-765-4321"
-            });
+            var users = new List<User>();
 
-            // Seed a Student user.
-            modelBuilder.Entity<Student>().HasData(new Student
-            {
-                Id = studentId,
-                FirstName = "Peter",
-                LastName = "Jones",
-                Email = "student@example.com",
-                Username = "student",
-                PasswordHash = passwordHasher.HashPassword(null, "Student@123"),
-                UserRole = Enums.UserRole.Student,
-                Status = "",
-                StudentIdNumber = "2023-0001",
-                Course = "Computer Science",
-                Year = "3",
-                Section = "A",
-                Street = "123 Main St",
-                CityMunicipality = "Anytown",
-                Province = "Anyprovince",
-                PostalCode = "12345",
-                PhoneNumber = "555-123-4567"
-            });
-
-            // Seed a Teacher user.
-            modelBuilder.Entity<Teacher>().HasData(new Teacher
-            {
-                Id = teacherId,
-                FirstName = "Mary",
-                LastName = "Williams",
-                Email = "teacher@example.com",
-                Username = "teacher",
-                PasswordHash = passwordHasher.HashPassword(null, "Teacher@123"),
-                UserRole = Enums.UserRole.Teacher,
-                Status = "",
-                Department = "Information Technology",
-                PhoneNumber = "555-987-6543"
-            });
-
-            // --- SECTION 3: ITEM SEEDING ---
-            // This section populates the database with sample technical assets (Items)
-            // that can be borrowed by users.
-            modelBuilder.Entity<Item>().HasData(
-                new Item
-                {
-                    Id = itemId1,
-                    ItemName = "Laptop",
-                    ItemMake = "Dell",
-                    ItemModel = "XPS 15",
-                    SerialNumber = "SN123456",
-                    ItemType = "Electronic",
-                    Category = Enums.ItemCategory.Electronics,
-                    Condition = Enums.ItemCondition.New,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    Description = "High-performance laptop for students."
-                },
-                new Item
-                {
-                    Id = itemId2,
-                    ItemName = "Projector",
-                    ItemMake = "Epson",
-                    ItemModel = "PowerLite 1781W",
-                    SerialNumber = "SN654321",
-                    ItemType = "Electronic",
-                    Category = Enums.ItemCategory.MediaEquipment,
-                    Condition = Enums.ItemCondition.Good,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    Description = "Portable projector for classroom use."
-                }
-            );
-
-            // --- SECTION 4: LENT ITEMS SEEDING ---
-            // This section creates an initial transaction record to demonstrate
-            // an item being lent to a user. It links a user, an item, and a teacher.
-            modelBuilder.Entity<LentItems>().HasData(new LentItems
+            // 1 SuperAdmin
+            users.Add(new User
             {
                 Id = Guid.NewGuid(),
-                ItemId = itemId1, // The Dell XPS 15 laptop
-                BorrowerFullName = "Peter Jones",
-                BorrowerRole = "Student",
-                StudentIdNumber = "2023-0001",
-                TeacherFullName = "Mary Williams",
-                TeacherId = teacherId, // Foreign key to the seeded teacher
-                UserId = studentId,    // Foreign key to the seeded student
-                Room = "Room 101",
-                SubjectTimeSchedule = "MWF 10:00-11:00 AM",
-                LentAt = DateTime.UtcNow,
-                Remarks = "Borrowed",
-                ReturnedAt = null // 'null' indicates the item has not yet been returned
+                FirstName = "Super",
+                LastName = "Admin",
+                Username = "superadmin",
+                Email = "superadmin@example.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+                UserRole = UserRole.SuperAdmin,
+                Status = "Offline"
             });
+
+            // 5 Admins
+            for (int i = 1; i <= 5; i++)
+            {
+                users.Add(new User
+                {
+                    Id = Guid.NewGuid(),
+                    FirstName = $"Admin{i}",
+                    LastName = "User",
+                    Username = $"admin{i}",
+                    Email = $"admin{i}@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+                    UserRole = UserRole.Admin,
+                    Status = "Offline"
+                });
+            }
+
+            modelBuilder.Entity<User>().HasData(users);
+
+            // ===============================
+            // SECTION 2 — TEACHERS
+            // ===============================
+            var teachers = new List<Teacher>();
+
+            for (int i = 1; i <= 5; i++)
+            {
+                teachers.Add(new Teacher
+                {
+                    Id = Guid.NewGuid(),
+                    FirstName = $"Teacher{i}",
+                    LastName = "Smith",
+                    Username = $"teacher{i}",
+                    Email = $"teacher{i}@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+                    UserRole = UserRole.Teacher,
+                    Department = "Information Technology",
+                    PhoneNumber = $"0917{i}23456",
+                    Status = "Offline"
+                });
+            }
+
+            modelBuilder.Entity<Teacher>().HasData(teachers);
+
+            // ===============================
+            // SECTION 3 — STAFF
+            // ===============================
+            var staff = new List<Staff>();
+
+            for (int i = 1; i <= 5; i++)
+            {
+                staff.Add(new Staff
+                {
+                    Id = Guid.NewGuid(),
+                    FirstName = $"Staff{i}",
+                    LastName = "Doe",
+                    Username = $"staff{i}",
+                    Email = $"staff{i}@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+                    UserRole = UserRole.Staff,
+                    Position = "Lab Technician",
+                    PhoneNumber = $"0998{i}76543",
+                    Status = "Offline"
+                });
+            }
+
+            modelBuilder.Entity<Staff>().HasData(staff);
+
+            // ===============================
+            // SECTION 4 — STUDENTS
+            // ===============================
+            var students = new List<Student>();
+
+            for (int i = 1; i <= 5; i++)
+            {
+                students.Add(new Student
+                {
+                    Id = Guid.NewGuid(),
+                    FirstName = $"Student{i}",
+                    LastName = "Jones",
+                    Username = $"student{i}",
+                    Email = $"student{i}@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
+                    UserRole = UserRole.Student,
+                    StudentIdNumber = $"2023-000{i}",
+                    Course = "Computer Science",
+                    Year = "3",
+                    Section = "A",
+                    Street = $"123 Main St #{i}",
+                    CityMunicipality = "Sample City",
+                    Province = "Sample Province",
+                    PostalCode = "12345",
+                    PhoneNumber = $"0912{i}34567",
+                    Status = "Offline",
+                    ProfilePicture = mockImageBytes,
+                    FrontStudentIdPicture = mockImageBytes,
+                    BackStudentIdPicture = mockImageBytes
+                });
+            }
+
+            modelBuilder.Entity<Student>().HasData(students);
         }
     }
 }
