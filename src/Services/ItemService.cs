@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
@@ -162,7 +162,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _itemRepository.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteItemAsync(Guid id)
+        public async Task<bool> DeleteItemAsync(Guid id) // Basically archive
         //TODO: Make sure that once deleted it will be pushed into the Item Archive
         {
             var itemToDelete = await _itemRepository.GetByIdAsync(id);

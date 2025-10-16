@@ -92,12 +92,14 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILentItemsRepository, LentItemsRepository>();
 builder.Services.AddScoped<IArchiveItemRepository, ArchiveItemsRepository>();
+builder.Services.AddScoped<IArchiveLentItemsRepository, ArchiveLentItemsRepository>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
+builder.Services.AddScoped<IArchiveLentItemsService, ArchiveLentItemsService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 

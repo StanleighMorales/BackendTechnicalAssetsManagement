@@ -24,13 +24,15 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             /// <returns>True if the update was successful, false otherwise (e.g., not found or not authorized).</returns>
             Task<bool> UpdateHistoryVisibility(Guid lentItemId, Guid userId, bool isHidden);
 
-        // Update
-        Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
-            Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto);
+            // Update
+            Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
+                Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto);
 
-        // Delete
-        Task<bool> SoftDeleteAsync(Guid id);
+            // Delete
+            Task<bool> SoftDeleteAsync(Guid id);
             Task<bool> PermaDeleteAsync(Guid id);
+
+            Task<bool> ArchiveLentItems(Guid id);
 
             // Persistence
             Task<bool> SaveChangesAsync();

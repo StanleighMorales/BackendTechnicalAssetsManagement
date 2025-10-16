@@ -11,8 +11,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-    name: "IX_Students_StudentIdNumber",
-    table: "Students"); // <-- THIS MUST BE FIRST
+            name: "IX_Students_StudentIdNumber",
+            table: "Students"); // <-- THIS MUST BE FIRST
 
             migrationBuilder.AlterColumn<string>(
                 name: "StudentIdNumber",

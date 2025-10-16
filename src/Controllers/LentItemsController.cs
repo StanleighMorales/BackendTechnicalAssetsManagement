@@ -109,7 +109,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
             return Ok(successResponse); 
         }
-        [HttpPatch("scan/{id}")]
+        [HttpPatch("scan/{id}/updateStatus")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(Guid id, [FromBody] ScanLentItemDto dto)
         {
@@ -123,18 +123,18 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
-        // DELETE (soft): api/v1/lentitems/{id}
-        [HttpDelete("{id}")]
+        
+        [HttpDelete("{id}/archive")]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> SoftDelete(Guid id)
+        public async Task<ActionResult<ApiResponse<object>>> ArchiveLentItems(Guid id)
         {
-            var success = await _service.SoftDeleteAsync(id);
+            var success = await _service.ArchiveLentItems(id);
             if (!success)
             {
                 var errorResponse = ApiResponse<object>.FailResponse("Soft delete failed. Item not found.");
                 return NotFound(errorResponse); // Or BadRequest("Soft delete failed");
             }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item soft-deleted successfully.");
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item archived successfully.");
             return Ok(successResponse);
         }
 

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.DTOs.Archive
+namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
 {
     public class UpdateArchiveItemsDto
     {

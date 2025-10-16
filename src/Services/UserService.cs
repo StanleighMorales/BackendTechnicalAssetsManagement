@@ -89,7 +89,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 return false; // Not found
             }
-            await _userRepository.DeleteAsync(id); // Assuming this is your delete method
+            await _userRepository.DeleteAsync(id); 
             return await _userRepository.SaveChangesAsync();
         }
 

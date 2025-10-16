@@ -1,5 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 
 namespace BackendTechnicalAssetsManagement.src.IService

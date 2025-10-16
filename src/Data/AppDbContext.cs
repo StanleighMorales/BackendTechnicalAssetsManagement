@@ -38,6 +38,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<LentItems> LentItems { get; set; }
 
         public DbSet<ArchiveItems> ArchiveItems { get; set; }
+        public DbSet<ArchiveLentItems> ArchiveLentItems { get; set; }
 
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.

@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+﻿using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Utils;

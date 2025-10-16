@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
@@ -14,21 +16,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly ILentItemsRepository _repository;
         private readonly IUserRepository _userRepository;
         private readonly IItemRepository _itemRepository;
+        private readonly IArchiveLentItemsService _archiveLentItemsService;
         private readonly IMapper _mapper;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService)
         {
             _repository = repository;
             _mapper = mapper;
             _userRepository = userRepository;
             _itemRepository = itemRepository;
+            _archiveLentItemsService = archiveLentItemsService;
         }
 
         // Create
         public async Task<LentItemsDto> AddAsync(CreateLentItemDto dto)
         {
             var lentItem = _mapper.Map<LentItems>(dto);
-            if(dto.ItemId != Guid.Empty)
+            if (dto.ItemId != Guid.Empty)
             {
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                 if (item != null)
@@ -79,7 +83,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
-            
+
 
 
             await _repository.AddAsync(lentItem);
@@ -179,6 +183,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _repository.SaveChangesAsync();
         }
 
+
         public async Task<bool> SaveChangesAsync()
         {
             return await _repository.SaveChangesAsync();
@@ -245,6 +250,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Save the changes to the database.
             await _repository.UpdateAsync(lentItem);
             return await _repository.SaveChangesAsync();
+        }
+
+        public async Task<bool> ArchiveLentItems(Guid id)
+        {
+            var lentItemsToArchive = await _repository.GetByIdAsync(id); // Uses _repository (ILentItemsRepository)
+            if (lentItemsToArchive == null) return false;
+
+            var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);
+
+            // **OPERATION 1 (Starts here) - Calls ArchiveLentItemsService**
+            await _archiveLentItemsService.CreateLentItemsArchiveAsync(archiveDto);
+            // This service uses _archiveLentItemsRepository to ADD AND SAVE changes.
+            // The DbContext associated with _archiveLentItemsRepository performs a SAVE.
+
+            // **OPERATION 2 (Starts here) - Calls LentItemsRepository**
+            await _repository.PermaDeleteAsync(id); // Uses _repository (ILentItemsRepository) to MARK FOR DELETION
+
+            // **OPERATION 3 (Finishes Operation 2)**
+            return await _repository.SaveChangesAsync(); // Uses _repository's DbContext to SAVE.
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.DTOs.Archive
+namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
 {
     public class ArchiveItemsDto
     {

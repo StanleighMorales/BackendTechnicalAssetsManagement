@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Profiles

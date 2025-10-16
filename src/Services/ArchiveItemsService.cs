@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
-using BackendTechnicalAssetsManagement.src.Utils;
-using static BackendTechnicalAssetsManagement.src.Services.ItemService;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -14,14 +12,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveItemRepository _archiveItemRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _hostEnvironment;
 
-        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment)
+        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper)
         {
             _archiveItemRepository = archiveItemRepository;
             _itemRepository = itemRepository;
             _mapper = mapper;
-            _hostEnvironment = hostEnvironment;
         }
         public async Task<ArchiveItemsDto> CreateItemArchiveAsync(CreateArchiveItemsDto createItemArchive)
         {
@@ -93,7 +89,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             return await _archiveItemRepository.SaveChangesAsync();
         }
-
+         
         public async Task<bool> UpdateItemArchiveAsync(Guid id, UpdateArchiveItemsDto UpdateItemArchive)
         {
             var itemToUpdate = await _archiveItemRepository.GetItemArchiveByIdAsync(id);
