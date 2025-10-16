@@ -157,7 +157,8 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<UpdateStaffProfileDto, Staff>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-
+            CreateMap<UpdateStaffProfileDto, User>() // Map the DTO to the base User class (Admin is a User)
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             // --- Generic DTO to Model (used for generic mapping like in repository or service layer) ---
             CreateMap<UserDto, User>()

@@ -35,6 +35,10 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         }
         public class UpdateStaffProfileDto
         {
+            public string? Username { get; set; }
+            public string? Email { get; set; }
+            public string? PhoneNumber { get; set; }
+
             public string? LastName { get; set; }
 
             public string? MiddleName { get; set; }
@@ -42,15 +46,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
             public string? FirstName { get; set; }
 
             public string? Position { get; set; }
-        }
-
-        public class UpdateAdminProfileDto
-        {
-            public string? LastName { get; set; }
-
-            public string? MiddleName { get; set; }
-
-            public string? FirstName { get; set; }
         }
 
     }

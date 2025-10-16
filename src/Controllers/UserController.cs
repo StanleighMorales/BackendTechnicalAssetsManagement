@@ -8,6 +8,7 @@ using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
 
 [Route("api/v1/users")]
@@ -169,27 +170,40 @@ public class UserController : ControllerBase
 
         return Ok(ApiResponse<object>.SuccessResponse(null, "Teacher profile updated successfully."));
     }
-
-    [HttpPatch("staff/profile{id}")]
-    [Authorize(Roles = "Admin,Staff")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateStaffProfile(Guid id, [FromBody] UpdateStaffProfileDto staffDto)
+    [HttpPatch("profile/technical")]
+    [Authorize(Policy = "AdminOrStaff")]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateMyProfile([FromBody] UpdateStaffProfileDto dto)
     {
-        if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdClaim, out var userId))
         {
-            return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
+            return Unauthorized(ApiResponse<object>.FailResponse("Invalid Token."));
         }
 
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user is not Staff staff)
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
         {
-            return NotFound(ApiResponse<object>.FailResponse("Staff not found."));
+            return NotFound(ApiResponse<object>.FailResponse("User not found."));
         }
 
-        _mapper.Map(staffDto, staff);
-        await _userRepository.UpdateAsync(staff);
-        await _userRepository.SaveChangesAsync();
+        // Role Check to ensure the correct DTO is used
+        if (user.UserRole == UserRole.Staff || user.UserRole == UserRole.Admin)
+        {
+            var success = await _userService.UpdateStaffOrAdminProfileAsync(userId, dto);
 
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Staff profile updated successfully."));
+            if (success)
+            {
+                // Uniformly use ApiResponse for success responses
+                return Ok(ApiResponse<object>.SuccessResponse(null, $"{user.UserRole} profile updated successfully."));
+            }
+        }
+        else
+        {
+            // If a Teacher or Student tries to use this endpoint
+            return BadRequest(ApiResponse<object>.FailResponse("Invalid update request for your user role."));
+        }
+
+        return StatusCode(500, ApiResponse<object>.FailResponse("Failed to update user profile."));
     }
 
     [HttpDelete("{id}")]

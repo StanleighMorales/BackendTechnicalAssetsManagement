@@ -5,6 +5,7 @@ using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Repository;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService
@@ -110,6 +111,32 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             // Assuming IUserRepository.GetAllStaffAsync returns the correct DTO
             return await _userRepository.GetAllStaffAsync();
+        }
+
+        public async Task<bool> UpdateStaffOrAdminProfileAsync(Guid id, UserProfileDtos.UpdateStaffProfileDto dto)
+        {
+            var userToUpdate = await _userRepository.GetByIdAsync(id);
+            if (userToUpdate == null) return false;
+
+            // Check for the most specific derived type first (Staff)
+            if (userToUpdate is Staff staff)
+            {
+                // Uses the DTO -> Staff map (includes Position)
+                _mapper.Map(dto, staff);
+            }
+            // Check if it's the base User type you treat as Admin
+            else if (userToUpdate.UserRole == UserRole.Admin)
+            {
+                // Uses the DTO -> User map (ignores Position)
+                _mapper.Map(dto, userToUpdate);
+            }
+            else
+            {
+                return false; // Handle other types not covered by this DTO (e.g., Student, Teacher)
+            }
+
+            await _userRepository.UpdateAsync(userToUpdate);
+            return await _userRepository.SaveChangesAsync();
         }
     }
 }

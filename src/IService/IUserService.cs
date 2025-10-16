@@ -1,5 +1,6 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
 
 namespace BackendTechnicalAssetsManagement.src.IService
 {
@@ -18,6 +19,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         // The service will handle the "Fetch, Apply, Save" logic.
         // The controller will just pass the ID and the DTO.
         Task<bool> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
+        Task<bool> UpdateStaffOrAdminProfileAsync(Guid id, UpdateStaffProfileDto dto);
         Task<bool> DeleteUserAsync(Guid id);
 
 
