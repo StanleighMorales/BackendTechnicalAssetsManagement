@@ -9,7 +9,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     [JsonDerivedType(typeof(GetStudentProfileDto), typeDiscriminator: "Student")]
     [JsonDerivedType(typeof(GetTeacherProfileDto), typeDiscriminator: "Teacher")]
     [JsonDerivedType(typeof(GetStaffProfileDto), typeDiscriminator: "Staff")]
-    [JsonDerivedType(typeof(GetAdminProfileDto), typeDiscriminator: "Admin")]
     public class BaseProfileDto
     {
         public Guid Id { get; set; }
@@ -30,10 +29,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string PhoneNumber { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
         public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
-    }
-    public class GetAdminProfileDto : BaseProfileDto
-    {
-        public string PhoneNumber { get; set; } = string.Empty;
     }
 
     public class GetTeacherProfileDto : BaseProfileDto

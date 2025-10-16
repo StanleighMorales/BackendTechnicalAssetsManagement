@@ -157,9 +157,6 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<UpdateStaffProfileDto, Staff>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            /// <summary>
-            /// Mapping for Admin profile updates, ignoring null properties for partial updates.
-            /// </summary>
 
 
             // --- Generic DTO to Model (used for generic mapping like in repository or service layer) ---

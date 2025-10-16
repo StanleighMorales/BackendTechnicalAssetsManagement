@@ -111,6 +111,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 case UserRole.Staff:
                     newUser = new Staff(); // <--- MANUALLY INSTANTIATE
                     break;
+                case UserRole.Admin:
+                case UserRole.SuperAdmin:
+                    // Admin and SuperAdmin are now just the base User class
+                    newUser = new User();
+                    break;
                 default:
                     // Handle cases where the role is not supported or invalid
                     throw new ArgumentException("Invalid user role specified.");

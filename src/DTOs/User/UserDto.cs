@@ -8,7 +8,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     [JsonDerivedType(typeof(StudentDto), typeDiscriminator: "Student")]
     [JsonDerivedType(typeof(TeacherDto), typeDiscriminator: "Teacher")]
     [JsonDerivedType(typeof(StaffDto), typeDiscriminator: "Staff")]
-    [JsonDerivedType(typeof(AdminDto), typeDiscriminator: "Admin")]
     public class UserDto
     {
         public Guid Id { get; set; }
@@ -30,9 +29,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
 
         public string PhoneNumber {  get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
-    }
-    public class AdminDto : UserDto
-    {
     }
     public class TeacherDto : UserDto
     {
