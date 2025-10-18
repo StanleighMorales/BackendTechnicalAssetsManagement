@@ -8,7 +8,7 @@
         public List<string>? Errors { get; set; }
 
         // Static factory method for a success response
-        public static ApiResponse<T> SuccessResponse(T data, string message = "Request successful.")
+        public static ApiResponse<T> SuccessResponse(T? data, string message = "Request successful.")
         {
             return new ApiResponse<T>
             {

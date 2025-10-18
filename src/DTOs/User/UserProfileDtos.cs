@@ -21,6 +21,9 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
             public string? CityMunicipality { get; set; }
             public string? Province { get; set; }
             public string? PostalCode { get; set; }
+
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+            public string? PhoneNumber { get; set; }
             public IFormFile? ProfilePicture { get; set; }
             public IFormFile? FrontStudentIdPicture { get; set; }
             public IFormFile? BackStudentIdPicture { get; set; }
@@ -31,12 +34,15 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
             public string? LastName { get; set; }
             public string? MiddleName { get; set; }
             public string? FirstName { get; set; }
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+            public string? PhoneNumber { get; set; }
             public string? Department { get; set; }
         }
         public class UpdateStaffProfileDto
         {
             public string? Username { get; set; }
             public string? Email { get; set; }
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
             public string? PhoneNumber { get; set; }
 
             public string? LastName { get; set; }

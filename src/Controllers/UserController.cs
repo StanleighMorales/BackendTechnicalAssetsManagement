@@ -173,37 +173,22 @@ public class UserController : ControllerBase
     /// <summary>
     /// Updates the profile of the currently authenticated 'Admin' or 'Staff' user.
     /// </summary>
-    [HttpPatch("profile/admin-or-staff")]
-    [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateMyProfile([FromBody] UpdateStaffProfileDto dto)
+    [HttpPatch("update/admin-or-staff{id}")] // Using PATCH as per our last discussion
+    [Authorize(Roles = "SuperAdmin, Admin, Staff")]
+    public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
-        // Retrieve the user ID from the token to ensure users can only update themselves.
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(ApiResponse<object>.FailResponse("Invalid Token."));
-        }
+        // We get the current user's ID securely from the token claims.
+        var currentUserId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
-        {
-            return NotFound(ApiResponse<object>.FailResponse("User not found."));
-        }
+        // The controller's job is now just to orchestrate the call.
+        // It lives in the "happy path." All error handling is offloaded.
+        await _userService.UpdateStaffOrAdminProfileAsync(id, dto, currentUserId);
 
-        if (user.UserRole == UserRole.Staff || user.UserRole == UserRole.Admin)
-        {
-            var success = await _userService.UpdateStaffOrAdminProfileAsync(userId, dto);
-            if (success)
-            {
-                return Ok(ApiResponse<object>.SuccessResponse(null, $"{user.UserRole} profile updated successfully."));
-            }
-        }
-        else
-        {
-            return BadRequest(ApiResponse<object>.FailResponse("Invalid update request for your user role."));
-        }
+        // If the line above throws an exception, this line is never reached.
+        // The GlobalExceptionHandler takes over.
 
-        return StatusCode(500, ApiResponse<object>.FailResponse("Failed to update user profile."));
+        // If no exception was thrown, the update was successful.
+        return NoContent(); // HTTP 204 is the correct response for a successful update.
     }
 
     /// <summary>

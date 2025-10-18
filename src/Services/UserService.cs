@@ -6,6 +6,7 @@ using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Repository;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
 namespace BackendTechnicalAssetsManagement.src.Services
 {
     public class UserService : IUserService
@@ -110,30 +111,56 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _userRepository.GetAllStaffAsync();
         }
 
-        public async Task<bool> UpdateStaffOrAdminProfileAsync(Guid id, UserProfileDtos.UpdateStaffProfileDto dto)
+        public async Task UpdateStaffOrAdminProfileAsync(Guid targetUserId, UpdateStaffProfileDto dto, Guid currentUserId)
         {
-            var userToUpdate = await _userRepository.GetByIdAsync(id);
-            if (userToUpdate == null) return false;
+            // 1. Get the user who is making the request
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+            // This case implies an issue with the auth token, which is rare.
+            // A KeyNotFoundException is appropriate.
+            if (currentUser == null)
+                throw new KeyNotFoundException("The current user making the request could not be found.");
 
-            // Check for the most specific derived type first (Staff)
+            // 2. Get the user to be updated
+            var userToUpdate = await _userRepository.GetByIdAsync(targetUserId);
+            if (userToUpdate == null)
+                throw new KeyNotFoundException($"User with ID '{targetUserId}' was not found.");
+
+            // 3. Authorization: Throw a specific exception for permission failure.
+            if (!CanUserUpdateProfile(currentUser, userToUpdate))
+            {
+                // This will be caught by your middleware and turned into a 403 Forbidden.
+                throw new UnauthorizedAccessException("You do not have permission to update this user's profile.");
+            }
+
+            // 4. Mapping: This logic remains the same.
             if (userToUpdate is Staff staff)
             {
-                // Uses the DTO -> Staff map (includes Position)
                 _mapper.Map(dto, staff);
-            }
-            // Check if it's the base User type you treat as Admin
-            else if (userToUpdate.UserRole == UserRole.Admin)
-            {
-                // Uses the DTO -> User map (ignores Position)
-                _mapper.Map(dto, userToUpdate);
             }
             else
             {
-                return false; // Handle other types not covered by this DTO (e.g., Student, Teacher)
+                _mapper.Map(dto, userToUpdate);
             }
 
+            // 5. Persist Changes: If we reach this point, the operation is successful.
             await _userRepository.UpdateAsync(userToUpdate);
-            return await _userRepository.SaveChangesAsync();
+            await _userRepository.SaveChangesAsync();
+        }
+
+        // The helper method remains exactly the same, as its logic is still correct.
+        private bool CanUserUpdateProfile(User currentUser, User userToUpdate)
+        {
+            if (currentUser.Id == userToUpdate.Id)
+            {
+                return true;
+            }
+
+            return currentUser.UserRole switch
+            {
+                UserRole.SuperAdmin => userToUpdate.UserRole is UserRole.Admin or UserRole.Staff,
+                UserRole.Admin => userToUpdate.UserRole is UserRole.Staff,
+                _ => false
+            };
         }
     }
 }
