@@ -27,11 +27,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IUserRepository _userRepository;
         private readonly IUserValidationService _userValidationService;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IWebHostEnvironment _env;
         private readonly IDevelopmentLoggerService _developmentLoggerService;
 
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env, IDevelopmentLoggerService developmentLoggerService)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env, IDevelopmentLoggerService developmentLoggerService, IRefreshTokenRepository refreshTokenRepository)
         {
             _context = context;
             _configuration = configuration;
@@ -42,6 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _mapper = mapper;
             _env = env;
             _developmentLoggerService = developmentLoggerService;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
         //public async Task<UserDto> Register(RegisterUserDto request)
@@ -270,6 +272,86 @@ namespace BackendTechnicalAssetsManagement.src.Services
             ClearAccessTokenCookie();
             // **CHANGE: Clear the Refresh Token Cookie**
             ClearRefreshTokenCookie();
+        }
+        #endregion
+
+        #region Change-Password
+        /// <summary>
+        /// Handles password changes for both a user's own account and other users' accounts by an administrator.
+        /// This single method intelligently determines the context based on the request and applies the correct
+        /// authorization and session invalidation logic.
+        /// </summary>
+        /// <param name="request">A DTO containing the new password and, optionally, the ID of the target user.</param>
+        /// <exception cref="UnauthorizedAccessException">
+        /// Thrown if the user is not authenticated, if they lack the required admin role to change another
+        /// user's password, or if they attempt to modify a user with higher privileges (e.g., an Admin changing a SuperAdmin's password).
+        /// </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if the specified target user's ID does not correspond to an existing user in the database.
+        /// </exception>
+        public async Task ChangePassword(ChangePasswordDto request)
+        {
+            // The ClaimsPrincipal represents the authenticated user's identity, derived from their access token.
+            var currentUserPrincipal = _httpContextAccessor.HttpContext.User;
+            var currentUserIdClaim = currentUserPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // A valid Guid must be present in the token; otherwise, the request is unauthorized.
+            if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated or token is invalid.");
+            }
+
+            // The target is the user whose password will be changed. If the request DTO provides a UserId,
+            // that becomes the target. If not, the target defaults to the currently logged-in user.
+            Guid targetUserId = request.UserId ?? currentUserId;
+
+            // A boolean flag to determine if the user is modifying their own account.
+            bool isChangingOwnPassword = targetUserId == currentUserId;
+
+            // Authorization is only required if the requester is attempting to modify a different user's account.
+            if (!isChangingOwnPassword)
+            {
+                // This check enforces the business rule that only users with specific administrative roles can change passwords for others.
+                if (!currentUserPrincipal.IsInRole("Admin") && !currentUserPrincipal.IsInRole("Staff") && !currentUserPrincipal.IsInRole("SuperAdmin"))
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to change passwords for other users.");
+                }
+            }
+
+            // Fetches the full user entity from the database that is about to be modified.
+            var userToUpdate = await _userRepository.GetByIdAsync(targetUserId);
+            if (userToUpdate == null)
+            {
+                throw new KeyNotFoundException("The target user was not found.");
+            }
+
+            // This is an additional security layer to prevent privilege escalation. For example, a standard 'Admin'
+            // should not be able to change the password of a 'SuperAdmin'.
+            if (userToUpdate.UserRole == UserRole.SuperAdmin && !currentUserPrincipal.IsInRole("SuperAdmin"))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to change a SuperAdmin's password.");
+            }
+
+            // Hashes the new password securely before storing it in the database.
+            userToUpdate.PasswordHash = _passwordHashingService.HashPassword(request.NewPassword);
+
+            // Marks the user entity's state as 'Modified'. This tells the DbContext to generate an UPDATE statement.
+            _userRepository.UpdateAsync(userToUpdate);
+
+            // This is a critical security step. It revokes all active refresh tokens for the target user,
+            // effectively logging them out of all devices and browser sessions.
+            await _refreshTokenRepository.RevokeAllForUserAsync(targetUserId);
+
+            // Atomically commits all tracked changes (the password update and token revocations) to the database.
+            await _userRepository.SaveChangesAsync();
+
+            // If the user changed their own password, their current session must also be terminated immediately.
+            if (isChangingOwnPassword)
+            {
+                // This instructs the user's browser to delete the authentication cookies, completing the logout process.
+                ClearAccessTokenCookie();
+                ClearRefreshTokenCookie();
+            }
         }
         #endregion
 

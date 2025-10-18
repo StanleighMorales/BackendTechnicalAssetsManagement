@@ -6,6 +6,7 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
     {
         Task AddAsync(RefreshToken token);
         Task<RefreshToken?> GetByTokenAsync(string token);
+        Task RevokeAllForUserAsync(Guid userId);
         Task SaveChangesAsync();
     }
 }

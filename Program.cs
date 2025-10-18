@@ -99,6 +99,7 @@ builder.Services.AddScoped<ILentItemsRepository, LentItemsRepository>();
 builder.Services.AddScoped<IArchiveItemRepository, ArchiveItemsRepository>();
 builder.Services.AddScoped<IArchiveLentItemsRepository, ArchiveLentItemsRepository>();
 builder.Services.AddScoped<IArchiveUserRepository, ArchiveUserRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();

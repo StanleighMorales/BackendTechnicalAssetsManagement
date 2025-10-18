@@ -160,5 +160,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
         #endregion
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<object>>> ChangePassword(ChangePasswordDto request)
+        {
+            await _authService.ChangePassword(request);
+            var response = ApiResponse<object>.SuccessResponse(null, "Password has been successfully changed.");
+            return Ok(response);
+        }
     }
 }
