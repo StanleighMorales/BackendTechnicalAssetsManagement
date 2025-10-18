@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes;
+﻿ using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             return await _context.SaveChangesAsync() > 0;
         }
-
+        //Currently not used
         public Task<ArchiveItems?> UpdateItemArchiveAsync(ArchiveItems itemArchive)
         {
             _context.ArchiveItems.Update(itemArchive);

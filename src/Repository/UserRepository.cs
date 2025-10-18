@@ -81,18 +81,14 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         //}
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            // NEW: Eagerly load the LentItems collection and its required navigation properties
             return await _context.Users
                 .Include(u => u.LentItems
                 .Where(li => !li.IsHiddenFromUser).OrderByDescending(li => li.LentAt))
-                    
-                    // If you need Item or Teacher details for the LentItemsDto mapping
-                    // you must include them here. 
-                    .ThenInclude(li => li.Item) // Include the Item details for the LentItemsDto mapping
+                    .ThenInclude(li => li.Item)
                 .Include(u => u.LentItems
-                    .Where(li => !li.IsHiddenFromUser) // <--- CRITICAL FIX: Add the filter to this chain
+                    .Where(li => !li.IsHiddenFromUser) 
                     .OrderByDescending(li => li.LentAt))
-                    .ThenInclude(li => li.Teacher) // Include the Teacher details for the LentItemsDto mapping
+                    .ThenInclude(li => li.Teacher)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 

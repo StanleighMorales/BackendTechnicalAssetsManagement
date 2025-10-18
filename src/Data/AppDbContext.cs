@@ -2,6 +2,7 @@
 // Microsoft.EntityFrameworkCore is the core library for EF Core functionality.
 // BackendTechnicalAssetsManagement.src.Classes is where your entity classes (models) are defined.
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.Data
@@ -37,8 +38,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<Item> Items { get; set; }
         public DbSet<LentItems> LentItems { get; set; }
 
+        //Archives
         public DbSet<ArchiveItems> ArchiveItems { get; set; }
         public DbSet<ArchiveLentItems> ArchiveLentItems { get; set; }
+        public DbSet<ArchiveUser> ArchiveUsers { get; set; }
 
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.
@@ -85,6 +88,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Student>().ToTable("Students");
             modelBuilder.Entity<Teacher>().ToTable("Teachers");
             modelBuilder.Entity<Staff>().ToTable("Staff");
+
+            modelBuilder.Entity<ArchiveStudent>().ToTable("ArchiveStudents");
+            modelBuilder.Entity<ArchiveTeacher>().ToTable("ArchiveTeachers");
+            modelBuilder.Entity<ArchiveStaff>().ToTable("ArchiveStaff");
 
 
             modelBuilder.Entity<ArchiveItems>(entity =>

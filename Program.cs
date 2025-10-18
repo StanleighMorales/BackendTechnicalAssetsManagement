@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using static BackendTechnicalAssetsManagement.src.Authorization.ViewProfileRequirement;
 
 Env.Load(); // Load .env file
 
@@ -38,6 +39,7 @@ builder.Services.AddControllers()
     });
 // Add Authentication and Authorization
 builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminBypassHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ViewProfileHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOrStaff", policy =>
@@ -96,6 +98,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILentItemsRepository, LentItemsRepository>();
 builder.Services.AddScoped<IArchiveItemRepository, ArchiveItemsRepository>();
 builder.Services.AddScoped<IArchiveLentItemsRepository, ArchiveLentItemsRepository>();
+builder.Services.AddScoped<IArchiveUserRepository, ArchiveUserRepository>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
@@ -103,6 +106,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
 builder.Services.AddScoped<IArchiveLentItemsService, ArchiveLentItemsService>();
+builder.Services.AddScoped<IArchiveUserService, ArchiveUserService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 

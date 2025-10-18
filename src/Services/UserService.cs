@@ -12,13 +12,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IArchiveUserService _archiveUserService;
 
 
 
-        public UserService(IUserRepository userRepository, IMapper mapper)
+        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _archiveUserService = archiveUserService;
         }
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
@@ -84,15 +86,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _userRepository.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteUserAsync(Guid id)
+        public async Task<bool> DeleteUserAsync(Guid id, Guid currentUserId)
         {
-            var userExists = await _userRepository.GetByIdAsync(id) != null;
-            if (!userExists)
-            {
-                return false; // Not found
-            }
-            await _userRepository.DeleteAsync(id); 
-            return await _userRepository.SaveChangesAsync();
+            
+            return await _archiveUserService.ArchiveUserAsync(id, currentUserId);
         }
 
         public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync() // Return specific DTO
