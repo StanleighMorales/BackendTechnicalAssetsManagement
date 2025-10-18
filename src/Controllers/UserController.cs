@@ -173,7 +173,7 @@ public class UserController : ControllerBase
     /// <summary>
     /// Updates the profile of the currently authenticated 'Admin' or 'Staff' user.
     /// </summary>
-    [HttpPatch("update/admin-or-staff{id}")] // Using PATCH as per our last discussion
+    [HttpPatch("admin-or-staff/profile{id}")] // Using PATCH as per our last discussion
     [Authorize(Roles = "SuperAdmin, Admin, Staff")]
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
