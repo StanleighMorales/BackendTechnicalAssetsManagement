@@ -75,32 +75,6 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a list of all users with the 'Student' role.
-    /// Access is restricted to users with 'Admin' or 'Staff' roles.
-    /// </summary>
-    [HttpGet("students")]
-    [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<StudentDto>>>> GetAllStudents()
-    {
-        var students = await _userService.GetAllStudentsAsync();
-        var response = ApiResponse<IEnumerable<StudentDto>>.SuccessResponse(students, "Students retrieved successfully.");
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Retrieves a list of all users with the 'Teacher' role.
-    /// Access is restricted to users with 'Admin' or 'Staff' roles.
-    /// </summary>
-    [HttpGet("teachers")]
-    [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<TeacherDto>>>> GetAllTeachers()
-    {
-        var teachers = await _userService.GetAllTeachersAsync();
-        var response = ApiResponse<IEnumerable<TeacherDto>>.SuccessResponse(teachers, "Teachers retrieved successfully.");
-        return Ok(response);
-    }
-
-    /// <summary>
     /// Updates a student's profile information.
     /// An 'Admin' can update any student profile. A 'Student' can only update their own.
     /// Note: Student ownership is not checked here and must be enforced by the client or a more specific policy.
