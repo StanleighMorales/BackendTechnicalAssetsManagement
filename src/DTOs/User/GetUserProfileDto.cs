@@ -18,6 +18,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string LastName { get; set; } = string.Empty;
         public string? MiddleName { get; set; }
         public string FirstName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
 
         public UserRole UserRole { get; set; }
         public string? Status { get; set; } = string.Empty;
@@ -26,7 +27,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     public class GetStaffProfileDto : BaseProfileDto
     {
 
-        public string PhoneNumber { get; set; } = string.Empty;
+        
         public string Position { get; set; } = string.Empty;
         public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
@@ -43,7 +44,6 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? BackStudentIdPicture { get; set; }
 
         public string StudentIdNumber { get; set; } = string.Empty;
-        public string? PhoneNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         public string Section { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;

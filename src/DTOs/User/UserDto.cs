@@ -22,12 +22,14 @@
             public string? MiddleName { get; set; }
             public string FirstName { get; set; } = string.Empty;
 
-        }
+            public string PhoneNumber { get; set; } = string.Empty;
+
+    }
 
         public class StaffDto : UserDto
         {
 
-            public string PhoneNumber {  get; set; } = string.Empty;
+            
             public string Position { get; set; } = string.Empty;
         }
         public class TeacherDto : UserDto
@@ -43,7 +45,6 @@
             [Required]
             public string StudentIdNumber { get; set; } = string.Empty;
             [Required]
-            public string PhoneNumber { get; set; } = string.Empty;
             public string Course { get; set; } = string.Empty;
             [Required]
             public string Section { get; set; } = string.Empty;
