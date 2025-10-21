@@ -128,6 +128,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // This uses the correct map (RegisterStudentDto to Student) but doesn't cause the cast error.
             _mapper.Map(request, newUser); // <--- THIS REPLACES THE PROBLEM LINES
 
+            if (!string.IsNullOrEmpty(newUser.PhoneNumber) && newUser.PhoneNumber.Length == 10)
+            {
+                newUser.PhoneNumber = "0" + newUser.PhoneNumber;
+            }
+
             if (string.IsNullOrWhiteSpace(request.Password) ||
                 request.Password.Length < 8 ||
                 !request.Password.Any(char.IsUpper) ||
