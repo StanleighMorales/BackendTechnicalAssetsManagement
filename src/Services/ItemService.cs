@@ -58,7 +58,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
             // 3. Map the DTO (Input) to the new Item (Entity)
-            var newItem = _mapper.Map<Item>(createItemDto);
+            var newItem = _mapper.Map<Item>(createItemDto); 
 
             // 4. MANUALLY SET the auto-generated values on the ENTITY
             newItem.Barcode = barcodeText;

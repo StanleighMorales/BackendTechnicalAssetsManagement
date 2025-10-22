@@ -7,10 +7,12 @@ using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Repository;
+using BackendTechnicalAssetsManagement.src.Utils;
+using TechnicalAssetManagementApi.Dtos.Item;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
-{
+{ 
     public class LentItemsService : ILentItemsService
     {
         private readonly ILentItemsRepository _repository;
@@ -83,14 +85,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
-
-
-
             await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(); // This saves the item and the database generates the lentItem.Id
 
-            var createdItem = await _repository.GetByIdAsync(lentItem.Id);
-            return _mapper.Map<LentItemsDto>(createdItem);
+            // 3. Now that lentItem.Id is valid, generate the barcode
+            string barcodeText = BarcodeGenerator.GenerateLentItemBarcode(lentItem.Id.ToString());
+            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+
+            // 4. Update the entity with the new barcode information
+            lentItem.Barcode = barcodeText;
+            lentItem.BarcodeImage = barcodeImageBytes;
+
+            // No need to call AddAsync again, just update the tracked entity
+            await _repository.UpdateAsync(lentItem);
+            await _repository.SaveChangesAsync(); // Save the final changes
+
+            // 5. Map the fully created and updated entity to the DTO and return it
+            return _mapper.Map<LentItemsDto>(lentItem);
         }
         // In Services/LentItemsService.cs
 
@@ -120,6 +131,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Add the fully-populated object to the repository and save.
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync();
+
+
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
             return _mapper.Map<LentItemsDto>(createdItem);

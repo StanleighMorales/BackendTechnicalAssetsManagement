@@ -16,9 +16,14 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                         // Priority 1: If the related Teacher object is loaded, use it.
                         src.Teacher != null ? $"{src.Teacher.FirstName} {src.Teacher.LastName}"
                         // Priority 2 (Fallback): Otherwise, use the name we stored directly in the table.
-                        : src.TeacherFullName));
+                        : src.TeacherFullName))
+                .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
+                    src.BarcodeImage != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
+                    null));
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>()
+                .ForMember(dest => dest.BarcodeImage, opt => opt.Ignore())
                 .ForMember(dest => dest.LentAt, opt => opt.MapFrom(_ => DateTime.Now)) // Set the creation timestamp
                 .ForMember(dest => dest.ItemName, opt => opt.Ignore()) // ItemName must be looked up in the service layer
                 .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore()) // Denormalized fields are set in the service layer
