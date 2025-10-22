@@ -38,5 +38,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+        public string? Barcode { get; set; }
+        public string? BarcodeImage { get; set; }
     }
 }
