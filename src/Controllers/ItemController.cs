@@ -19,6 +19,28 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             _itemService = itemService;
         }
+        // POST: /api/item
+        [HttpPost]
+        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
+        {
+            try
+            {
+                var newItemDto = await _itemService.CreateItemAsync(createItemDto);
+                var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
+                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
+            }
+            catch (ItemService.DuplicateSerialNumberException ex)
+            {
+                var errorResponse = ApiResponse<ItemDto>.FailResponse(ex.Message);
+                return Conflict(errorResponse);
+            }
+            catch (ArgumentException ex)
+            {
+                var response = ApiResponse<ItemDto>.FailResponse(ex.Message);
+                return BadRequest(response);
+            }
+        }
+
 
         // GET: /api/item
         [HttpGet]
@@ -56,27 +78,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
-        // POST: /api/item
-        [HttpPost]
-        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
-        {
-            try
-            {
-                var newItemDto = await _itemService.CreateItemAsync(createItemDto);
-                var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
-                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
-            }
-            catch (ItemService.DuplicateSerialNumberException ex)
-            {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return Conflict(errorResponse);
-            }
-            catch (ArgumentException ex)
-            {
-                var response = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return BadRequest(response);
-            }
-        }
+        
 
         // PUT: /api/item/5
         [HttpPatch("{id}")]
