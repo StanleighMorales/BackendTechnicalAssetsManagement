@@ -1,6 +1,6 @@
 ﻿using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
-namespace BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers
+namespace BackendTechnicalAssetsManagement.src.Classes
 {
     public class ArchiveUser
     {

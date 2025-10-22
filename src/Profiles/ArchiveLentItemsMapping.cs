@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
+using BackendTechnicalAssetsManagement.src.DTOs.Item;
 
 namespace BackendTechnicalAssetsManagement.src.Profiles
 {
@@ -9,7 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
         public ArchiveLentItemsMapping()
         {
             // === DTO -> ENTITY MAPPINGS (Receiving data for storage) ===
-
+            CreateMap<Item, ItemDto>();
             // Simple map for reading back into the DTO/Entity structure.
             CreateMap<ArchiveLentItemsDto, ArchiveLentItems>();
 

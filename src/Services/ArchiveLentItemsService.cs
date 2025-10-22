@@ -1,12 +1,8 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
-using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
-using BackendTechnicalAssetsManagement.src.Repository;
-using Microsoft.VisualBasic;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {

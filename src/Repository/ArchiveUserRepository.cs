@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Users;
 using BackendTechnicalAssetsManagement.src.IRepository;

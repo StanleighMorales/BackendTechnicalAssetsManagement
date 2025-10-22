@@ -1,5 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Users

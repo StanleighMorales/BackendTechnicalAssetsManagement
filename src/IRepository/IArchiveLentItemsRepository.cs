@@ -1,6 +1,4 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
-
 namespace BackendTechnicalAssetsManagement.src.IRepository
 {
     public interface IArchiveLentItemsRepository

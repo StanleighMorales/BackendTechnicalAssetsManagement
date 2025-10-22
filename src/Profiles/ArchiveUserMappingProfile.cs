@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
-using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
-using BackendTechnicalAssetsManagement.src.Classes; // For active User, Student, Teacher, Staff
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Users;
-using BackendTechnicalAssetsManagement.src.Utils; // Assuming ImageConverterUtils is here
-using static BackendTechnicalAssetsManagement.src.Classes.Enums; // If UserRole is needed for mapping
 
 namespace BackendTechnicalAssetsManagement.src.Profiles
 {

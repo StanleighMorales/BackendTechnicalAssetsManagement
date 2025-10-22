@@ -1,6 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
 namespace BackendTechnicalAssetsManagement.src.Repository
@@ -27,12 +26,16 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             {
                 return Enumerable.Empty<ArchiveLentItems>();
             }
-            return await _context.ArchiveLentItems.ToListAsync();
+            return await _context.ArchiveLentItems
+                .Include(a => a.Item)
+                .ToListAsync();
         }
 
         public async Task<ArchiveLentItems?> GetArchiveLentItemsByIdAsync(Guid id)
         {
-            return await _context.ArchiveLentItems.FindAsync(id);
+            return await _context.ArchiveLentItems
+                .Include(a => a.Item)
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public Task<ArchiveLentItems?> UpdateArchiveLentItemsAsync(Guid id, ArchiveLentItems archiveLentItems)

@@ -2,7 +2,6 @@
 // Microsoft.EntityFrameworkCore is the core library for EF Core functionality.
 // BackendTechnicalAssetsManagement.src.Classes is where your entity classes (models) are defined.
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.Data

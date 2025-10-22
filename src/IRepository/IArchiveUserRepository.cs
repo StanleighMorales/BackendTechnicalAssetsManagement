@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes.ArchiveUsers;
+﻿using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Users;
 
 namespace BackendTechnicalAssetsManagement.src.IRepository

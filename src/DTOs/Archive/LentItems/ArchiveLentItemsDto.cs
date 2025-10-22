@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,10 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public Guid? LentItemId { get; set; }
-
-        public Guid? ItemId { get; set; }
-        public string? Item { get; set; }
-        public string? ItemName { get; set; }
+        public ItemDto? Item { get; set; }
 
         public Guid? UserId { get; set; }
         public string? User { get; set; }
