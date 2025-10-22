@@ -2,8 +2,7 @@
 {
     public class CreateArchiveLentItemsDto
     {
-        public Guid LentItemId { get; set; }
-
+        public Guid Id { get; set; }
         public Guid ItemId { get; set; }
         public string? Item { get; set; }
         public string? ItemName { get; set; }

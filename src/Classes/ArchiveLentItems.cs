@@ -6,9 +6,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     public class ArchiveLentItems
     {
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
-        [ForeignKey("Id")]
-        public Guid LentItemId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public Guid Id { get; set; }
 
         public Guid ItemId { get; set; }
         public Item? Item { get; set; }

@@ -23,6 +23,10 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<IEnumerable<ArchiveLentItems>> GetAllArchiveLentItemsAsync()
         {
+            if (_context.ArchiveLentItems == null)
+            {
+                return Enumerable.Empty<ArchiveLentItems>();
+            }
             return await _context.ArchiveLentItems.ToListAsync();
         }
 
