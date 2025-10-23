@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
-    [Route("api/v1/archiveUsers")]
+    [Route("api/v1/archiveusers")]
     [Authorize(Roles = "Admin,Staff")] // Secure all endpoints in this controller for Admin or Staff
     public class ArchiveUsersController : ControllerBase
     {
