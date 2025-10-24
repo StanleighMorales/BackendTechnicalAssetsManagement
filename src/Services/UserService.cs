@@ -5,6 +5,7 @@ using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
 using BackendTechnicalAssetsManagement.src.Repository;
+using BackendTechnicalAssetsManagement.src.Utils;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
 namespace BackendTechnicalAssetsManagement.src.Services
@@ -84,6 +85,33 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 3. SAVE
             await _userRepository.UpdateAsync(userToUpdate);
+            return await _userRepository.SaveChangesAsync();
+        }
+
+        public async Task<bool> UpdateStudentProfileAsync(Guid id, UpdateStudentProfileDto dto)
+        {
+            var userToUpdate = await _userRepository.GetByIdAsync(id);
+            if (userToUpdate is not Student studentToUpdate)
+            {
+                return false; // Not found or not a student
+            }
+
+            // Centralized validation
+            try
+            {
+                if (dto.ProfilePicture != null) ImageConverterUtils.ValidateImage(dto.ProfilePicture);
+                if (dto.FrontStudentIdPicture != null) ImageConverterUtils.ValidateImage(dto.FrontStudentIdPicture);
+                if (dto.BackStudentIdPicture != null) ImageConverterUtils.ValidateImage(dto.BackStudentIdPicture);
+            }
+            catch (ArgumentException)
+            {
+                // Re-throw or handle as a custom exception that your middleware can catch
+                throw;
+            }
+
+            _mapper.Map(dto, studentToUpdate);
+
+            await _userRepository.UpdateAsync(studentToUpdate);
             return await _userRepository.SaveChangesAsync();
         }
 

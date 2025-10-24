@@ -124,26 +124,47 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .IncludeBase<RegisterUserDto, User>();
 
             /// <summary>
-            /// Consolidated mapping for Student profile updates. 
-            /// 1. Converts IFormFile to byte[] ONLY if the file is provided.
-            /// 2. Ignores all other null properties for partial updates.
+            /// Hybrid mapping for Student profile updates.
+            /// It explicitly handles the complex image properties while using a generic
+            /// rule for all other simple properties. This is a clean and efficient pattern.
             /// </summary>
             CreateMap<UpdateStudentProfileDto, Student>()
-               // Rule 1: Handle the image properties with specific logic
-               .ForMember(dest => dest.ProfilePicture, opt => {
-                   opt.Condition(src => src.ProfilePicture != null);
-                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture));
-               })
-               .ForMember(dest => dest.FrontStudentIdPicture, opt => {
-                   opt.Condition(src => src.FrontStudentIdPicture != null);
-                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture));
-               })
-               .ForMember(dest => dest.BackStudentIdPicture, opt => {
-                   opt.Condition(src => src.BackStudentIdPicture != null);
-                   opt.MapFrom(src => ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture));
-               })
-               // Rule 2: Handle all other properties (e.g., LastName, Course) to ignore nulls for partial updates.
-               .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+                // --- Step 1: Explicitly handle the complex properties (the images) ---
+                // Use the robust (src, dest) resolver to either update the image or keep the original.
+                .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom((src, dest) =>
+                    (src.ProfilePicture != null && src.ProfilePicture.Length > 0)
+                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.ProfilePicture)
+                        : dest.ProfilePicture))
+
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom((src, dest) =>
+                    (src.FrontStudentIdPicture != null && src.FrontStudentIdPicture.Length > 0)
+                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.FrontStudentIdPicture)
+                        : dest.FrontStudentIdPicture))
+
+                .ForMember(dest => dest.BackStudentIdPicture, opt => opt.MapFrom((src, dest) =>
+                    (src.BackStudentIdPicture != null && src.BackStudentIdPicture.Length > 0)
+                        ? ImageConverterUtils.ConvertIFormFileToByteArray(src.BackStudentIdPicture)
+                        : dest.BackStudentIdPicture))
+
+                // --- Step 2: Use a generic rule for all other members ---
+                // This ForAllMembers rule will run for EVERY property, including the images.
+                .ForAllMembers(opts => {
+                    // We add a condition to tell this rule to IGNORE the properties we already handled.
+                    if (opts.DestinationMember.Name == nameof(Student.ProfilePicture) ||
+                        opts.DestinationMember.Name == nameof(Student.FrontStudentIdPicture) ||
+                        opts.DestinationMember.Name == nameof(Student.BackStudentIdPicture))
+                    {
+                        // By calling UseDestinationValue(), we tell the mapper to stop processing
+                        // and just keep the value that's already on the destination object.
+                        // This prevents this generic rule from interfering with our specific rules above.
+                        opts.UseDestinationValue();
+                    }
+
+                    // For all other properties (LastName, Course, etc.), apply the simple "ignore if null" rule.
+                    opts.Condition((src, dest, srcMember) => srcMember != null);
+                });
+
 
             /// <summary>
             /// Mapping for Teacher profile updates, ignoring null properties for partial updates.

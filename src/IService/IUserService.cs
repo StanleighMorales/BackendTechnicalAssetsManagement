@@ -9,10 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId);
         Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<UserDto?> GetUserByIdAsync(Guid id);
-
-        // --- WRITE operations ---
-        // The service will handle the "Fetch, Apply, Save" logic.
-        // The controller will just pass the ID and the DTO.
+        Task<bool> UpdateStudentProfileAsync(Guid id, UpdateStudentProfileDto dto);
         Task<bool> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
         Task UpdateStaffOrAdminProfileAsync(Guid id, UpdateStaffProfileDto dto, Guid currentUserId);
         Task<bool> DeleteUserAsync(Guid id, Guid currentUserId);

@@ -79,40 +79,27 @@ public class UserController : ControllerBase
     /// An 'Admin' can update any student profile. A 'Student' can only update their own.
     /// Note: Student ownership is not checked here and must be enforced by the client or a more specific policy.
     /// </summary>
-    [HttpPatch("students/profile{id}")]
+    [HttpPatch("students/profile/{id}")]
     [Authorize(Roles = "Admin,Student")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
     {
         try
         {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user is not Student student)
+            var success = await _userService.UpdateStudentProfileAsync(id, studentDto);
+
+            if (!success)
             {
                 return NotFound(ApiResponse<object>.FailResponse("Student not found."));
             }
 
-            // Centralized image validation to ensure files are valid before processing.
-            try
-            {
-                if (studentDto.ProfilePicture != null) ImageConverterUtils.ValidateImage(studentDto.ProfilePicture);
-                if (studentDto.FrontStudentIdPicture != null) ImageConverterUtils.ValidateImage(studentDto.FrontStudentIdPicture);
-                if (studentDto.BackStudentIdPicture != null) ImageConverterUtils.ValidateImage(studentDto.BackStudentIdPicture);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
-            }
-
-            _mapper.Map(studentDto, student);
-
-            await _userRepository.UpdateAsync(student);
-            await _userRepository.SaveChangesAsync();
-
             return Ok(ApiResponse<object>.SuccessResponse(null, "Student profile updated successfully."));
+        }
+        catch (ArgumentException ex) // Catches the validation exception from the service
+        {
+            return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
         }
         catch (Exception ex)
         {
-            // General exception handler for unexpected errors during the update process.
             return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
         }
     }
@@ -121,7 +108,7 @@ public class UserController : ControllerBase
     /// Updates a teacher's profile information.
     /// An 'Admin' can update any teacher profile. A 'Teacher' can only update their own profile.
     /// </summary>
-    [HttpPatch("teachers/profile{id}")]
+    [HttpPatch("teachers/profile/{id}")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateTeacherProfile(Guid id, [FromBody] UpdateTeacherProfileDto teacherDto)
     {
@@ -147,7 +134,7 @@ public class UserController : ControllerBase
     /// <summary>
     /// Updates the profile of the currently authenticated 'Admin' or 'Staff' user.
     /// </summary>
-    [HttpPatch("admin-or-staff/profile{id}")] // Using PATCH as per our last discussion
+    [HttpPatch("admin-or-staff/profile/{id}")] // Using PATCH as per our last discussion
     [Authorize(Roles = "SuperAdmin, Admin, Staff")]
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
