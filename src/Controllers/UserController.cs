@@ -158,7 +158,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpDelete("archive/{id}")]
     [Authorize(Roles = "Admin,Staff")]
-    public async Task<ActionResult<ApiResponse<object>>> DeleteUser(Guid id)
+    public async Task<ActionResult<ApiResponse<object>>> ArchiveUser(Guid id)
     {
         var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(currentUserIdString, out var currentUserId))

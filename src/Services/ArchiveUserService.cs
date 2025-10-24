@@ -79,6 +79,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     await transaction.RollbackAsync();
                     return false;
                 }
+                userToArchive.Status = "Archived";
 
                 // ... The rest of the method (mapping, adding, deleting, committing) remains the same ...
                 var archivedUser = _mapper.Map<ArchiveUser>(userToArchive);
@@ -114,8 +115,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                 // 2. Map the archived user back to an active user entity
                 // The mapping profile will handle resetting the Status, etc.
+                
                 var restoredUser = _mapper.Map<Classes.User>(userToRestore);
-
+                restoredUser.Status = "Offline"; // Explicitly set status to Active
                 // 3. Add the user back to the active user table
                 await _userRepository.AddAsync(restoredUser);
                 await _userRepository.SaveChangesAsync();

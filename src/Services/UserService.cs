@@ -121,24 +121,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _archiveUserService.ArchiveUserAsync(id, currentUserId);
         }
 
-        public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync() // Return specific DTO
-        {
-            // Assuming IUserRepository.GetAllStudentsAsync returns the correct DTO
-            return await _userRepository.GetAllStudentsAsync();
-        }
-
-        public async Task<IEnumerable<TeacherDto>> GetAllTeachersAsync() // Return specific DTO
-        {
-            // Assuming IUserRepository.GetAllTeachersAsync returns the correct DTO
-            return await _userRepository.GetAllTeachersAsync();
-        }
-
-        public async Task<IEnumerable<StaffDto>> GetAllStaffAsync() // Return specific DTO
-        {
-            // Assuming IUserRepository.GetAllStaffAsync returns the correct DTO
-            return await _userRepository.GetAllStaffAsync();
-        }
-
         public async Task UpdateStaffOrAdminProfileAsync(Guid targetUserId, UpdateStaffProfileDto dto, Guid currentUserId)
         {
             // 1. Get the user who is making the request
