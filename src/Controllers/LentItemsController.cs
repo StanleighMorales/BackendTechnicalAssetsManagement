@@ -147,7 +147,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var success = await _service.ArchiveLentItems(id);
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("Soft delete failed. Item not found.");
+                var errorResponse = ApiResponse<object>.FailResponse("archive failed. Item not found.");
                 return NotFound(errorResponse); // Or BadRequest("Soft delete failed");
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item archived successfully.");
