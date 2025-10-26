@@ -37,7 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
         {
             // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
-            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
+            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
             {
                 var badRequestResponse = ApiResponse<LentItemsDto>.FailResponse("Student ID number is required for students.");
                 return BadRequest(badRequestResponse);

@@ -116,14 +116,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             //    We now manually populate the fields that AutoMapper couldn't figure out.
             //    This overwrites the empty default values.
             lentItem.BorrowerFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
-            lentItem.BorrowerRole = dto.BorrowerRole;
+            if (dto.BorrowerRole != null)
+            {
+                lentItem.BorrowerRole = dto.BorrowerRole;
+            }
             lentItem.TeacherFullName = $"{dto.TeacherFirstName} {dto.TeacherLastName}";
 
             // 3. Set User and Teacher IDs to null for a "guest"
             lentItem.UserId = null;
             lentItem.TeacherId = null;
 
-            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
+            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
             {
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
             }

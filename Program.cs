@@ -146,25 +146,29 @@ builder.Services.AddAuthServices(builder.Configuration);
 #region Cors Policy
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
-builder.Services.AddCors(options =>
+if (allowedOrigins != null)
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        options.AddPolicy("AllowReactApp", policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+        options.AddPolicy("AllowFlutterDev", policy =>
+        {
+            policy
+                .SetIsOriginAllowed(origin =>
+                    new Uri(origin).Host == "localhost" || new Uri(origin).Host == "127.0.0.1")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
     });
-    options.AddPolicy("AllowFlutterDev", policy =>
-    {
-        policy
-            .SetIsOriginAllowed(origin =>
-                new Uri(origin).Host == "localhost" || new Uri(origin).Host == "127.0.0.1")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+}
+    
 #endregion
 
 var app = builder.Build();
