@@ -9,6 +9,7 @@ using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
 using DotNetEnv;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -126,7 +127,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+// Health Checks
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("The database connection string 'DefaultConnection' was not found in the configuration.");
+}
+
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString, name: "Database");
 
 // Custom Extension Method Services
 builder.Services.AddAuthServices(builder.Configuration);
@@ -189,5 +199,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 
 app.Run();
