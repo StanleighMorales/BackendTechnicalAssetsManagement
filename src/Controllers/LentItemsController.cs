@@ -7,6 +7,7 @@ using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using ZXing.QrCode.Internal;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
@@ -112,16 +113,36 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
         [HttpPatch("scan/updateStatus{id}")]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(Guid id, [FromBody] ScanLentItemDto dto)
+        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string id, [FromBody] ScanLentItemDto dto)
         {
-            var success = await _service.UpdateStatusAsync(id, dto);
+            const string prefix = "LENT-";
+
+            // Now this line is valid because 'id' is a string.
+            string guidString = id;
+
+            // Sanitize the input by removing the prefix.
+            if (guidString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                guidString = guidString.Substring(prefix.Length);
+            }
+
+            // Validate and parse the cleaned string into a Guid.
+            if (!Guid.TryParse(guidString, out var entityId))
+            {
+                // The input was invalid after stripping the prefix.
+                return BadRequest("Invalid ID format.");
+            }
+
+            // 3. Call your service with the clean 'entityId' (which is a Guid).
+            // Assuming your service is called _lentItemService
+            var success = await _service.UpdateStatusAsync(entityId, dto);
+
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("Status update failed. Item not found or no changes made.");
-                return NotFound(errorResponse);
+                return NotFound(); // Or return a more detailed ApiResponse
             }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item status updated successfully.");
-            return Ok(successResponse);
+
+            return Ok(); // Or return NoContent()
         }
 
         [HttpPatch("hide/{lentItemId}")]
