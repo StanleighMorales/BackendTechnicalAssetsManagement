@@ -75,6 +75,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Item>()
                 .Property(i => i.Category)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<Item>()
+                .Property(i => i.Status)
+                .HasConversion<string>();
             modelBuilder.Entity<LentItems>()
                 .Property(li => li.Remarks)
                 .HasConversion<string>();
@@ -102,6 +106,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
                 // Do the same for the Condition property
                 entity.Property(e => e.Condition)
+                      .HasConversion<string>();
+
+                // Convert Status enum to string as well
+                entity.Property(e => e.Status)
                       .HasConversion<string>();
             });
 

@@ -11,6 +11,8 @@
 
         public enum  LentItemsStatus { Pending, Canceled, Borrowed, Returned }
 
+        public enum ItemStatus { Available, Unavailable }
+
     }
 }
     

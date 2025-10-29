@@ -194,8 +194,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
         /// <summary>
         /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID and barcode.
-        /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition
+        /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition, Status, Image
         /// The barcode will be generated with format: "ITEM-SN-{SerialNumber}"
+        /// Image column can contain file paths or URLs to load images from
+        /// Status column should contain "Available" or "Unavailable" (defaults to Available if not specified)
         /// </summary>
         /// <param name="file">Excel file (.xlsx format only)</param>
         public async Task ImportItemsFromExcelAsync(IFormFile file)
@@ -246,6 +248,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 columnMapping["Category"] = column.ColumnName;
                             else if (columnName.StartsWith("Condition", StringComparison.OrdinalIgnoreCase))
                                 columnMapping["Condition"] = column.ColumnName;
+                            else if (columnName.StartsWith("Status", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["Status"] = column.ColumnName;
+                            else if (columnName.StartsWith("Image", StringComparison.OrdinalIgnoreCase) || 
+                                     columnName.StartsWith("ImagePath", StringComparison.OrdinalIgnoreCase) ||
+                                     columnName.StartsWith("ImageUrl", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["Image"] = column.ColumnName;
                         }
 
                         foreach (DataRow row in dataTable.Rows)
@@ -285,6 +293,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 // Generate barcode image bytes
                                 byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
+                                // Handle image import (if image path/url is provided)
+                                byte[]? imageBytes = null;
+                                string? imageMimeType = null;
+                                var imageValue = GetColumnValue(row, columnMapping, "Image");
+                                if (!string.IsNullOrWhiteSpace(imageValue))
+                                {
+                                    try
+                                    {
+                                        // Try to load image from file path or URL
+                                        imageBytes = await LoadImageFromPathOrUrlAsync(imageValue);
+                                        imageMimeType = GetMimeTypeFromPath(imageValue);
+                                    }
+                                    catch
+                                    {
+                                        // If image loading fails, continue without image
+                                        // Optional: Log the error
+                                    }
+                                }
+
                                 var item = new Item
                                 {
                                     Id = newItemId, // Use generated GUID
@@ -298,6 +325,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     // Enum Parsing with validation
                                     Category = Enum.TryParse<ItemCategory>(GetColumnValue(row, columnMapping, "Category"), true, out var category) ? category : default,
                                     Condition = Enum.TryParse<ItemCondition>(GetColumnValue(row, columnMapping, "Condition"), true, out var condition) ? condition : default,
+                                    Status = Enum.TryParse<ItemStatus>(GetColumnValue(row, columnMapping, "Status"), true, out var status) ? status : ItemStatus.Available,
+
+                                    // Set image information
+                                    Image = imageBytes,
+                                    ImageMimeType = imageMimeType,
 
                                     // Set barcode information
                                     Barcode = barcodeText,
@@ -343,6 +375,67 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return row[actualColumnName]?.ToString();
             }
             return null;
+        }
+
+        /// <summary>
+        /// Loads image bytes from a file path or URL
+        /// </summary>
+        /// <param name="imagePathOrUrl">File path or URL to the image</param>
+        /// <returns>Image bytes</returns>
+        private async Task<byte[]?> LoadImageFromPathOrUrlAsync(string imagePathOrUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imagePathOrUrl))
+                return null;
+
+            try
+            {
+                // Check if it's a URL
+                if (Uri.TryCreate(imagePathOrUrl, UriKind.Absolute, out var uri) && 
+                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                {
+                    // Load from URL
+                    using var httpClient = new HttpClient();
+                    return await httpClient.GetByteArrayAsync(uri);
+                }
+                else
+                {
+                    // Treat as file path
+                    var fullPath = Path.IsPathRooted(imagePathOrUrl) 
+                        ? imagePathOrUrl 
+                        : Path.Combine(_hostEnvironment.ContentRootPath, imagePathOrUrl);
+                    
+                    if (File.Exists(fullPath))
+                    {
+                        return await File.ReadAllBytesAsync(fullPath);
+                    }
+                }
+            }
+            catch
+            {
+                // Return null if loading fails
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets MIME type from file path or URL
+        /// </summary>
+        /// <param name="pathOrUrl">File path or URL</param>
+        /// <returns>MIME type string</returns>
+        private static string? GetMimeTypeFromPath(string pathOrUrl)
+        {
+            var extension = Path.GetExtension(pathOrUrl)?.ToLowerInvariant();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".bmp" => "image/bmp",
+                ".webp" => "image/webp",
+                ".svg" => "image/svg+xml",
+                _ => "image/jpeg" // Default fallback
+            };
         }
 
     }

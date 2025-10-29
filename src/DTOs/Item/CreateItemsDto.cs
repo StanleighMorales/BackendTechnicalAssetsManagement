@@ -28,5 +28,7 @@ namespace TechnicalAssetManagementApi.Dtos.Item
 
         [Required]
         public ItemCondition Condition { get; set; }
+
+        public ItemStatus Status { get; set; } = ItemStatus.Available;
     }
 }

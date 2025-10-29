@@ -16,6 +16,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
         public string? Description { get; set; }
         public ItemCategory Category { get; set; }
         public ItemCondition Condition { get; set; }
+        public ItemStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

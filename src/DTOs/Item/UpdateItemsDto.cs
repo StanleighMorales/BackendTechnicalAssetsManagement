@@ -23,5 +23,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
     
         public ItemCondition? Condition { get; set; }
 
+        public ItemStatus? Status { get; set; }
+
     }
 }
