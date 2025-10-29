@@ -100,6 +100,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<ItemDto>(item);
         }
 
+        public async Task<ItemDto?> GetItemBySerialNumberAsync(string serialNumber)
+        {
+            var item = await _itemRepository.GetBySerialNumberAsync(serialNumber);
+            return _mapper.Map<ItemDto>(item);
+        }
+
         public async Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto)
         {
             var existingItem = await _itemRepository.GetByIdAsync(id);
@@ -186,7 +192,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             //await _itemRepository.DeleteAsync(id);
             //return await _itemRepository.SaveChangesAsync();
         }
-        //Remove this after the Image validation is successfully working
+        /// <summary>
+        /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID and barcode.
+        /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition
+        /// The barcode will be generated with format: "ITEM-SN-{SerialNumber}"
+        /// </summary>
+        /// <param name="file">Excel file (.xlsx format only)</param>
         public async Task ImportItemsFromExcelAsync(IFormFile file)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -212,12 +223,37 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     {
                         var dataTable = result.Tables[0];
 
+                        // Create a flexible column mapping to handle different header formats
+                        var columnMapping = new Dictionary<string, string>();
+                        foreach (DataColumn column in dataTable.Columns)
+                        {
+                            var columnName = column.ColumnName.Trim();
+                            
+                            // Map columns with flexible matching (case-insensitive and handles extra text)
+                            if (columnName.StartsWith("SerialNumber", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["SerialNumber"] = column.ColumnName;
+                            else if (columnName.StartsWith("ItemName", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["ItemName"] = column.ColumnName;
+                            else if (columnName.StartsWith("ItemType", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["ItemType"] = column.ColumnName;
+                            else if (columnName.StartsWith("ItemModel", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["ItemModel"] = column.ColumnName;
+                            else if (columnName.StartsWith("ItemMake", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["ItemMake"] = column.ColumnName;
+                            else if (columnName.StartsWith("Description", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["Description"] = column.ColumnName;
+                            else if (columnName.StartsWith("Category", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["Category"] = column.ColumnName;
+                            else if (columnName.StartsWith("Condition", StringComparison.OrdinalIgnoreCase))
+                                columnMapping["Condition"] = column.ColumnName;
+                        }
+
                         foreach (DataRow row in dataTable.Rows)
                         {
                             try
                             {
                                 // --- Data Reading and Validation ---
-                                var serialNumber = row["SerialNumber"]?.ToString();
+                                var serialNumber = GetColumnValue(row, columnMapping, "SerialNumber");
 
                                 // Basic validation: Skip row if essential data like SerialNumber is missing
                                 if (string.IsNullOrWhiteSpace(serialNumber))
@@ -227,29 +263,45 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 }
 
                                 // Add the "SN-" prefix, similar to your CreateItemAsync logic
-                                if (!serialNumber.StartsWith("SN-"))
+                                if (!serialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
                                 {
                                     serialNumber = $"SN-{serialNumber}";
                                 }
+
+                                // Check for duplicate serial number
                                 var existingItem = await _itemRepository.GetBySerialNumberAsync(serialNumber);
                                 if (existingItem != null)
                                 {
                                     // TODO: Log that a duplicate was found and skipped.
                                     continue; 
                                 }
+
+                                // Generate GUID for the new item
+                                var newItemId = Guid.NewGuid();
+
+                                // Generate barcode text using the same structure as normal item creation
+                                string barcodeText = BarcodeGenerator.GenerateItemBarcode(serialNumber);
+
+                                // Generate barcode image bytes
+                                byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+
                                 var item = new Item
                                 {
-                                    Id = Guid.NewGuid(), // Generate new ID
+                                    Id = newItemId, // Use generated GUID
                                     SerialNumber = serialNumber,
-                                    ItemName = row["ItemName"]?.ToString() ?? string.Empty,
-                                    ItemType = row["ItemType"]?.ToString() ?? string.Empty,
-                                    ItemModel = row["ItemModel"]?.ToString(),
-                                    ItemMake = row["ItemMake"]?.ToString() ?? string.Empty,
-                                    Description = row["Description"]?.ToString(),
+                                    ItemName = GetColumnValue(row, columnMapping, "ItemName") ?? string.Empty,
+                                    ItemType = GetColumnValue(row, columnMapping, "ItemType") ?? string.Empty,
+                                    ItemModel = GetColumnValue(row, columnMapping, "ItemModel"),
+                                    ItemMake = GetColumnValue(row, columnMapping, "ItemMake") ?? string.Empty,
+                                    Description = GetColumnValue(row, columnMapping, "Description"),
 
                                     // Enum Parsing with validation
-                                    Category = Enum.TryParse<ItemCategory>(row["Category"]?.ToString(), true, out var category) ? category : default,
-                                    Condition = Enum.TryParse<ItemCondition>(row["Condition"]?.ToString(), true, out var condition) ? condition : default,
+                                    Category = Enum.TryParse<ItemCategory>(GetColumnValue(row, columnMapping, "Category"), true, out var category) ? category : default,
+                                    Condition = Enum.TryParse<ItemCondition>(GetColumnValue(row, columnMapping, "Condition"), true, out var condition) ? condition : default,
+
+                                    // Set barcode information
+                                    Barcode = barcodeText,
+                                    BarcodeImage = barcodeImageBytes,
 
                                     CreatedAt = DateTime.UtcNow,
                                     UpdatedAt = DateTime.UtcNow
@@ -272,10 +324,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Now that we have the list, we save it to the database.
             if (itemsToCreate.Any())
             {
-                // We need to add a method to our repository to handle bulk inserts.
                 await _itemRepository.AddRangeAsync(itemsToCreate);
                 await _itemRepository.SaveChangesAsync();
             }
+        }
+
+        /// <summary>
+        /// Helper method to safely get column values from DataRow using flexible column mapping
+        /// </summary>
+        /// <param name="row">The DataRow to read from</param>
+        /// <param name="columnMapping">Dictionary mapping logical column names to actual column names</param>
+        /// <param name="logicalColumnName">The logical column name to retrieve</param>
+        /// <returns>The column value as string, or null if not found</returns>
+        private static string? GetColumnValue(DataRow row, Dictionary<string, string> columnMapping, string logicalColumnName)
+        {
+            if (columnMapping.TryGetValue(logicalColumnName, out var actualColumnName))
+            {
+                return row[actualColumnName]?.ToString();
+            }
+            return null;
         }
 
     }

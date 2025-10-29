@@ -77,12 +77,39 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
             return Ok(successResponse);
         }
+
+        [HttpGet("by-serial/{serialNumber}")]
+        public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemBySerialNumber(string serialNumber)
+        {
+            var item = await _itemService.GetItemBySerialNumberAsync(serialNumber);
+            if (item == null)
+            {
+                var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
+            return Ok(successResponse);
+        }
         [HttpPost("import")]
         public async Task<IActionResult> ImportItemsFromExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return BadRequest(ApiResponse<object>.FailResponse("No file uploaded."));
+            }
+
+            // Validate file extension - only accept .xlsx files
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".xlsx")
+            {
+                return BadRequest(ApiResponse<object>.FailResponse("Only .xlsx files are allowed for import."));
+            }
+
+            // Validate MIME type as additional security
+            var allowedMimeTypes = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+            if (!allowedMimeTypes.Contains(file.ContentType))
+            {
+                return BadRequest(ApiResponse<object>.FailResponse("Invalid file type. Only Excel (.xlsx) files are allowed."));
             }
 
             try
