@@ -24,7 +24,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>()
                 .ForMember(dest => dest.BarcodeImage, opt => opt.Ignore())
-                .ForMember(dest => dest.LentAt, opt => opt.MapFrom(_ => DateTime.Now)) // Set the creation timestamp
+                .ForMember(dest => dest.LentAt, opt => opt.Ignore()) // LentAt should only be set when status becomes Borrowed
                 .ForMember(dest => dest.ItemName, opt => opt.Ignore()) // ItemName must be looked up in the service layer
                 .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore()) // Denormalized fields are set in the service layer
                 .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())

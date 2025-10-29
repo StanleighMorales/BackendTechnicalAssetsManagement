@@ -18,7 +18,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
         public string Room { get; set; } = string.Empty;
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
-        public DateTime LentAt { get; set; }
+        public DateTime? LentAt { get; set; }
         public DateTime? ReturnedAt { get; set; }
         public string Status { get; set; } = string.Empty;
 

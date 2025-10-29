@@ -36,7 +36,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)
-                .FirstOrDefaultAsync(li => li.LentAt == dateTime);
+                .FirstOrDefaultAsync(li => li.LentAt.HasValue && li.LentAt.Value == dateTime);
         }
 
         public async Task<LentItems?> GetByIdAsync(Guid id)

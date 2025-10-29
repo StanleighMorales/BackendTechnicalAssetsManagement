@@ -41,10 +41,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     lentItem.ItemName = item.ItemName;
                     
-                    // Set item status to Unavailable when borrowed
-                    item.Status = ItemStatus.Unavailable;
-                    item.UpdatedAt = DateTime.UtcNow;
-                    await _itemRepository.UpdateAsync(item);
+                    // Only set item status to Unavailable and LentAt when status is Borrowed
+                    if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        item.Status = ItemStatus.Unavailable;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        lentItem.LentAt = DateTime.UtcNow;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                    // For Pending status, keep item Available and don't set LentAt
                 }
                 else
                 {
@@ -136,7 +141,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
             }
 
-            // Update the corresponding item status to Unavailable
+            // Update the corresponding item status based on lent item status
             if (dto.ItemId != Guid.Empty)
             {
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
@@ -144,10 +149,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     lentItem.ItemName = item.ItemName;
                     
-                    // Set item status to Unavailable when borrowed by guest
-                    item.Status = ItemStatus.Unavailable;
-                    item.UpdatedAt = DateTime.UtcNow;
-                    await _itemRepository.UpdateAsync(item);
+                    // Only set item status to Unavailable and LentAt when status is Borrowed
+                    if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        item.Status = ItemStatus.Unavailable;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        lentItem.LentAt = DateTime.UtcNow;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                    // For Pending status, keep item Available and don't set LentAt
                 }
             }
 
@@ -264,8 +274,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
-                // For Pending or Canceled, we might want to set back to Available
-                else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
+                // For Pending or Canceled, set item back to Available
+                else if (dto.LentItemsStatus == LentItemsStatus.Canceled || dto.LentItemsStatus == LentItemsStatus.Pending)
                 {
                     item.Status = ItemStatus.Available;
                     item.UpdatedAt = DateTime.UtcNow;
@@ -284,8 +294,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 // Set the LentAt time to the current server UTC time
                 entity.LentAt = scanTimestamp;
             }
-            // Note: No action is needed for Pending or Canceled, 
-            // but the status property is still updated above.
+            else if (dto.LentItemsStatus == LentItemsStatus.Pending || dto.LentItemsStatus == LentItemsStatus.Canceled)
+            {
+                // Clear LentAt when status changes to Pending or Canceled
+                entity.LentAt = null;
+            }
 
             await _repository.UpdateAsync(entity);
             return await _repository.SaveChangesAsync();
