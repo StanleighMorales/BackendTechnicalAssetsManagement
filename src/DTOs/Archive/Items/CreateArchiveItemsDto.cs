@@ -6,7 +6,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
     public class CreateArchiveItemsDto
     {
         [Required]
-        public Guid ItemId { get; set; }
+        public Guid Id { get; set; }
         [Required]
         public string SerialNumber { get; set; } = string.Empty;
         public string? Barcode { get; set; }
@@ -24,5 +24,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
         public string? Category { get; set; }
         [Required]
         public string? Condition { get; set; }
+        [Required]
+        public string? Status { get; set; }
     }
 }

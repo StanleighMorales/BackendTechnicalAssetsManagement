@@ -40,6 +40,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 if (item != null)
                 {
                     lentItem.ItemName = item.ItemName;
+                    
+                    // Set item status to Unavailable when borrowed
+                    item.Status = ItemStatus.Unavailable;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
                 }
                 else
                 {
@@ -131,11 +136,36 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
             }
 
+            // Update the corresponding item status to Unavailable
+            if (dto.ItemId != Guid.Empty)
+            {
+                var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+                if (item != null)
+                {
+                    lentItem.ItemName = item.ItemName;
+                    
+                    // Set item status to Unavailable when borrowed by guest
+                    item.Status = ItemStatus.Unavailable;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+            }
+
             // 4. Add the fully-populated object to the repository and save.
             await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(); // This saves the item and the database generates the lentItem.Id
 
+            // 5. Now that lentItem.Id is valid, generate the barcode
+            string barcodeText = BarcodeGenerator.GenerateLentItemBarcode(lentItem.Id.ToString());
+            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
+            // 6. Update the entity with the new barcode information
+            lentItem.Barcode = barcodeText;
+            lentItem.BarcodeImage = barcodeImageBytes;
+
+            // No need to call AddAsync again, just update the tracked entity
+            await _repository.UpdateAsync(lentItem);
+            await _repository.SaveChangesAsync(); // Save the final changes
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
             return _mapper.Map<LentItemsDto>(createdItem);
@@ -216,6 +246,33 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             entity.Status = dto.LentItemsStatus.ToString();
 
+            // Update the corresponding Item status based on LentItems status
+            var item = await _itemRepository.GetByIdAsync(entity.ItemId);
+            if (item != null)
+            {
+                if (dto.LentItemsStatus == LentItemsStatus.Returned)
+                {
+                    // Set item status back to Available when returned
+                    item.Status = ItemStatus.Available;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+                else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
+                {
+                    // Ensure item status is Unavailable when borrowed
+                    item.Status = ItemStatus.Unavailable;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+                // For Pending or Canceled, we might want to set back to Available
+                else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
+                {
+                    item.Status = ItemStatus.Available;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+            }
+
             // Check the new status to decide which field to update
             if (dto.LentItemsStatus == LentItemsStatus.Returned)
             {
@@ -272,6 +329,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             var lentItemsToArchive = await _repository.GetByIdAsync(id); // Uses _repository (ILentItemsRepository)
             if (lentItemsToArchive == null) return false;
+
+            // If the lent item was not returned, make sure the item status is set back to Available
+            // when archiving the lent item record
+            if (lentItemsToArchive.Status != LentItemsStatus.Returned.ToString())
+            {
+                var item = await _itemRepository.GetByIdAsync(lentItemsToArchive.ItemId);
+                if (item != null)
+                {
+                    item.Status = ItemStatus.Available;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+            }
 
             var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);
 

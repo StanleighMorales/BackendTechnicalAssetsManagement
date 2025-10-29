@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -69,9 +70,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Because of our mapping change, restoredItem now has the correct, original Id
             var restoredItem = _mapper.Map<Item>(archivedItem);
 
-            // Set new timestamps
+            // Set new timestamps and ensure status is Available when restored
             restoredItem.CreatedAt = DateTime.UtcNow;
             restoredItem.UpdatedAt = DateTime.UtcNow;
+            restoredItem.Status = ItemStatus.Available; // Restored items should be available
 
             // EF Core will now happily add this item with its specified Id
             await _itemRepository.AddAsync(restoredItem);

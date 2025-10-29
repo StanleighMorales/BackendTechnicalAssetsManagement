@@ -46,14 +46,14 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                  .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Item, CreateArchiveItemsDto>()
-                // Explicitly map the 'Id' from the source (Item) to 'ItemId' in the destination (DTO)
-                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.Id))
-
                 // Convert the 'Category' enum from the source to a string in the destination
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()))
 
                 // Convert the 'Condition' enum from the source to a string in the destination
-                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()));
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+
+                // Convert the 'Status' enum from the source to a string in the destination
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
         }
     }

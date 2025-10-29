@@ -7,9 +7,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
     public class ArchiveItems
     {
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
-        [ForeignKey("Id")]
-        public Guid ItemId { get; set; }
+        public Guid Id { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
         public string? Barcode { get; set; }
         public byte[]? BarcodeImage { get; set; }

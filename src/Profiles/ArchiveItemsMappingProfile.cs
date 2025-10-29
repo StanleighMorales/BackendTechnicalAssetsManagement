@@ -29,8 +29,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             CreateMap<ArchiveItems, UpdateArchiveItemsDto>();
 
             // This is the map for the restore functionality
-            CreateMap<ArchiveItems, Item>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.ItemId));
+            CreateMap<ArchiveItems, Item>();
             // The Category and Condition properties will be mapped automatically
             // because they have the same name and type in both classes 
             // and the Item entity expects Enums.
@@ -38,15 +37,17 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             // DTO -> Entity
             CreateMap<ArchiveItemsDto, ArchiveItems>();
             CreateMap<CreateArchiveItemsDto, ArchiveItems>()
-                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.ItemId));
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category ?? "Electronics")))
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition ?? "New")))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<ItemStatus>(src.Status ?? "Available")));
             CreateMap<UpdateArchiveItemsDto, ArchiveItems>()
-                 .ForMember(dest => dest.ItemId, opt => opt.Ignore())
+                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                  .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Item, CreateArchiveItemsDto>()
-                .ForMember(dest => dest.ItemId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.Condition.ToString()))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.Barcode, opt => opt.MapFrom(src => src.Barcode))
                 .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src => src.BarcodeImage))
                 .ForMember(dest => dest.ImageMimeType, opt => opt.MapFrom(src => src.ImageMimeType));

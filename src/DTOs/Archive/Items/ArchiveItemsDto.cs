@@ -7,8 +7,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
     public class ArchiveItemsDto
     {
         public Guid Id { get; set; }
-        
-        public Guid ItemId { get; set; }
         public string SerialNumber { get; set; } = string.Empty;
         public string? Barcode { get; set; }
         public string? BarcodeImage { get; set; }

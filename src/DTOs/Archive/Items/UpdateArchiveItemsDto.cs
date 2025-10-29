@@ -5,8 +5,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.Items
 {
     public class UpdateArchiveItemsDto
     {
-        
-        public Guid? ItemId { get; set; }
         public string? SerialNumber { get; set; }
         public byte[]? Image { get; set; }
         public string? ItemName { get; set; }

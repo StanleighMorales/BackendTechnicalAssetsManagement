@@ -181,6 +181,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             //// We REMOVE the call to DeleteImage. It's not needed.
             //// The image bytes will be deleted from the database when the row is deleted.
 
+            // Set item status to Unavailable before archiving
+            itemToDelete.Status = ItemStatus.Unavailable;
+            itemToDelete.UpdatedAt = DateTime.UtcNow;
+
             var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
             await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
 
