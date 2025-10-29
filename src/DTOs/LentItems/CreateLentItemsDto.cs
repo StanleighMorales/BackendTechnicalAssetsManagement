@@ -7,6 +7,7 @@
         public Guid? TeacherId { get; set; }
         public string Room { get; set; } = string.Empty;
         public string SubjectTimeSchedule { get; set; } = string.Empty;
-        public string Remarks { get; set; } = string.Empty;
+        public string? Remarks { get; set; }
+        public string? Status { get; set; } = string.Empty;
     }
 }

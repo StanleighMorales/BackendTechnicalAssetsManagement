@@ -1,4 +1,5 @@
 using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Authorization;
 using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
@@ -7,12 +8,14 @@ using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Middleware;
 using BackendTechnicalAssetsManagement.src.Repository;
 using BackendTechnicalAssetsManagement.src.Services;
-using BackendTechnicalAssetsManagement.src.Utils;
 using DotNetEnv;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using static BackendTechnicalAssetsManagement.src.Authorization.ViewProfileRequirement;
 
 Env.Load(); // Load .env file
 
@@ -24,7 +27,7 @@ builder.Configuration
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+    serverOptions.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
 });
 
 // Add services to the container.
@@ -32,9 +35,12 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 // Add Authentication and Authorization
+builder.Services.AddSingleton<IAuthorizationHandler, SuperAdminBypassHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, ViewProfileHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOrStaff", policy =>
@@ -92,21 +98,26 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ILentItemsRepository, LentItemsRepository>();
 builder.Services.AddScoped<IArchiveItemRepository, ArchiveItemsRepository>();
+builder.Services.AddScoped<IArchiveLentItemsRepository, ArchiveLentItemsRepository>();
+builder.Services.AddScoped<IArchiveUserRepository, ArchiveUserRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILentItemsService, LentItemsService>();
 builder.Services.AddScoped<IArchiveItemsService, ArchiveItemsService>();
+builder.Services.AddScoped<IArchiveLentItemsService, ArchiveLentItemsService>();
+builder.Services.AddScoped<IArchiveUserService, ArchiveUserService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
+
+builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
 #endregion
 
 // Background Services
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
-// Utilities
-builder.Services.AddScoped<ImageFileManager>();
 
 //Singleton Services
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
@@ -116,7 +127,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+// Health Checks
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("The database connection string 'DefaultConnection' was not found in the configuration.");
+}
+
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString, name: "Database");
 
 // Custom Extension Method Services
 builder.Services.AddAuthServices(builder.Configuration);
@@ -126,25 +146,29 @@ builder.Services.AddAuthServices(builder.Configuration);
 #region Cors Policy
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
-builder.Services.AddCors(options =>
+if (allowedOrigins != null)
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        options.AddPolicy("AllowReactApp", policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+        options.AddPolicy("AllowFlutterDev", policy =>
+        {
+            policy
+                .SetIsOriginAllowed(origin =>
+                    new Uri(origin).Host == "localhost" || new Uri(origin).Host == "127.0.0.1")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
     });
-    options.AddPolicy("AllowFlutterDev", policy =>
-    {
-        policy
-            .SetIsOriginAllowed(origin =>
-                new Uri(origin).Host == "localhost" || new Uri(origin).Host == "127.0.0.1")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+}
+    
 #endregion
 
 var app = builder.Build();
@@ -179,5 +203,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
 
 app.Run();

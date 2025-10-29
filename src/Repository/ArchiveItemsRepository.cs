@@ -42,7 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             return await _context.SaveChangesAsync() > 0;
         }
-
+        //Currently not used
         public Task<ArchiveItems?> UpdateItemArchiveAsync(ArchiveItems itemArchive)
         {
             _context.ArchiveItems.Update(itemArchive);

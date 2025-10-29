@@ -1,9 +1,11 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Models.DTOs.Users;
+using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
@@ -16,13 +18,42 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<AuthController> _logger;
-        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger)
+        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger, IUserService userService)
         {
             _authService = authService;
             _env = env;
             _logger = logger;
+            _userService = userService;
+        }
+        [HttpGet("me")]
+        // FIX: Change the generic type from BaseProfileDto to object
+        public async Task<ActionResult<ApiResponse<object>>> GetMyProfile()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                // Change FailResponse to use object generic type
+                var response = ApiResponse<object>.FailResponse("Invalid Token.");
+                return Unauthorized(response);
+            }
+
+            // userProfile is the concrete derived DTO (e.g., GetStudentProfileDto)
+            var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
+            if (userProfile == null)
+            {
+                // Change FailResponse to use object generic type
+                var notFoundResponse = ApiResponse<object>.FailResponse("User profile not found.");
+                return NotFound(notFoundResponse);
+            }
+
+            // Change SuccessResponse to use object generic type
+            var successResponse = ApiResponse<object>.SuccessResponse(userProfile, "User profile retrieved successfully.");
+
+            // The ActionResult return type must also match the object generic type
+            return Ok(successResponse);
         }
 
         /// <summary>
@@ -64,6 +95,25 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return Ok(response);
         }
+        /// <summary>
+        /// Authenticates a user and returns a JSON Web Token (JWT) and Refresh Token in the response body.
+        /// Intended for use by mobile applications or pure API clients.
+        /// </summary>
+        /// <param name="request">The user's login credentials (e.g., username and password).</param>
+        /// <returns>An ApiResponse containing the user data, access token, and refresh token.</returns>
+        [HttpPost("login-mobile")]
+        public async Task<ActionResult<ApiResponse<MobileLoginResponseDto>>> LoginMobile(LoginUserDto request)
+        {
+            var data = await _authService.LoginMobile(request);
+            var response = ApiResponse<MobileLoginResponseDto>.SuccessResponse(data, "Mobile login successful.");
+
+            if (_env.IsDevelopment())
+            {
+                _logger.LogInformation("User {Email} logged in via mobile endpoint.", data.User.Email);
+            }
+
+            return Ok(response);
+        }
 
         /// <summary>
         /// Logs out the currently authenticated user.
@@ -95,6 +145,28 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<string>.SuccessResponse(newAccessToken, "Token Refreshed Successfully.");
             return Ok(successResponse);
         }
+
+        /// <summary>
+        /// Generates a new access token and a new refresh token using a valid refresh token from the request body.
+        /// Intended for use by mobile applications or pure API clients.
+        /// </summary>
+        /// <param name="request">The RefreshTokenRequestDto containing the Refresh Token string.</param>
+        /// <returns>An ApiResponse containing a new Access Token and a new Refresh Token.</returns>
+        [HttpPost("refresh-token-mobile")] // <-- MOBILE refresh token endpoint (uses JSON body)
+        public async Task<ActionResult<ApiResponse<MobileLoginResponseDto>>> RefreshTokenMobile([FromBody] RefreshTokenDto request)
+        {
+            var data = await _authService.RefreshTokenMobile(request.RefreshToken);
+            var successResponse = ApiResponse<MobileLoginResponseDto>.SuccessResponse(data, "Token Refreshed Successfully.");
+            return Ok(successResponse);
+        }
         #endregion
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<object>>> ChangePassword(ChangePasswordDto request)
+        {
+            await _authService.ChangePassword(request);
+            var response = ApiResponse<object>.SuccessResponse(null, "Password has been successfully changed.");
+            return Ok(response);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BackendTechnicalAssetsManagement.src.Authorization;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -8,83 +9,110 @@ using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 using static BackendTechnicalAssetsManagement.src.DTOs.User.UserProfileDtos;
 
+/// <summary>
+/// Manages user-related operations, including retrieving user profiles, updating information, and archiving accounts.
+/// All endpoints require authentication.
+/// </summary>
 [Route("api/v1/users")]
 [ApiController]
 [Authorize]
 public class UserController : ControllerBase
 {
+    private readonly IAuthorizationService _authorizationService;
     private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public UserController(IUserService userService, IUserRepository userRepository, IMapper mapper)
+    public UserController(IUserService userService, IUserRepository userRepository, IMapper mapper, IAuthorizationService authorizationService)
     {
         _userService = userService;
         _userRepository = userRepository;
         _mapper = mapper;
+        _authorizationService = authorizationService;
     }
 
-    [HttpGet("me")]
-    // FIX: The signature now correctly promises a BaseProfileDto for better documentation.
-    public async Task<ActionResult<ApiResponse<BaseProfileDto>>> GetMyProfile()
-    {
-        // FIX: Removed the local try-catch. Let the service return null for "not found"
-        // and let the global middleware handle any unexpected errors.
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString))
-        {
-            var response = ApiResponse<BaseProfileDto>.FailResponse("Invalid Token.");
-            return Unauthorized(response);
-        }
-
-        var userProfile = await _userService.GetUserProfileByIdAsync(Guid.Parse(userIdString));
-        if (userProfile == null)
-        {
-            var notFoundResponse = ApiResponse<BaseProfileDto>.FailResponse("User profile not found.");
-            return NotFound(notFoundResponse);
-        }
-
-        var successResponse = ApiResponse<BaseProfileDto>.SuccessResponse(userProfile, "User profile retrieved successfully.");
-        return Ok(successResponse);
-    }
-
+    /// <summary>
+    /// Retrieves a list of all users.
+    /// Access is restricted to users with 'Admin' or 'Staff' roles.
+    /// </summary>
     [HttpGet]
     [Authorize(Policy = "AdminOrStaff")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAllUsers()
+    public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> GetAllUsers()
     {
         var users = await _userService.GetAllUsersAsync();
-        var response = ApiResponse<IEnumerable<UserDto>>.SuccessResponse(users, "Users retrieved successfully.");
+        var response = ApiResponse<IEnumerable<object>>.SuccessResponse(users, "Users retrieved successfully.");
         return Ok(response);
     }
 
-    // --- PATCH Endpoints (Now with full implementation) ---
-
-    [HttpPatch("students/{id}/profile")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
+    /// <summary>
+    /// Retrieves a specific user's profile by their unique ID.
+    /// Implements resource-based authorization to determine if the requester has permission to view the target profile.
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<object>>> GetUserProfileById(Guid id)
     {
-        if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
+        var userToView = await _userRepository.GetByIdAsync(id);
+        if (userToView == null)
         {
-            return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
+            return NotFound(ApiResponse<object>.FailResponse("User profile not found."));
         }
 
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user is not Student student)
+        // Use the authorization service to apply custom 'ViewProfileRequirement' rules.
+        // This checks if the current user can view the specific 'userToView' resource.
+        var authorizationResult = await _authorizationService.AuthorizeAsync(User, userToView, new ViewProfileRequirement());
+
+        if (!authorizationResult.Succeeded)
         {
-            return NotFound(ApiResponse<object>.FailResponse("Student not found."));
+            return Forbid(); // Return 403 Forbidden if authorization rules fail.
         }
 
-        _mapper.Map(studentDto, student);
-        await _userRepository.UpdateAsync(student);
-        await _userRepository.SaveChangesAsync();
-
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Student profile updated successfully."));
+        var userProfile = await _userService.GetUserProfileByIdAsync(id);
+        var successResponse = ApiResponse<object>.SuccessResponse(userProfile, "User profile retrieved successfully.");
+        return Ok(successResponse);
     }
 
-    [HttpPatch("teachers/{id}/profile")]
+    /// <summary>
+    /// Updates a student's profile information.
+    /// An 'Admin' can update any student profile. A 'Student' can only update their own.
+    /// Note: Student ownership is not checked here and must be enforced by the client or a more specific policy.
+    /// </summary>
+    [HttpPatch("students/profile/{id}")]
+    [Authorize(Roles = "Admin,Student")]
+    public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
+    {
+        try
+        {
+            var success = await _userService.UpdateStudentProfileAsync(id, studentDto);
+
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.FailResponse("Student not found."));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Student profile updated successfully."));
+        }
+        catch (ArgumentException ex) // Catches the validation exception from the service
+        {
+            return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
+        }
+    }
+
+    /// <summary>
+    /// Updates a teacher's profile information.
+    /// An 'Admin' can update any teacher profile. A 'Teacher' can only update their own profile.
+    /// </summary>
+    [HttpPatch("teachers/profile/{id}")]
+    [Authorize(Roles = "Admin,Teacher")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateTeacherProfile(Guid id, [FromBody] UpdateTeacherProfileDto teacherDto)
     {
+        // Enforce that a non-admin user can only update their own profile.
         if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
         {
             return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
@@ -103,58 +131,49 @@ public class UserController : ControllerBase
         return Ok(ApiResponse<object>.SuccessResponse(null, "Teacher profile updated successfully."));
     }
 
-    [HttpPatch("staff/{id}/profile")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateStaffProfile(Guid id, [FromBody] UpdateStaffProfileDto staffDto)
+    /// <summary>
+    /// Updates the profile of the currently authenticated 'Admin' or 'Staff' user.
+    /// </summary>
+    [HttpPatch("admin-or-staff/profile/{id}")] // Using PATCH as per our last discussion
+    [Authorize(Roles = "SuperAdmin, Admin, Staff")]
+    public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
-        if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
-        {
-            return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
-        }
+        // We get the current user's ID securely from the token claims.
+        var currentUserId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user is not Staff staff)
-        {
-            return NotFound(ApiResponse<object>.FailResponse("Staff not found."));
-        }
+        // The controller's job is now just to orchestrate the call.
+        // It lives in the "happy path." All error handling is offloaded.
+        await _userService.UpdateStaffOrAdminProfileAsync(id, dto, currentUserId);
 
-        _mapper.Map(staffDto, staff);
-        await _userRepository.UpdateAsync(staff);
-        await _userRepository.SaveChangesAsync();
+        // If the line above throws an exception, this line is never reached.
+        // The GlobalExceptionHandler takes over.
 
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Staff profile updated successfully."));
+        // If no exception was thrown, the update was successful.
+        return NoContent(); // HTTP 204 is the correct response for a successful update.
     }
 
-    [HttpPatch("admin/{id}/profile")]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateAdminProfile(Guid id, [FromBody] UpdateAdminProfileDto adminDto)
+    /// <summary>
+    /// Archives a user account by its ID, effectively performing a soft delete.
+    /// The service layer prevents a user from archiving their own account.
+    /// </summary>
+    [HttpDelete("archive/{id}")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<ActionResult<ApiResponse<object>>> ArchiveUser(Guid id)
     {
-        if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
+        var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(currentUserIdString, out var currentUserId))
         {
-            return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
+            return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
         }
 
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user is not Admin admin)
-        {
-            return NotFound(ApiResponse<object>.FailResponse("Admin not found."));
-        }
+        // The service layer contains the logic to prevent self-archiving.
+        var success = await _userService.DeleteUserAsync(id, currentUserId);
 
-        _mapper.Map(adminDto, admin);
-        await _userRepository.UpdateAsync(admin);
-        await _userRepository.SaveChangesAsync();
-
-        return Ok(ApiResponse<object>.SuccessResponse(null, "Admin profile updated successfully."));
-    }
-
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<ApiResponse<object>>> DeleteUser(Guid id)
-    {
-        var success = await _userService.DeleteUserAsync(id);
         if (!success)
         {
-            return NotFound(ApiResponse<object>.FailResponse("Delete failed. User not found."));
+            return BadRequest(ApiResponse<object>.FailResponse("Failed to archive user. The user may not exist or the action is not permitted."));
         }
 
-        return Ok(ApiResponse<object>.SuccessResponse(null, "User deleted successfully."));
+        return Ok(ApiResponse<object>.SuccessResponse(null, "User has been successfully archived."));
     }
 }

@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.IService;
 using System.Linq;
 using System.Threading.Tasks;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+using System.Collections.Generic; // Added for Dictionary extension methods if needed, though GetValueOrDefault is generally available or can be assumed.
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -29,12 +30,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var allItems = await _itemRepository.GetAllAsync();
             var allLentRecords = await _lentItemRepository.GetAllAsync();
             var allUsers = await _userRepository.GetAllAsync();
+            var allCategories = Enum.GetValues(typeof(ItemCategory)).Cast<ItemCategory>();
 
             return new SummaryDto
             {
                 TotalItems = allItems.Count(),
                 TotalLentItems = allLentRecords.Count(),
-                TotalActiveUsers = allUsers.Count(u => u.Status == "Active")
+                TotalActiveUsers = allUsers.Count(u => u.Status == "Online"),
+                TotalItemsCategories = allCategories.Count()
             };
         }
 
@@ -80,20 +83,35 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         /// <summary>
         /// Calculates a detailed summary of active users ONLY.
-        /// This is now much more efficient as it only queries users.
+        /// This is now much more efficient as it only queries users and uses GroupBy for role counts.
         /// </summary>
         public async Task<ActiveUserCount> GetActiveUserCountAsync()
         {
             var allUsers = await _userRepository.GetAllAsync();
-            var activeUsers = allUsers.Where(u => u.Status == "Active").ToList();
+            // Filter active users
+            var activeUsers = allUsers.Where(u => u.Status == "Online");
+
+            // Group by UserRole and count, then convert to dictionary
+            var roleCounts = activeUsers.GroupBy(u => u.UserRole)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            // Calculate total active users from the dictionary values
+            var totalActive = roleCounts.Values.Sum();
+
+            // Helper to safely get value from dictionary, defaulting to 0
+            // Note: GetValueOrDefault is an extension method often available in modern C# environments.
+            static int GetValueOrDefault<TKey>(Dictionary<TKey, int> dict, TKey key)
+            {
+                return dict.TryGetValue(key, out var count) ? count : 0;
+            }
 
             return new ActiveUserCount
             {
-                TotalActiveUsers = activeUsers.Count(),
-                TotalActiveAdmins = activeUsers.Count(user => user.UserRole == UserRole.Admin || user.UserRole == UserRole.SuperAdmin),
-                TotalActiveStaffs = activeUsers.Count(user => user.UserRole == UserRole.Staff),
-                TotalActiveTeachers = activeUsers.Count(user => user.UserRole == UserRole.Teacher),
-                TotalActiveStudents = activeUsers.Count(user => user.UserRole == UserRole.Student)
+                TotalActiveUsers = totalActive,
+                TotalActiveAdmins = GetValueOrDefault(roleCounts, UserRole.Admin) + GetValueOrDefault(roleCounts, UserRole.SuperAdmin),
+                TotalActiveStaffs = GetValueOrDefault(roleCounts, UserRole.Staff),
+                TotalActiveTeachers = GetValueOrDefault(roleCounts, UserRole.Teacher),
+                TotalActiveStudents = GetValueOrDefault(roleCounts, UserRole.Student)
             };
         }
     }

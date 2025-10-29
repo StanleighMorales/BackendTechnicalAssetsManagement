@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
-using BackendTechnicalAssetsManagement.src.DTOs.Archive;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
-using BackendTechnicalAssetsManagement.src.Utils;
-using static BackendTechnicalAssetsManagement.src.Services.ItemService;
 
 namespace BackendTechnicalAssetsManagement.src.Services
 {
@@ -14,16 +12,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveItemRepository _archiveItemRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _hostEnvironment;
-        private readonly ImageFileManager _imageFileManager;
 
-        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, ImageFileManager imageFileManager)
+        public ArchiveItemsService(IArchiveItemRepository archiveItemRepository, IItemRepository itemRepository, IMapper mapper)
         {
             _archiveItemRepository = archiveItemRepository;
             _itemRepository = itemRepository;
             _mapper = mapper;
-            _hostEnvironment = hostEnvironment;
-            _imageFileManager = imageFileManager;
         }
         public async Task<ArchiveItemsDto> CreateItemArchiveAsync(CreateArchiveItemsDto createItemArchive)
         {
@@ -39,12 +33,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<bool> DeleteItemArchiveAsync(Guid id)
         {
-            var itemToDelete = _archiveItemRepository.GetItemArchiveByIdAsync(id);
+            // 1. Await the repository call to get the result (ArchiveItems or null)
+            var itemToDelete = await _archiveItemRepository.GetItemArchiveByIdAsync(id);
+
+            // 2. Check if the actual item is null
             if (itemToDelete == null)
             {
-                return false;
+                return false; // Item not found
             }
 
+            // 3. Proceed with deletion
+            await _archiveItemRepository.DeleteItemArchiveAsync(id);
+
+            // 4. Save changes and return true/false based on success (i.e., if rows were affected)
             return await _archiveItemRepository.SaveChangesAsync();
         }
 
@@ -88,7 +89,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             return await _archiveItemRepository.SaveChangesAsync();
         }
-
+         
         public async Task<bool> UpdateItemArchiveAsync(Guid id, UpdateArchiveItemsDto UpdateItemArchive)
         {
             var itemToUpdate = await _archiveItemRepository.GetItemArchiveByIdAsync(id);

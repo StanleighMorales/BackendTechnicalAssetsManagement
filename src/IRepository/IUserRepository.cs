@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.DTOs.User;
 
 namespace BackendTechnicalAssetsManagement.src.IRepository
 {
@@ -10,6 +11,11 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByPhoneNumberAsync(string phoneNumber);
         Task<IEnumerable<User>> GetAllAsync();
+        Task<IEnumerable<UserDto>> GetAllUserDtosAsync();
+
+        Task<IEnumerable<StudentDto>> GetAllStudentsAsync();
+        Task<IEnumerable<TeacherDto>> GetAllTeachersAsync();
+        Task<IEnumerable<StaffDto>> GetAllStaffAsync();
         Task<User> AddAsync(User user);
         Task UpdateAsync(User user);
 

@@ -9,7 +9,7 @@
 
         public enum UserRole { SuperAdmin, Admin, Staff, Teacher, Student }
 
-        public enum LentItemRemarks { Borrowed, Returned, Lost, Damaged, UnderRepair }
+        public enum  LentItemsStatus { Pending, Canceled, Borrowed, Returned }
 
     }
 }

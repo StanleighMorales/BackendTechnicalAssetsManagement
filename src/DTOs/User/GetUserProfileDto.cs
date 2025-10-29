@@ -1,39 +1,41 @@
-﻿using static BackendTechnicalAssetsManagement.src.Classes.Enums;
+﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using System.Text.Json.Serialization;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 {
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+
+    [JsonDerivedType(typeof(GetStudentProfileDto), typeDiscriminator: "Student")]
+    [JsonDerivedType(typeof(GetTeacherProfileDto), typeDiscriminator: "Teacher")]
+    [JsonDerivedType(typeof(GetStaffProfileDto), typeDiscriminator: "Staff")]
     public class BaseProfileDto
     {
+        public Guid Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+        public string? MiddleName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+
         public UserRole UserRole { get; set; }
         public string? Status { get; set; } = string.Empty;
 
     }
     public class GetStaffProfileDto : BaseProfileDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
 
-        public string PhoneNumber { get; set; } = string.Empty;
+        
         public string Position { get; set; } = string.Empty;
-    }
-    public class GetAdminProfileDto : BaseProfileDto
-    {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-
-        public string PhoneNumber { get; set; } = string.Empty;
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
 
     public class GetTeacherProfileDto : BaseProfileDto
     {
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string Department { get; set; } = string.Empty;
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
     public class GetStudentProfileDto : BaseProfileDto
     {
@@ -41,11 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? FrontStudentIdPicture { get; set; }
         public string? BackStudentIdPicture { get; set; }
 
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        public string FirstName { get; set; } = string.Empty;
         public string StudentIdNumber { get; set; } = string.Empty;
-        public string? PhoneNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         public string Section { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;
@@ -54,6 +52,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string CityMunicipality { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
+
+        public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
 
 }

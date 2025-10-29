@@ -19,6 +19,28 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             _itemService = itemService;
         }
+        // POST: /api/item
+        [HttpPost]
+        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
+        {
+            try
+            {
+                var newItemDto = await _itemService.CreateItemAsync(createItemDto);
+                var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
+                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
+            }
+            catch (ItemService.DuplicateSerialNumberException ex)
+            {
+                var errorResponse = ApiResponse<ItemDto>.FailResponse(ex.Message);
+                return Conflict(errorResponse);
+            }
+            catch (ArgumentException ex)
+            {
+                var response = ApiResponse<ItemDto>.FailResponse(ex.Message);
+                return BadRequest(response);
+            }
+        }
+
 
         // GET: /api/item
         [HttpGet]
@@ -43,27 +65,17 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
             return Ok(successResponse);
         }
-
-        // POST: /api/item
-        [HttpPost]
-        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
+        [HttpGet("by-barcode/{barcode}")]
+        public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemByBarcode(string barcodeText)
         {
-            try
+            var item = await _itemService.GetItemByBarcodeAsync(barcodeText);
+            if (item == null)
             {
-                var newItemDto = await _itemService.CreateItemAsync(createItemDto);
-                var reponse = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
-                return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, reponse);
+                var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
+                return NotFound(errorResponse);
             }
-            catch (ItemService.DuplicateSerialNumberException ex)
-            {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return Conflict(errorResponse);
-            }
-            catch (ArgumentException ex)
-            {
-                var response = ApiResponse<ItemDto>.FailResponse(ex.Message);
-                return BadRequest(response);
-            }
+            var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
+            return Ok(successResponse);
         }
         [HttpPost("import")]
         public async Task<IActionResult> ImportItemsFromExcel(IFormFile file)
@@ -85,8 +97,10 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             }
         }
 
+        
+
         // PUT: /api/item/5
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemsDto updateItemDto)
         {
             try
@@ -110,15 +124,15 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         // DELETE: /api/item/5
         [HttpDelete("archive{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<object>>> DeleteItem(Guid id)
+        public async Task<ActionResult<ApiResponse<object>>> ArchiveItem(Guid id)
         {
             var success = await _itemService.DeleteItemAsync(id);
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("Delete failed. Item not found.");
+                var errorResponse = ApiResponse<object>.FailResponse("Archive failed. Item not found.");
                 return NotFound(errorResponse);
             }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item deleted successfully.");
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item Archived successfully.");
             return Ok(successResponse);
         }
     }

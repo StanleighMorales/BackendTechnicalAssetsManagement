@@ -1,29 +1,52 @@
 ﻿using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
+using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Repository;
+using BackendTechnicalAssetsManagement.src.Utils;
+using TechnicalAssetManagementApi.Dtos.Item;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Services
-{
+{ 
     public class LentItemsService : ILentItemsService
     {
         private readonly ILentItemsRepository _repository;
         private readonly IUserRepository _userRepository;
+        private readonly IItemRepository _itemRepository;
+        private readonly IArchiveLentItemsService _archiveLentItemsService;
         private readonly IMapper _mapper;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService)
         {
             _repository = repository;
             _mapper = mapper;
             _userRepository = userRepository;
+            _itemRepository = itemRepository;
+            _archiveLentItemsService = archiveLentItemsService;
         }
 
         // Create
         public async Task<LentItemsDto> AddAsync(CreateLentItemDto dto)
         {
             var lentItem = _mapper.Map<LentItems>(dto);
+            if (dto.ItemId != Guid.Empty)
+            {
+                var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+                if (item != null)
+                {
+                    lentItem.ItemName = item.ItemName;
+                }
+                else
+                {
+
+                    throw new KeyNotFoundException($"Item with ID {dto.ItemId} not found.");
+                }
+            }
             if (dto.UserId.HasValue)
             {
                 // You need a method in your user repository to get a user by ID.
@@ -62,13 +85,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
-
-
             await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(); // This saves the item and the database generates the lentItem.Id
 
-            var createdItem = await _repository.GetByIdAsync(lentItem.Id);
-            return _mapper.Map<LentItemsDto>(createdItem);
+            // 3. Now that lentItem.Id is valid, generate the barcode
+            string barcodeText = BarcodeGenerator.GenerateLentItemBarcode(lentItem.Id.ToString());
+            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+
+            // 4. Update the entity with the new barcode information
+            lentItem.Barcode = barcodeText;
+            lentItem.BarcodeImage = barcodeImageBytes;
+
+            // No need to call AddAsync again, just update the tracked entity
+            await _repository.UpdateAsync(lentItem);
+            await _repository.SaveChangesAsync(); // Save the final changes
+
+            // 5. Map the fully created and updated entity to the DTO and return it
+            return _mapper.Map<LentItemsDto>(lentItem);
         }
         // In Services/LentItemsService.cs
 
@@ -83,14 +116,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             //    We now manually populate the fields that AutoMapper couldn't figure out.
             //    This overwrites the empty default values.
             lentItem.BorrowerFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
-            lentItem.BorrowerRole = dto.BorrowerRole;
+            if (dto.BorrowerRole != null)
+            {
+                lentItem.BorrowerRole = dto.BorrowerRole;
+            }
             lentItem.TeacherFullName = $"{dto.TeacherFirstName} {dto.TeacherLastName}";
 
             // 3. Set User and Teacher IDs to null for a "guest"
             lentItem.UserId = null;
             lentItem.TeacherId = null;
 
-            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
+            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
             {
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
             }
@@ -98,6 +134,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Add the fully-populated object to the repository and save.
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync();
+
+
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
             return _mapper.Map<LentItemsDto>(createdItem);
@@ -148,7 +186,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.UpdateAsync(entity);
             return await _repository.SaveChangesAsync();
         }
-
         // Delete (soft & hard)
         public async Task<bool> SoftDeleteAsync(Guid id)
         {
@@ -162,10 +199,92 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _repository.SaveChangesAsync();
         }
 
+
         public async Task<bool> SaveChangesAsync()
         {
             return await _repository.SaveChangesAsync();
         }
+        public async Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+            {
+                return false;
+            }
 
+            var scanTimestamp = DateTime.UtcNow;
+
+            entity.Status = dto.LentItemsStatus.ToString();
+
+            // Check the new status to decide which field to update
+            if (dto.LentItemsStatus == LentItemsStatus.Returned)
+            {
+                // Set the ReturnedAt time to the current server UTC time
+                entity.ReturnedAt = scanTimestamp;
+            }
+            else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
+            {
+                // Set the LentAt time to the current server UTC time
+                entity.LentAt = scanTimestamp;
+            }
+            // Note: No action is needed for Pending or Canceled, 
+            // but the status property is still updated above.
+
+            await _repository.UpdateAsync(entity);
+            return await _repository.SaveChangesAsync();
+        }
+        public async Task<bool> UpdateHistoryVisibility(Guid lentItemId, Guid userId, bool isHidden)
+        {
+            // 1. Fetch the LentItems record by ID.
+            var lentItem = await _repository.GetByIdAsync(lentItemId);
+
+            if (lentItem == null)
+            {
+                return false; // Item not found.
+            }
+
+            // 2. Authorization check: Ensure the item belongs to the user.
+            //    We check both UserId and TeacherId (if a teacher borrowed it for a class, 
+            //    they should still be able to hide it from their history).
+            if (lentItem.UserId != userId && lentItem.TeacherId != userId)
+            {
+                // Note: Admin/Staff management access to ALL lent items is handled 
+                // separately via the Authorize(Policy = "AdminOrStaff") on the main update endpoints.
+                // This specific method is ONLY for a user editing their *own* history, so 
+                // we enforce ownership check.
+                return false; // Not authorized (item does not belong to this user).
+            }
+
+            // 3. Update the visibility flag only if it's changing (to avoid unnecessary save)
+            if (lentItem.IsHiddenFromUser == isHidden)
+            {
+                return true; // Already in the desired state.
+            }
+
+            lentItem.IsHiddenFromUser = isHidden;
+
+            // 4. Save the changes to the database.
+            await _repository.UpdateAsync(lentItem);
+            return await _repository.SaveChangesAsync();
+        }
+
+        public async Task<bool> ArchiveLentItems(Guid id)
+        {
+            var lentItemsToArchive = await _repository.GetByIdAsync(id); // Uses _repository (ILentItemsRepository)
+            if (lentItemsToArchive == null) return false;
+
+            var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);
+
+            // **OPERATION 1 (Starts here) - Calls ArchiveLentItemsService**
+            await _archiveLentItemsService.CreateLentItemsArchiveAsync(archiveDto);
+            // This service uses _archiveLentItemsRepository to ADD AND SAVE changes.
+            // The DbContext associated with _archiveLentItemsRepository performs a SAVE.
+
+            // **OPERATION 2 (Starts here) - Calls LentItemsRepository**
+            await _repository.PermaDeleteAsync(id); // Uses _repository (ILentItemsRepository) to MARK FOR DELETION
+
+            // **OPERATION 3 (Finishes Operation 2)**
+            return await _repository.SaveChangesAsync(); // Uses _repository's DbContext to SAVE.
+        }
     }
 }

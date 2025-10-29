@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -16,22 +17,47 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 {
                     OnMessageReceived = context =>
                     {
-                        //read the token from the cookie.
-                        context.Token = context.Request.Cookies["accessToken"];
+                        ////read the token from the cookie
+                        //var accessToken = context.Request.Cookies["accessToken"];
+
+
+                        //if (!string.IsNullOrEmpty(accessToken)) // Check the local variable
+                        //{
+                        //    context.Token = accessToken; // Assign the token
+                        //}
+
+                        //return Task.CompletedTask;
+                        string token = null;
+                        var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+
+                        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            token = authHeader.Substring("Bearer ".Length).Trim();
+                        }
+
+                        // 2. If no token in the header, try to read from the cookie (Web clients)
+                        if (string.IsNullOrEmpty(token))
+                        {
+                            token = context.Request.Cookies["4CLC-XSRF-TOKEN"];
+                        }
+
+                        // 3. Assign the found token for validation
+                        context.Token = token;
+
                         return Task.CompletedTask;
                     }
                 };
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                    configuration.GetSection("AppSettings:Token").Value!)),
+                   configuration.GetSection("AppSettings:Token").Value!)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidateLifetime = true,
+                    ValidateLifetime = true, // Must be true for security!
                     ClockSkew = TimeSpan.Zero
                 };
+
             });
 
             services.AddAuthorization();

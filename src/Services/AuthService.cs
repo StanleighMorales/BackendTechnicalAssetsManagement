@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,10 +27,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IUserRepository _userRepository;
         private readonly IUserValidationService _userValidationService;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IWebHostEnvironment _env;
+        private readonly IDevelopmentLoggerService _developmentLoggerService;
 
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env)
+        public AuthService(AppDbContext context, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IPasswordHashingService passwordHashingService, IUserRepository userRepository, IMapper mapper, IUserValidationService userValidationService, IWebHostEnvironment env, IDevelopmentLoggerService developmentLoggerService, IRefreshTokenRepository refreshTokenRepository)
         {
             _context = context;
             _configuration = configuration;
@@ -41,8 +42,55 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _userValidationService = userValidationService;
             _mapper = mapper;
             _env = env;
+            _developmentLoggerService = developmentLoggerService;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
+        //public async Task<UserDto> Register(RegisterUserDto request)
+        //{
+        //    await _userValidationService.ValidateUniqueUserAsync(
+        //        request.Username,
+        //        request.Email,
+        //        request.PhoneNumber
+        //        );
+
+        //    User newUser;
+
+        //    switch (request.Role)
+        //    {
+        //        case UserRole.Student:
+        //            newUser = _mapper.Map<Student>(request);
+        //            break;
+        //        case UserRole.Teacher:
+        //            newUser = _mapper.Map<Teacher>(request);
+        //            break;
+        //        case UserRole.Staff:
+        //            newUser = _mapper.Map<Staff>(request);
+        //            break;
+        //        case UserRole.Admin:
+        //            newUser = _mapper.Map<Admin>(request);
+        //            break;
+        //        default:
+        //            // Handle cases where the role is not supported or invalid
+        //            throw new ArgumentException("Invalid user role specified.");
+        //    }
+        //    if (string.IsNullOrWhiteSpace(request.Password) ||
+        //        request.Password.Length < 8 ||
+        //        !request.Password.Any(char.IsUpper) ||
+        //        !request.Password.Any(char.IsLower) ||
+        //        !request.Password.Any(char.IsDigit) ||
+        //        !request.Password.Any(ch => "!@#$%^&*()_+-=[]{}|;':\",.<>?/`~".Contains(ch)))
+        //    {
+        //        throw new ArgumentException("Password must be at least 8 characters long, and include uppercase, lowercase, number, and special character.");
+        //    }
+        //    newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
+
+        //    newUser.Status = "Offline";
+        //    await _userRepository.AddAsync( newUser );
+        //    await _userRepository.SaveChangesAsync();
+
+        //    return _mapper.Map<UserDto>(newUser);
+        //}
         public async Task<UserDto> Register(RegisterUserDto request)
         {
             await _userValidationService.ValidateUniqueUserAsync(
@@ -53,24 +101,38 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             User newUser;
 
+            // FIX: Manually instantiate the correct derived class (no mapping yet)
             switch (request.Role)
             {
                 case UserRole.Student:
-                    newUser = _mapper.Map<Student>(request);
+                    newUser = new Student(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Teacher:
-                    newUser = _mapper.Map<Teacher>(request);
+                    newUser = new Teacher(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Staff:
-                    newUser = _mapper.Map<Staff>(request);
+                    newUser = new Staff(); // <--- MANUALLY INSTANTIATE
                     break;
                 case UserRole.Admin:
-                    newUser = _mapper.Map<Admin>(request);
+                case UserRole.SuperAdmin:
+                    // Admin and SuperAdmin are now just the base User class
+                    newUser = new User();
                     break;
                 default:
                     // Handle cases where the role is not supported or invalid
                     throw new ArgumentException("Invalid user role specified.");
             }
+
+            // NEW: Use AutoMapper to map the DTO *over* the instantiated object.
+            // This is the map-over signature: _mapper.Map(source, destination)
+            // This uses the correct map (RegisterStudentDto to Student) but doesn't cause the cast error.
+            _mapper.Map(request, newUser); // <--- THIS REPLACES THE PROBLEM LINES
+
+            if (!string.IsNullOrEmpty(newUser.PhoneNumber) && newUser.PhoneNumber.Length == 10)
+            {
+                newUser.PhoneNumber = "0" + newUser.PhoneNumber;
+            }
+
             if (string.IsNullOrWhiteSpace(request.Password) ||
                 request.Password.Length < 8 ||
                 !request.Password.Any(char.IsUpper) ||
@@ -80,15 +142,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 throw new ArgumentException("Password must be at least 8 characters long, and include uppercase, lowercase, number, and special character.");
             }
+
+            // The rest of the logic remains the same
             newUser.PasswordHash = _passwordHashingService.HashPassword(request.Password);
 
-            await _userRepository.AddAsync( newUser );
+            newUser.Status = "Offline";
+            await _userRepository.AddAsync(newUser);
             await _userRepository.SaveChangesAsync();
 
             return _mapper.Map<UserDto>(newUser);
         }
 
         #region Login/Logout
+
         public async Task<UserDto> Login(LoginUserDto loginDto)
         {
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
@@ -102,102 +168,343 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("Invalid username or password.");
             }
 
-            string accessToken = CreateAccessToken(user);
-            var refreshTokenEntity = GenerateRefreshToken();
+            // Revoke any existing refresh tokens for security (common to both)
+            var existingTokens = await _context.RefreshTokens
+                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                                            .ToListAsync();
+            foreach (var token in existingTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
 
-            refreshTokenEntity.UserId = user.Id;
-            await _context.RefreshTokens.AddAsync(refreshTokenEntity);
+            // --- SHARED LOGIC ---
+            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
 
-            // Your SetTokenCookies method will need to accept the entity.
-            SetTokenCookies(accessToken, refreshTokenEntity);
+            // --- WEB-SPECIFIC ACTION: Set Cookie ---
+            SetAccessTokenCookie(accessToken);
+            SetRefreshTokenCookie(refreshTokenEntity.Token, refreshTokenEntity.ExpiresAt);
+            if (_env.IsDevelopment())
+            {
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
 
-            user.Status = "Active";
-            await _context.SaveChangesAsync(); // Save both user and new token.
+            user.Status = "Online";
+            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
 
             return _mapper.Map<UserDto>(user);
         }
 
+        public async Task<MobileLoginResponseDto> LoginMobile(LoginUserDto loginDto)
+        {
+            var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            {
+                throw new Exception("Invalid username or password.");
+            }
+            if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
+            {
+                throw new Exception("Invalid username or password.");
+            }
+
+            // Revoke any existing refresh tokens for security (common to both)
+            var existingTokens = await _context.RefreshTokens
+                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
+                                            .ToListAsync();
+            foreach (var token in existingTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
+            // --- SHARED LOGIC ---
+            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
+
+            // --- MOBILE-SPECIFIC ACTION: No cookie, just update status and save ---
+            user.Status = "Online";
+            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+
+            if (_env.IsDevelopment())
+            {
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
+
+            // --- MOBILE-SPECIFIC RESPONSE: Return DTO with tokens in JSON body ---
+            return new MobileLoginResponseDto
+            {
+                User = _mapper.Map<UserDto>(user),
+                AccessToken = accessToken,
+                RefreshToken = refreshTokenEntity.Token
+            };
+        }
 
         public async Task Logout()
         {
-            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
+            var userId = GetUserIdFromClaims();
+
+            if (userId == Guid.Empty)
             {
-                // If there's no token, there's nothing to do
+                // User is not authenticated via accessToken, nothing to do.
+                ClearAccessTokenCookie();
+                ClearRefreshTokenCookie();
                 return;
             }
 
-            // Include the User entity when fetching the token
+            // Find the active refresh token for the user and revoke it.
+            // We assume the latest unrevoked token is the current one.
             var tokenEntity = await _context.RefreshTokens
-                .Include(rt => rt.User) // Eagerly load the related User
-                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+                .Include(rt => rt.User)
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .OrderByDescending(rt => rt.CreatedAt)
+                .FirstOrDefaultAsync();
 
             if (tokenEntity != null)
             {
-                // Revoke the token
+                // Revoke the token in the DB
                 tokenEntity.IsRevoked = true;
                 tokenEntity.RevokedAt = DateTime.UtcNow;
 
-                // Check if the user exists and update their status
                 if (tokenEntity.User != null)
                 {
-                    tokenEntity.User.Status = "Inactive";
+                    tokenEntity.User.Status = "Offline";
                 }
 
-                // Save changes for both the token and the user status
                 await _context.SaveChangesAsync();
             }
 
-            // Clear the cookies from the client's browser
-            ClearTokenCookies();
+            // Clear the access token cookie from the client's browser
+            ClearAccessTokenCookie();
+            // **CHANGE: Clear the Refresh Token Cookie**
+            ClearRefreshTokenCookie();
+        }
+        #endregion
+
+        #region Change-Password
+        /// <summary>
+        /// Handles password changes for both a user's own account and other users' accounts by an administrator.
+        /// This single method intelligently determines the context based on the request and applies the correct
+        /// authorization and session invalidation logic.
+        /// </summary>
+        /// <param name="request">A DTO containing the new password and, optionally, the ID of the target user.</param>
+        /// <exception cref="UnauthorizedAccessException">
+        /// Thrown if the user is not authenticated, if they lack the required admin role to change another
+        /// user's password, or if they attempt to modify a user with higher privileges (e.g., an Admin changing a SuperAdmin's password).
+        /// </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if the specified target user's ID does not correspond to an existing user in the database.
+        /// </exception>
+        public async Task ChangePassword(ChangePasswordDto request)
+        {
+            // The ClaimsPrincipal represents the authenticated user's identity, derived from their access token.
+            var currentUserPrincipal = _httpContextAccessor.HttpContext.User;
+            var currentUserIdClaim = currentUserPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // A valid Guid must be present in the token; otherwise, the request is unauthorized.
+            if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated or token is invalid.");
+            }
+
+            // The target is the user whose password will be changed. If the request DTO provides a UserId,
+            // that becomes the target. If not, the target defaults to the currently logged-in user.
+            Guid targetUserId = request.UserId ?? currentUserId;
+
+            // A boolean flag to determine if the user is modifying their own account.
+            bool isChangingOwnPassword = targetUserId == currentUserId;
+
+            // Authorization is only required if the requester is attempting to modify a different user's account.
+            if (!isChangingOwnPassword)
+            {
+                // This check enforces the business rule that only users with specific administrative roles can change passwords for others.
+                if (!currentUserPrincipal.IsInRole("Admin") && !currentUserPrincipal.IsInRole("Staff") && !currentUserPrincipal.IsInRole("SuperAdmin"))
+                {
+                    throw new UnauthorizedAccessException("You do not have permission to change passwords for other users.");
+                }
+            }
+
+            // Fetches the full user entity from the database that is about to be modified.
+            var userToUpdate = await _userRepository.GetByIdAsync(targetUserId);
+            if (userToUpdate == null)
+            {
+                throw new KeyNotFoundException("The target user was not found.");
+            }
+
+            // This is an additional security layer to prevent privilege escalation. For example, a standard 'Admin'
+            // should not be able to change the password of a 'SuperAdmin'.
+            if (userToUpdate.UserRole == UserRole.SuperAdmin && !currentUserPrincipal.IsInRole("SuperAdmin"))
+            {
+                throw new UnauthorizedAccessException("You do not have permission to change a SuperAdmin's password.");
+            }
+
+            // Hashes the new password securely before storing it in the database.
+            userToUpdate.PasswordHash = _passwordHashingService.HashPassword(request.NewPassword);
+
+            // Marks the user entity's state as 'Modified'. This tells the DbContext to generate an UPDATE statement.
+            _userRepository.UpdateAsync(userToUpdate);
+
+            // This is a critical security step. It revokes all active refresh tokens for the target user,
+            // effectively logging them out of all devices and browser sessions.
+            await _refreshTokenRepository.RevokeAllForUserAsync(targetUserId);
+
+            // Atomically commits all tracked changes (the password update and token revocations) to the database.
+            await _userRepository.SaveChangesAsync();
+
+            // If the user changed their own password, their current session must also be terminated immediately.
+            if (isChangingOwnPassword)
+            {
+                // This instructs the user's browser to delete the authentication cookies, completing the logout process.
+                ClearAccessTokenCookie();
+                ClearRefreshTokenCookie();
+            }
         }
         #endregion
 
         #region Token Generations/Set
-        public async Task<string> RefreshToken()
+        private (string accessToken, RefreshToken refreshTokenEntity) GenerateAndPersistTokens(User user)
         {
-            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
-            if (string.IsNullOrEmpty(refreshToken))
-            {
-                throw new RefreshTokenException("Refresh token not found.");
-            }
+            string accessToken = CreateAccessToken(user);
+            var refreshTokenEntity = GenerateRefreshToken();
 
-            // Find the token in the DB, including the user data
+            // 1. Link the Refresh Token to the user
+            refreshTokenEntity.UserId = user.Id;
+
+            // 2. Add the refresh token to the database context (will be saved later)
+            _context.RefreshTokens.Add(refreshTokenEntity);
+
+            return (accessToken, refreshTokenEntity);
+        }
+
+        public async Task<MobileLoginResponseDto> RefreshTokenMobile(string refreshToken)
+        {
+            // 1. Find the tokenEntity using the 'refreshToken' string passed in
             var tokenEntity = await _context.RefreshTokens
                 .Include(rt => rt.User)
                 .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
+            // 2. Perform validity checks
             if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
             {
                 throw new RefreshTokenException("Invalid or expired refresh token.");
             }
 
-            // Revoke the old token
+            var user = tokenEntity.User;
+            if (user == null)
+            {
+                throw new RefreshTokenException("Associated user not found for refresh token.");
+            }
+
+            // --- CORE LOGIC: TOKEN ROTATION ---
+
+            // 3. Revoke the old refresh token (Security: Token Rotation)
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.UtcNow;
-
             _context.Update(tokenEntity);
 
-
-            // --- SIMPLIFIED CODE ---
-            var user = tokenEntity.User;
+            // 4. Generate new tokens
             string newAccessToken = CreateAccessToken(user);
-
-            // 1. Generate the new complete RefreshToken entity.
             var newRefreshTokenEntity = GenerateRefreshToken();
-
-            // 2. Assign the UserId to it.
             newRefreshTokenEntity.UserId = user.Id;
 
-            // 3. Add it to the database.
+            // 5. Add the new refresh token to the database
             await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
 
+            // 6. Save all changes (old token revoked, new token added)
             await _context.SaveChangesAsync();
 
-            SetTokenCookies(newAccessToken, newRefreshTokenEntity);
+            // --- END CORE LOGIC ---
+
+            // 7. Return the new tokens in the DTO
+            return new MobileLoginResponseDto
+            {
+                User = _mapper.Map<UserDto>(user),
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshTokenEntity.Token
+            };
+        }
+
+
+        public async Task<string> RefreshToken()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                throw new RefreshTokenException("HttpContext not available.");
+            }
+
+            // 1. Get the Refresh Token string from the HttpOnly cookie
+            // The client MUST send this cookie to the /refresh-token endpoint.
+            var refreshTokenString = httpContext.Request.Cookies["4CLC-Auth-SRT"];
+
+            if (string.IsNullOrEmpty(refreshTokenString))
+            {
+                // This is now the entry point for an expired session.
+                throw new RefreshTokenException("Refresh token cookie is missing. Please log in again.");
+            }
+
+            // 2. Find the token entity in the database
+            var tokenEntity = await _context.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshTokenString);
+
+            // 3. Perform Validity Checks
+            if (tokenEntity == null)
+            {
+                // This means the token in the cookie doesn't match a record.
+                throw new RefreshTokenException("Invalid refresh token. No matching record found.");
+            }
+            if (tokenEntity.IsRevoked)
+            {
+                // **DETECTED A REPLAY ATTACK / SECURITY ISSUE (optional defense)**
+                // If a revoked token is used, it often means the token was stolen and used after the user logged out.
+                // You might choose to revoke ALL tokens for this user and log it.
+                // Clear the cookie for safety
+                ClearRefreshTokenCookie();
+                throw new RefreshTokenException("Refresh token is revoked. Please log in again.");
+            }
+            if (tokenEntity.ExpiresAt < DateTime.UtcNow)
+            {
+                // The long-lived RT has finally expired.
+                ClearRefreshTokenCookie(); // Clear the expired cookie
+                throw new RefreshTokenException("Expired session. Please log in again.");
+            }
+
+            var user = tokenEntity.User;
+            if (user == null)
+            {
+                // Defensive check
+                throw new RefreshTokenException("Associated user not found for refresh token.");
+            }
+
+            // --- CORE LOGIC: SECURE TOKEN ROTATION ---
+
+            // 4. Revoke the old refresh token (Security: Token Rotation)
+            // This ensures a stolen token can only be used ONCE.
+            tokenEntity.IsRevoked = true;
+            tokenEntity.RevokedAt = DateTime.UtcNow;
+            _context.Update(tokenEntity);
+
+            // 5. Generate NEW tokens (AT and RT)
+            string newAccessToken = CreateAccessToken(user);
+            var newRefreshTokenEntity = GenerateRefreshToken(); // Generates a completely new RT string
+            newRefreshTokenEntity.UserId = user.Id;
+
+            // 6. Add the new refresh token to the database
+            await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+
+            // 7. Save all changes (old token revoked, new token added)
+            await _context.SaveChangesAsync();
+
+            // 8. Set the NEW Access Token cookie AND the NEW Refresh Token cookie
+            SetAccessTokenCookie(newAccessToken);
+            SetRefreshTokenCookie(newRefreshTokenEntity.Token, newRefreshTokenEntity.ExpiresAt);
+
+            if (_env.IsDevelopment())
+            {
+                _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
+            }
 
             return newAccessToken;
-
         }
 
         private string CreateAccessToken(User user)
@@ -205,17 +512,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-
                 new Claim(ClaimTypes.Name, user.Username),
-
                 new Claim(ClaimTypes.Role, user.UserRole.ToString()),
-
-
             };
+
             if (!string.IsNullOrEmpty(user.Email))
             {
                 claims.Add(new Claim(ClaimTypes.Email, user.Email));
             }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value!));
 
@@ -223,25 +528,27 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
+                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
+
                 signingCredentials: creds
             );
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             return jwt;
         }
+
         private RefreshToken GenerateRefreshToken()
         {
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = DateTime.UtcNow.AddDays(7), // You might want to make this configurable
                 CreatedAt = DateTime.UtcNow
             };
         }
 
-
-        private void SetTokenCookies(string accessToken, RefreshToken refreshToken)
+        private void SetAccessTokenCookie(string accessToken)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
@@ -250,30 +557,71 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var accessTokenCookieOptions = new CookieOptions
             {
-                HttpOnly = !isDevelopment,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddMinutes(15)
-            };
-            httpContext.Response.Cookies.Append("accessToken", accessToken, accessTokenCookieOptions);
+                HttpOnly = !isDevelopment, // Keep HttpOnly logic based on environment
+                //Secure = true,             // Ensure this is true in production
+                //SameSite = SameSiteMode.None,
+                Secure = false,
+                SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
+                //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
+                Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
 
-            var refreshTokenCookieOptions = new CookieOptions
-            {
-                HttpOnly = !isDevelopment,
-                Secure = true, // Ensure this is true in production
-                SameSite = SameSiteMode.None,
-                Expires = refreshToken.ExpiresAt
             };
-            httpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, refreshTokenCookieOptions);
+
+            httpContext.Response.Cookies.Append("4CLC-XSRF-TOKEN", accessToken, accessTokenCookieOptions);
         }
-        private void ClearTokenCookies()
+
+        private void ClearAccessTokenCookie()
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
 
             // To clear a cookie, you instruct the browser to delete it.
-            httpContext.Response.Cookies.Delete("accessToken");
-            httpContext.Response.Cookies.Delete("refreshToken");
+            // The default options are usually enough to delete, but specifying the path/domain/samesite might be needed if they were used when setting.
+            // Using Delete with no options will generally work for simple cookies.
+            httpContext.Response.Cookies.Delete("4CLC-XSRF-TOKEN");
+        }
+        private void ClearRefreshTokenCookie()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            // To clear, you just call Delete
+            httpContext.Response.Cookies.Delete("4CLC-Auth-SRT");
+        }
+        private void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
+
+            var isDevelopment = _env.IsDevelopment();
+
+            var refreshTokenCookieOptions = new CookieOptions
+            {
+                HttpOnly = true,           // Critical: ALWAYS HttpOnly
+                Secure = !isDevelopment,   // Critical: Use Secure=true in Production (HTTPS)
+                SameSite = SameSiteMode.Lax, // Recommended for security
+                Expires = expiresAt        // Use the token's actual expiry time (e.g., 7 days)
+            };
+
+            httpContext.Response.Cookies.Append("4CLC-Auth-SRT", refreshToken, refreshTokenCookieOptions);
+        }
+        /// <summary>
+        /// Extracts the UserId from the claims of the currently authenticated user (from the accessToken).
+        /// </summary>
+        /// <returns>The UserId Guid, or Guid.Empty if not found.</returns>
+        private Guid GetUserIdFromClaims()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return Guid.Empty;
+
+            var userIdClaim = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                return userId;
+            }
+
+            return Guid.Empty;
         }
         #endregion
 

@@ -26,6 +26,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public UserRole Role { get; set; }
         [Required]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
         public string Password { get; set; } = string.Empty;
 
 
@@ -61,8 +63,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string? MiddleName { get; set; }
         [Required]
         public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string StudentIdNumber { get; set; } = string.Empty;
+        public string? StudentIdNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         [Required]
         public string Section { get; set; } = string.Empty;
@@ -78,13 +79,5 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string Province { get; set; } = string.Empty;
         [Required]
         public string PostalCode { get; set; } = string.Empty;
-    }
-    public class RegisterAdminDto : RegisterUserDto
-    {
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
     }
 }

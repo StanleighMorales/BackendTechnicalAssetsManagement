@@ -6,79 +6,52 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     {
         public class UpdateStudentProfileDto
         {
-            [Required]
-            public string LastName { get; set; } = string.Empty;
+            public string? LastName { get; set; }
             public string? MiddleName { get; set; }
-            [Required]
-            public string FirstName { get; set; } = string.Empty;
+ 
+            public string? FirstName { get; set; }
 
-            [Required]
-            public string StudentIdNumber { get; set; } = string.Empty;
+            public string? StudentIdNumber { get; set; }
 
-            public string Course { get; set; } = string.Empty;
-            [Required]
-            public string Section { get; set; } = string.Empty;
-            [Required]
-            public string Year { get; set; } = string.Empty;
+            public string? Course { get; set; }
+            public string? Section { get; set; }
+            public string? Year { get; set; }
 
-            [Required]
-            public string Street { get; set; } = string.Empty;
-            [Required]
-            public string CityMunicipality { get; set; } = string.Empty;
-            [Required]
-            public string Province { get; set; } = string.Empty;
-            [Required]
-            public string PostalCode { get; set; } = string.Empty;
+            public string? Street { get; set; }
+            public string? CityMunicipality { get; set; }
+            public string? Province { get; set; }
+            public string? PostalCode { get; set; }
 
-            // You can handle file uploads separately or include them here.
-            // For simplicity, we'll focus on the data first.
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+            public string? PhoneNumber { get; set; }
             public IFormFile? ProfilePicture { get; set; }
             public IFormFile? FrontStudentIdPicture { get; set; }
             public IFormFile? BackStudentIdPicture { get; set; }
         }
         public class UpdateTeacherProfileDto
         {
-            [Required]
-            public string LastName { get; set; } = string.Empty;
+           
+            public string? LastName { get; set; }
             public string? MiddleName { get; set; }
-            [Required]
-            public string FirstName { get; set; } = string.Empty;
-            [Required]
-            public string Department { get; set; } = string.Empty;
+            public string? FirstName { get; set; }
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+            public string? PhoneNumber { get; set; }
+            public string? Department { get; set; }
         }
         public class UpdateStaffProfileDto
         {
-            [Required]
-            public string LastName { get; set; } = string.Empty;
+            public string? Username { get; set; }
+            public string? Email { get; set; }
+            [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+            public string? PhoneNumber { get; set; }
+
+            public string? LastName { get; set; }
 
             public string? MiddleName { get; set; }
 
-            [Required]
-            public string FirstName { get; set; } = string.Empty;
-            [Required]
+            public string? FirstName { get; set; }
 
             public string? Position { get; set; }
-        }
-        public class UpdateManagerProfileDto
-        {
-            [Required]
-            public string LastName { get; set; } = string.Empty;
-
-            public string? MiddleName { get; set; }
-
-            [Required]
-            public string FirstName { get; set; } = string.Empty;
-        }
-
-        public class UpdateAdminProfileDto
-        {
-            [Required]
-            public string LastName { get; set; } = string.Empty;
-
-            public string? MiddleName { get; set; }
-
-            [Required]
-            public string FirstName { get; set; } = string.Empty;
         }
 
     }

@@ -34,11 +34,13 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Staff> Staff { get; set; }
-        public DbSet<Admin> Admins { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<LentItems> LentItems { get; set; }
 
+        //Archives
         public DbSet<ArchiveItems> ArchiveItems { get; set; }
+        public DbSet<ArchiveLentItems> ArchiveLentItems { get; set; }
+        public DbSet<ArchiveUser> ArchiveUsers { get; set; }
 
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.
@@ -50,6 +52,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // It's a best practice to call the base method first. This ensures any configuration
             // from the base DbContext class is applied before your custom configurations.
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Seed();
 
             // This is a custom extension method that encapsulates all the data seeding logic.
             // Calling .Seed() here executes the code from your ModelBuilderExtensions class,
@@ -83,8 +86,11 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // ('Students', 'Teachers', etc.) store the fields specific to each derived type.
             modelBuilder.Entity<Student>().ToTable("Students");
             modelBuilder.Entity<Teacher>().ToTable("Teachers");
-            modelBuilder.Entity<Admin>().ToTable("Admins");
             modelBuilder.Entity<Staff>().ToTable("Staff");
+
+            modelBuilder.Entity<ArchiveStudent>().ToTable("ArchiveStudents");
+            modelBuilder.Entity<ArchiveTeacher>().ToTable("ArchiveTeachers");
+            modelBuilder.Entity<ArchiveStaff>().ToTable("ArchiveStaff");
 
 
             modelBuilder.Entity<ArchiveItems>(entity =>
@@ -108,7 +114,10 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
                 entity.HasIndex(e => e.SerialNumber).IsUnique();
             });
-
+            modelBuilder.Entity<Student>()
+               .HasIndex(s => s.StudentIdNumber)
+               .IsUnique()
+               .HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
 
             // TODO: This is a good place to add more advanced configurations in the future, such as:
             // - Defining complex relationships (many-to-many).

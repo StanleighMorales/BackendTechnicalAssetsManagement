@@ -1,9 +1,13 @@
-﻿namespace BackendTechnicalAssetsManagement.src.DTOs
+﻿using BackendTechnicalAssetsManagement.src.DTOs.Item;
+
+namespace BackendTechnicalAssetsManagement.src.DTOs
 {
     public class LentItemsDto
     {
         public Guid Id { get; set; }
-        public Guid? ItemId { get; set; }
+        //public Guid? ItemId { get; set; }
+        public ItemDto? Item { get; set; }
+        //public string ItemName { get; set; } = string.Empty;
         public Guid? UserId { get; set; }
         public Guid? TeacherId { get; set; }
 
@@ -16,9 +20,13 @@
 
         public DateTime LentAt { get; set; }
         public DateTime? ReturnedAt { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         public string Remarks { get; set; } = string.Empty;
+        public bool IsHiddenFromUser { get; set; }
 
+        public string? Barcode { get; set; }
+        public string? BarcodeImage { get; set; }
     }
 
 }

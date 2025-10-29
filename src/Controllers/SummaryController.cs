@@ -12,7 +12,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     /// All endpoints in this controller require authorization for users who are Admins or Staff.
     /// </summary>
     [ApiController]
-    [Route("api/summary")]
+    [Route("api/v1/summary")]
     [Authorize(Policy = "AdminOrStaff")]
     public class SummaryController : ControllerBase
     {

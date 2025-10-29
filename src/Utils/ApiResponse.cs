@@ -3,12 +3,12 @@
     public class ApiResponse<T>
     {
         public bool Success { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public T? Data { get; set; }
         public List<string>? Errors { get; set; }
 
         // Static factory method for a success response
-        public static ApiResponse<T> SuccessResponse(T data, string message = "Request successful.")
+        public static ApiResponse<T> SuccessResponse(T? data, string message = "Request successful.")
         {
             return new ApiResponse<T>
             {

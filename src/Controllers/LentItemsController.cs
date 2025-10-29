@@ -1,15 +1,20 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.LentItems;
 using BackendTechnicalAssetsManagement.src.IService;
+using BackendTechnicalAssetsManagement.src.Services;
 using BackendTechnicalAssetsManagement.src.Utils;
+using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using ZXing.QrCode.Internal;
+using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/lentItems")]
-    [Authorize(Policy = "AdminOrStaff")]
+    [Authorize]
     public class LentItemsController : ControllerBase
     {
         private readonly ILentItemsService _service;
@@ -18,9 +23,52 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             _service = service;
         }
+        // POST: api/v1/lentitems
+        [HttpPost]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Add([FromBody] CreateLentItemDto dto)
+        {
+            var created = await _service.AddAsync(dto);
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "User - Item Listed Successfully.");
 
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
+        }
+
+        [HttpPost("guests")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
+        {
+            // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
+            if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
+            {
+                var badRequestResponse = ApiResponse<LentItemsDto>.FailResponse("Student ID number is required for students.");
+                return BadRequest(badRequestResponse);
+            }
+
+            var created = await _service.AddForGuestAsync(dto);
+            // You can still use GetById to retrieve the newly created item
+            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Guest - Item Listed Successfully.");
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
+        }
+
+       
+
+        // GET: api/v1/lentitems/date/{dateTime}
+        [HttpGet("date/{dateTime}")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByDateTime(DateTime dateTime)
+        {
+            var item = await _service.GetByDateTimeAsync(dateTime);
+            if (item == null)
+            {
+                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Item not found for the specified date and time.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Item retrieved successfully.");
+            return Ok(successResponse);
+        }
         // GET: api/v1/lentitems
         [HttpGet]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAll()
         {
             var items = await _service.GetAllAsync();
@@ -30,6 +78,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: api/v1/lentitems/{id}
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetById(Guid id)
         {
             var item = await _service.GetByIdAsync(id);
@@ -42,47 +91,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
-        // GET: api/v1/lentitems/date/{dateTime}
-        [HttpGet("date/{dateTime}")]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByDateTime(DateTime dateTime)
-        {
-            var item = await _service.GetByDateTimeAsync(dateTime);
-            if (item == null)
-            {
-                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Item not found for the specified date and time.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Item retrieved successfully.");
-            return Ok(successResponse);
-        }
-
-        // POST: api/v1/lentitems
-        [HttpPost]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> Add([FromBody] CreateLentItemDto dto)
-        {
-            var created = await _service.AddAsync(dto);
-            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "User - Item Listed Successfully.");
-
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
-        }
-        [HttpPost("guests")]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
-        {
-            // You might want to add some validation here, e.g., if role is "Student", ensure StudentIdNumber is not null.
-            if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && string.IsNullOrEmpty(dto.StudentIdNumber))
-            {
-                var badRequestResponse = ApiResponse<LentItemsDto>.FailResponse("Student ID number is required for students.");
-                return BadRequest(badRequestResponse);
-            }
-
-            var created = await _service.AddForGuestAsync(dto);
-            // You can still use GetById to retrieve the newly created item
-            var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Guest - Item Listed Successfully.");
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, response);
-        }
-
         // PATCH: api/v1/lentitems/{id}
         [HttpPatch("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
             // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.
@@ -98,20 +109,69 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             // Return NoContent for a successful update, or you could return the updated object.
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
-            return Ok(successResponse);
+            return Ok(successResponse); 
         }
-
-        // DELETE (soft): api/v1/lentitems/{id}
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<ApiResponse<object>>> SoftDelete(Guid id)
+        [HttpPatch("scan/updateStatus{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string id, [FromBody] ScanLentItemDto dto)
         {
-            var success = await _service.SoftDeleteAsync(id);
+            const string prefix = "LENT-";
+
+            // Now this line is valid because 'id' is a string.
+            string guidString = id;
+
+            // Sanitize the input by removing the prefix.
+            if (guidString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                guidString = guidString.Substring(prefix.Length);
+            }
+
+            // Validate and parse the cleaned string into a Guid.
+            if (!Guid.TryParse(guidString, out var entityId))
+            {
+                // The input was invalid after stripping the prefix.
+                return BadRequest("Invalid ID format.");
+            }
+
+            // 3. Call your service with the clean 'entityId' (which is a Guid).
+            // Assuming your service is called _lentItemService
+            var success = await _service.UpdateStatusAsync(entityId, dto);
+
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("Soft delete failed. Item not found.");
+                return NotFound(); // Or return a more detailed ApiResponse
+            }
+
+            return Ok(); // Or return NoContent()
+        }
+
+        [HttpPatch("hide/{lentItemId}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<object>>> HideFromHistory(Guid lentItemId)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // 1. Service verifies: Does the LentItems record exist AND does it belong to this userId?
+            var success = await _service.UpdateHistoryVisibility(lentItemId, userId, true);
+
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.FailResponse("Item not found or not authorized."));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Item hidden from history."));
+        }
+        [HttpDelete("archive/{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<object>>> ArchiveLentItems(Guid id)
+        {
+            var success = await _service.ArchiveLentItems(id);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse("archive failed. Item not found.");
                 return NotFound(errorResponse); // Or BadRequest("Soft delete failed");
             }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item soft-deleted successfully.");
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item archived successfully.");
             return Ok(successResponse);
         }
     }
