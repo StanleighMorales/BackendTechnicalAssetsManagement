@@ -282,11 +282,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         #region Change-Password
         /// <summary>
-        /// Handles password changes for both a user's own account and other users' accounts by an administrator.
-        /// This single method intelligently determines the context based on the request and applies the correct
-        /// authorization and session invalidation logic.
+        /// Handles password changes for both a user's own account and other users' accounts by administrators.
+        /// Users can change their own passwords. Only Admin and SuperAdmin roles can change other users' passwords.
+        /// Staff members can only change their own passwords.
         /// </summary>
-        /// <param name="request">A DTO containing the new password and, optionally, the ID of the target user.</param>
+        /// <param name="userId">The ID of the user whose password will be changed.</param>
+        /// <param name="request">A DTO containing the new password and confirmation.</param>
         /// <exception cref="UnauthorizedAccessException">
         /// Thrown if the user is not authenticated, if they lack the required admin role to change another
         /// user's password, or if they attempt to modify a user with higher privileges (e.g., an Admin changing a SuperAdmin's password).
@@ -294,7 +295,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// <exception cref="KeyNotFoundException">
         /// Thrown if the specified target user's ID does not correspond to an existing user in the database.
         /// </exception>
-        public async Task ChangePassword(ChangePasswordDto request)
+        public async Task ChangePassword(Guid userId, ChangePasswordDto request)
         {
             // The ClaimsPrincipal represents the authenticated user's identity, derived from their access token.
             var currentUserPrincipal = _httpContextAccessor.HttpContext.User;
@@ -306,9 +307,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new UnauthorizedAccessException("User is not authenticated or token is invalid.");
             }
 
-            // The target is the user whose password will be changed. If the request DTO provides a UserId,
-            // that becomes the target. If not, the target defaults to the currently logged-in user.
-            Guid targetUserId = request.UserId ?? currentUserId;
+            // The target is the user whose password will be changed, provided via the route parameter.
+            Guid targetUserId = userId;
 
             // A boolean flag to determine if the user is modifying their own account.
             bool isChangingOwnPassword = targetUserId == currentUserId;
@@ -316,8 +316,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Authorization is only required if the requester is attempting to modify a different user's account.
             if (!isChangingOwnPassword)
             {
-                // This check enforces the business rule that only users with specific administrative roles can change passwords for others.
-                if (!currentUserPrincipal.IsInRole("Admin") && !currentUserPrincipal.IsInRole("Staff") && !currentUserPrincipal.IsInRole("SuperAdmin"))
+                // This check enforces the business rule that only Admin and SuperAdmin roles can change passwords for other users.
+                // Staff members can only change their own passwords.
+                if (!currentUserPrincipal.IsInRole("Admin") && !currentUserPrincipal.IsInRole("SuperAdmin"))
                 {
                     throw new UnauthorizedAccessException("You do not have permission to change passwords for other users.");
                 }

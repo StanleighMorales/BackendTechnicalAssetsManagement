@@ -10,7 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<UserDto> Login(LoginUserDto request);
         Task<MobileLoginResponseDto> LoginMobile(LoginUserDto loginDto);
         Task<MobileLoginResponseDto> RefreshTokenMobile(string refreshToken);
-        Task ChangePassword(ChangePasswordDto request);
+        Task ChangePassword(Guid userId, ChangePasswordDto request);
         Task<string> RefreshToken();
         Task Logout();
     }

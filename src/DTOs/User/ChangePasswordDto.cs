@@ -5,9 +5,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     public class ChangePasswordDto
     {
         [Required]
-        public Guid? UserId { get; set; }
-
-        [Required]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         // This regex ensures the password contains the required characters.
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
