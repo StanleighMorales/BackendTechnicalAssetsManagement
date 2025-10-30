@@ -39,9 +39,26 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                 if (item != null)
                 {
+                    // Check if item is already unavailable
+                    if (item.Status == ItemStatus.Unavailable)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
+                    }
+
+                    // Check if there's already an active lent item for this item
+                    var existingLentItems = await _repository.GetAllAsync();
+                    var activeLentItem = existingLentItems.FirstOrDefault(li => 
+                        li.ItemId == dto.ItemId && 
+                        (li.Status == "Pending" || li.Status == "Borrowed"));
+                    
+                    if (activeLentItem != null)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
+                    }
+
                     lentItem.ItemName = item.ItemName;
                     
-                    // Only set item status to Unavailable and LentAt when status is Borrowed
+                    // Set item status to Unavailable for both Pending and Borrowed status
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
@@ -49,7 +66,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         lentItem.LentAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
-                    // For Pending status, keep item Available and don't set LentAt
+                    else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        item.Status = ItemStatus.Unavailable;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        // Don't set LentAt for Pending status
+                        await _itemRepository.UpdateAsync(item);
+                    }
                 }
                 else
                 {
@@ -147,9 +170,26 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                 if (item != null)
                 {
+                    // Check if item is already unavailable
+                    if (item.Status == ItemStatus.Unavailable)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
+                    }
+
+                    // Check if there's already an active lent item for this item
+                    var existingLentItems = await _repository.GetAllAsync();
+                    var activeLentItem = existingLentItems.FirstOrDefault(li => 
+                        li.ItemId == dto.ItemId && 
+                        (li.Status == "Pending" || li.Status == "Borrowed"));
+                    
+                    if (activeLentItem != null)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
+                    }
+
                     lentItem.ItemName = item.ItemName;
                     
-                    // Only set item status to Unavailable and LentAt when status is Borrowed
+                    // Set item status to Unavailable for both Pending and Borrowed status
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
@@ -157,7 +197,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         lentItem.LentAt = DateTime.UtcNow;
                         await _itemRepository.UpdateAsync(item);
                     }
-                    // For Pending status, keep item Available and don't set LentAt
+                    else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        item.Status = ItemStatus.Unavailable;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        // Don't set LentAt for Pending status
+                        await _itemRepository.UpdateAsync(item);
+                    }
                 }
             }
 
@@ -214,7 +260,60 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
-            // 3. Apply the DTO properties onto the fetched entity
+            // 3. Handle status changes and corresponding item status updates
+            if (!string.IsNullOrEmpty(dto.Status))
+            {
+                var oldStatus = entity.Status;
+                var newStatus = dto.Status;
+
+                // If status is changing, update the corresponding item status
+                if (!string.Equals(oldStatus, newStatus, StringComparison.OrdinalIgnoreCase))
+                {
+                    var item = await _itemRepository.GetByIdAsync(entity.ItemId);
+                    if (item != null)
+                    {
+                        // Check if trying to set an active status on an item that's already unavailable
+                        if ((newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) || 
+                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)) && 
+                            item.Status == ItemStatus.Unavailable && 
+                            !oldStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) &&
+                            !oldStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                        {
+                            throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
+                        }
+
+                        // Update item status based on new lent item status
+                        if (newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Unavailable;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.LentAt = DateTime.UtcNow;
+                        }
+                        else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Unavailable;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.LentAt = null;
+                        }
+                        else if (newStatus.Equals("Returned", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Available;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.ReturnedAt = DateTime.UtcNow;
+                        }
+                        else if (newStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Available;
+                            item.UpdatedAt = DateTime.UtcNow;
+                            entity.LentAt = null;
+                        }
+
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
+            }
+
+            // 4. Apply the DTO properties onto the fetched entity
             // This special overload of AutoMapper is designed for this exact purpose.
             // It will only update the properties that are not null in the DTO.
             _mapper.Map(dto, entity);
@@ -222,7 +321,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // Note: If you need complex logic (like updating BorrowerFullName when UserId changes),
             // you would add that logic here before saving.
 
-            // 4. Update the entity in the context and save
+            // 5. Update the entity in the context and save
             await _repository.UpdateAsync(entity);
             return await _repository.SaveChangesAsync();
         }
@@ -254,12 +353,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var scanTimestamp = DateTime.UtcNow;
 
-            entity.Status = dto.LentItemsStatus.ToString();
-
             // Update the corresponding Item status based on LentItems status
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
             if (item != null)
             {
+                // Check if trying to set an active status on an item that's already unavailable
+                // (unless it's already in an active status by this same lent item)
+                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending) && 
+                    item.Status == ItemStatus.Unavailable && 
+                    entity.Status != LentItemsStatus.Borrowed.ToString() &&
+                    entity.Status != LentItemsStatus.Pending.ToString())
+                {
+                    throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
+                }
+
                 if (dto.LentItemsStatus == LentItemsStatus.Returned)
                 {
                     // Set item status back to Available when returned
@@ -274,14 +381,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
-                // For Pending or Canceled, set item back to Available
-                else if (dto.LentItemsStatus == LentItemsStatus.Canceled || dto.LentItemsStatus == LentItemsStatus.Pending)
+                // For Pending, set item to Unavailable (reserved)
+                else if (dto.LentItemsStatus == LentItemsStatus.Pending)
+                {
+                    item.Status = ItemStatus.Unavailable;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+                }
+                // For Canceled, set item back to Available
+                else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
                 {
                     item.Status = ItemStatus.Available;
                     item.UpdatedAt = DateTime.UtcNow;
                     await _itemRepository.UpdateAsync(item);
                 }
             }
+
+            entity.Status = dto.LentItemsStatus.ToString();
 
             // Check the new status to decide which field to update
             if (dto.LentItemsStatus == LentItemsStatus.Returned)

@@ -51,6 +51,12 @@ namespace BackendTechnicalAssetsManagement.src.Middleware
                         apiResponse = ApiResponse<object>.FailResponse(ex.Message);
                         break;
 
+                    // V-- NEW: Handle invalid operations for a 400 Bad Request --V
+                    case InvalidOperationException:
+                        response.StatusCode = (int)HttpStatusCode.BadRequest; // 400
+                        apiResponse = ApiResponse<object>.FailResponse(ex.Message);
+                        break;
+
                     // Case for your existing custom RefreshTokenException
                     case RefreshTokenException:
                         response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
