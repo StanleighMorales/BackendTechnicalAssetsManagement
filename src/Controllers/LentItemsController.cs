@@ -153,18 +153,24 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
         [HttpPatch("scan/{barcode}")]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string id, [FromBody] ScanLentItemDto dto)
+        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string barcode, [FromBody] ScanLentItemDto dto)
         {
             const string prefix = "LENT-";
 
-            // Validate that the barcode starts with the expected prefix
-            if (!id.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            // Validate that the barcode starts with the expected prefix and follows the correct format
+            if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
             }
 
-            // Find the lent item by barcode instead of trying to parse as GUID
-            var success = await _service.UpdateStatusByBarcodeAsync(id, dto);
+            // Additional validation for the complete format: LENT-YYYYMMDD-XXX
+            if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
+            {
+                return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+            }
+
+            // Find the lent item by barcode
+            var success = await _service.UpdateStatusByBarcodeAsync(barcode, dto);
 
             if (!success)
             {

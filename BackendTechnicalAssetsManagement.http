@@ -36,4 +36,36 @@ GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/debug
 Authorization: Bearer {your-jwt-token}
 Accept: application/json
 
+#### Scan
+ LentItem Barcode to Update Status
+PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/scan/LENT-20251101-003
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+  "lentItemsStatus": "Returned"
+}
+
+###
+
+# Test with invalid barcode format
+PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/scan/INVALID-BARCODE
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+  "lentItemsStatus": "Returned"
+}
+
+###
+
+# Test with non-existent barcode
+PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/scan/LENT-20251101-999
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+  "lentItemsStatus": "Returned"
+}
+
 ###
