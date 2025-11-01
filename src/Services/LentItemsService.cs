@@ -233,10 +233,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<LentItemsDto?>(item);
         }
 
-        public async Task<LentItemsDto?> GetByDateTimeAsync(DateTime dateTime)
+        public async Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime)
         {
-            var item = await _repository.GetByDateTime(dateTime);
-            return _mapper.Map<LentItemsDto?>(item);
+            var items = await _repository.GetByDateTime(dateTime);
+            return _mapper.Map<IEnumerable<LentItemsDto>>(items);
         }
 
         // Update

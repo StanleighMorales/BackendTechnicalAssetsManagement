@@ -30,13 +30,46 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         }
 
-        public async Task<LentItems?> GetByDateTime(DateTime dateTime)
+        public async Task<IEnumerable<LentItems>> GetByDateTime(DateTime dateTime)
         {
+            // Ensure we're working with UTC time for database comparison
+            var utcDateTime = dateTime.Kind == DateTimeKind.Utc ? dateTime : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            
+            // If only date is provided (time is 00:00:00), search for all items on that date
+            if (utcDateTime.TimeOfDay == TimeSpan.Zero)
+            {
+                var startOfDay = utcDateTime.Date;
+                var endOfDay = startOfDay.AddDays(1);
+                
+                // Debug: Log the search range
+                Console.WriteLine($"Searching for date range: {startOfDay:yyyy-MM-dd HH:mm:ss.fff} to {endOfDay:yyyy-MM-dd HH:mm:ss.fff}");
+                
+                return await _context.LentItems
+                    .Include(li => li.User)
+                    .Include(li => li.Teacher)
+                    .Include(li => li.Item)
+                    .Where(li => li.LentAt.HasValue && 
+                                li.LentAt.Value >= startOfDay && 
+                                li.LentAt.Value < endOfDay)
+                    .ToListAsync();
+            }
+            
+            // If specific time is provided, search for items within that minute (ignoring seconds)
+            var startOfMinute = new DateTime(utcDateTime.Year, utcDateTime.Month, utcDateTime.Day, 
+                                           utcDateTime.Hour, utcDateTime.Minute, 0, DateTimeKind.Utc);
+            var endOfMinute = startOfMinute.AddMinutes(1);
+            
+            // Debug: Log the search range
+            Console.WriteLine($"Searching for time range: {startOfMinute:yyyy-MM-dd HH:mm:ss.fff} to {endOfMinute:yyyy-MM-dd HH:mm:ss.fff}");
+            
             return await _context.LentItems
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)
-                .FirstOrDefaultAsync(li => li.LentAt.HasValue && li.LentAt.Value == dateTime);
+                .Where(li => li.LentAt.HasValue && 
+                            li.LentAt.Value >= startOfMinute && 
+                            li.LentAt.Value < endOfMinute)
+                .ToListAsync();
         }
 
         public async Task<LentItems?> GetByIdAsync(Guid id)

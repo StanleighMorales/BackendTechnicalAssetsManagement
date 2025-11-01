@@ -11,3 +11,29 @@ Authorization: Bearer {your-jwt-token}
 Content-Type: application/json
 
 ###
+# Get LentItems by Date (all items for a specific date)
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/date/2025-11-01
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+# Get LentItems by Date and Time (items for specific date and time, ignoring seconds)
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/date/2025-11-01T12:30:00
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+# Get LentItems by Date and Time (alternative format)
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/date/2025-11-01%2012:30
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+#### Debug en
+dpoint to see all LentAt values
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/debug
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###

@@ -13,7 +13,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<LentItemsDto?> GetByIdAsync(Guid id);
-            Task<LentItemsDto?> GetByDateTimeAsync(DateTime dateTime);
+            Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime);
 
             /// <summary>
             /// Updates the IsHiddenFromUser flag for a specific LentItem, only if it belongs to the specified user.

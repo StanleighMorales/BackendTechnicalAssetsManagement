@@ -55,16 +55,36 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         // GET: api/v1/lentitems/date/{dateTime}
         [HttpGet("date/{dateTime}")]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByDateTime(DateTime dateTime)
+        public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetByDateTime(string dateTime)
         {
-            var item = await _service.GetByDateTimeAsync(dateTime);
-            if (item == null)
+            try
             {
-                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Item not found for the specified date and time.");
-                return NotFound(errorResponse);
+                // Parse the date string manually to handle different formats
+                if (!DateTime.TryParse(dateTime, out DateTime parsedDateTime))
+                {
+                    var badRequestResponse = ApiResponse<IEnumerable<LentItemsDto>>.FailResponse($"Invalid date format: '{dateTime}'. Use formats like '2025-11-01' or '2025-11-01T12:30:00'.");
+                    return BadRequest(badRequestResponse);
+                }
+
+                // Convert to UTC for database comparison since LentAt is stored in UTC
+                var utcDateTime = DateTime.SpecifyKind(parsedDateTime, DateTimeKind.Utc);
+                
+                var items = await _service.GetByDateTimeAsync(utcDateTime);
+                if (items == null || !items.Any())
+                {
+                    // Add debug information to help troubleshoot
+                    var debugInfo = $"No items found for date: {dateTime} (parsed as UTC: {utcDateTime:yyyy-MM-dd HH:mm:ss.fff})";
+                    var errorResponse = ApiResponse<IEnumerable<LentItemsDto>>.FailResponse(debugInfo);
+                    return NotFound(errorResponse);
+                }
+                var successResponse = ApiResponse<IEnumerable<LentItemsDto>>.SuccessResponse(items, $"Found {items.Count()} items for the specified date and time.");
+                return Ok(successResponse);
             }
-            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Item retrieved successfully.");
-            return Ok(successResponse);
+            catch (Exception ex)
+            {
+                var errorResponse = ApiResponse<IEnumerable<LentItemsDto>>.FailResponse($"Error processing request: {ex.Message}");
+                return BadRequest(errorResponse);
+            }
         }
         // GET: api/v1/lentitems
         [HttpGet]
@@ -73,6 +93,26 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             var items = await _service.GetAllAsync();
             var response = ApiResponse<IEnumerable<LentItemsDto>>.SuccessResponse(items, "Items retrieved successfully.");
+            return Ok(response);
+        }
+
+        // GET: api/v1/lentitems/debug
+        [HttpGet("debug")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<object>>> GetDebugInfo()
+        {
+            var items = await _service.GetAllAsync();
+            var debugInfo = items.Where(i => i.LentAtFormatted != null).Select(i => new
+            {
+                Id = i.Id,
+                BorrowerName = i.BorrowerFullName,
+                LentAtOriginal = i.LentAt,
+                LentAtFormatted = i.LentAtFormatted,
+                LentAtUtc = i.LentAt?.ToString("yyyy-MM-dd HH:mm:ss.fff UTC"),
+                Status = i.Status
+            }).ToList();
+            
+            var response = ApiResponse<object>.SuccessResponse(debugInfo, $"Debug info for {debugInfo.Count} items with LentAt values.");
             return Ok(response);
         }
 
