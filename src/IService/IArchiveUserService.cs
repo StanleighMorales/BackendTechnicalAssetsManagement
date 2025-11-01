@@ -4,7 +4,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
 {
     public interface IArchiveUserService
     {
-        Task<bool> ArchiveUserAsync(Guid targetUserId, Guid currentUserId);
+        Task<(bool Success, string ErrorMessage)> ArchiveUserAsync(Guid targetUserId, Guid currentUserId);
         Task<IEnumerable<ArchiveUserDto>> GetAllArchivedUsersAsync();
 
         Task<ArchiveUserDto?> GetArchivedUserByIdAsync(Guid archiveUserId);

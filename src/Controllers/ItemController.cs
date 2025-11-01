@@ -149,15 +149,15 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // DELETE: /api/item/5
-        [HttpDelete("archive{id}")]
+        [HttpDelete("archive/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveItem(Guid id)
         {
-            var success = await _itemService.DeleteItemAsync(id);
+            var (success, errorMessage) = await _itemService.DeleteItemAsync(id);
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("Archive failed. Item not found.");
-                return NotFound(errorResponse);
+                var errorResponse = ApiResponse<object>.FailResponse($"Archive failed. {errorMessage}");
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item Archived successfully.");
             return Ok(successResponse);

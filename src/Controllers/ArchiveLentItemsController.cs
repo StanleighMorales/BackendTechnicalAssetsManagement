@@ -30,6 +30,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public async Task<ActionResult<ApiResponse<ArchiveLentItemsDto?>>> GetLentItemsArchiveById(Guid id)
         {
             var archivedLentItems = await _archiveLentItemsService.GetLentItemsArchiveByIdAsync(id);
+            
+            if (archivedLentItems == null)
+            {
+                var errorResponse = ApiResponse<ArchiveLentItemsDto>.FailResponse("Archived lent item not found.");
+                return NotFound(errorResponse);
+            }
+            
             var response = ApiResponse<ArchiveLentItemsDto>.SuccessResponse(archivedLentItems, "Archived lent items retrieved successfully.");
             return Ok(response);
         }

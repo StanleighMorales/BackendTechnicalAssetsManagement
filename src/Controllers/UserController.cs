@@ -167,11 +167,12 @@ public class UserController : ControllerBase
         }
 
         // The service layer contains the logic to prevent self-archiving.
-        var success = await _userService.DeleteUserAsync(id, currentUserId);
+        var (success, errorMessage) = await _userService.DeleteUserAsync(id, currentUserId);
 
         if (!success)
         {
-            return BadRequest(ApiResponse<object>.FailResponse("Failed to archive user. The user may not exist or the action is not permitted."));
+            var errorResponse = ApiResponse<object>.FailResponse($"Failed to archive user. {errorMessage}");
+            return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
         }
 
         return Ok(ApiResponse<object>.SuccessResponse(null, "User has been successfully archived."));

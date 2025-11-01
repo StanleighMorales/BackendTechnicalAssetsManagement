@@ -115,7 +115,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _userRepository.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteUserAsync(Guid id, Guid currentUserId)
+        public async Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId)
         {
             
             return await _archiveUserService.ArchiveUserAsync(id, currentUserId);

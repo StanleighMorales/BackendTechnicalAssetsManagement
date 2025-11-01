@@ -75,7 +75,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// Permanently deletes a user from the archive. This action is irreversible.
         /// </summary>
         /// <param name="archiveUserId">The GUID of the archived user to delete permanently.</param>
-        [HttpDelete("permanent-delete{archiveUserId}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")] // Example: Restrict permanent deletion to only Admins
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]

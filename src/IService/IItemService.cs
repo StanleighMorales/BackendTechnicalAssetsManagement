@@ -12,7 +12,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<ItemDto?> GetItemBySerialNumberAsync(string serialNumber);
         Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto);
         Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto);
-        Task<bool> DeleteItemAsync(Guid id);
+        Task<(bool Success, string ErrorMessage)> DeleteItemAsync(Guid id);
 
         /// <summary>
         /// Imports items from an Excel (.xlsx) file with automatic GUID and barcode generation.

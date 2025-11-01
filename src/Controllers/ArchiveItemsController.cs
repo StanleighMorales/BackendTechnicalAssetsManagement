@@ -41,6 +41,13 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         public async Task<ActionResult<ApiResponse<ArchiveItemsDto?>>> GetArchivedItemById(Guid id)
         {
             var archivedItem = await _archiveItemsService.GetItemArchiveByIdAsync(id);
+            
+            if (archivedItem == null)
+            {
+                var errorResponse = ApiResponse<ArchiveItemsDto>.FailResponse("Archived item not found.");
+                return NotFound(errorResponse);
+            }
+            
             var response = ApiResponse<ArchiveItemsDto>.SuccessResponse(archivedItem, "Archived item retrieved successfully.");
             return Ok(response);
         }
@@ -72,7 +79,14 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<string>>> DeleteArchivedItem(Guid id)
         {
-            await _archiveItemsService.DeleteItemArchiveAsync(id);
+            var success = await _archiveItemsService.DeleteItemArchiveAsync(id);
+            
+            if (!success)
+            {
+                var errorResponse = ApiResponse<string>.FailResponse("Archived item not found.");
+                return NotFound(errorResponse);
+            }
+            
             var response = ApiResponse<string>.SuccessResponse(null, "Archived item deleted successfully.");
             return Ok(response);
         }

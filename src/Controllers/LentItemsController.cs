@@ -170,11 +170,11 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveLentItems(Guid id)
         {
-            var success = await _service.ArchiveLentItems(id);
+            var (success, errorMessage) = await _service.ArchiveLentItems(id);
             if (!success)
             {
-                var errorResponse = ApiResponse<object>.FailResponse("archive failed. Item not found.");
-                return NotFound(errorResponse); // Or BadRequest("Soft delete failed");
+                var errorResponse = ApiResponse<object>.FailResponse($"Archive failed. {errorMessage}");
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item archived successfully.");
             return Ok(successResponse);

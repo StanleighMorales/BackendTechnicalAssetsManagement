@@ -492,36 +492,48 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _repository.SaveChangesAsync();
         }
 
-        public async Task<bool> ArchiveLentItems(Guid id)
+        public async Task<(bool Success, string ErrorMessage)> ArchiveLentItems(Guid id)
         {
             var lentItemsToArchive = await _repository.GetByIdAsync(id); // Uses _repository (ILentItemsRepository)
-            if (lentItemsToArchive == null) return false;
+            if (lentItemsToArchive == null) 
+                return (false, "Lent item not found.");
 
-            // If the lent item was not returned, make sure the item status is set back to Available
-            // when archiving the lent item record
-            if (lentItemsToArchive.Status != LentItemsStatus.Returned.ToString())
+            try
             {
-                var item = await _itemRepository.GetByIdAsync(lentItemsToArchive.ItemId);
-                if (item != null)
+                // If the lent item was not returned, make sure the item status is set back to Available
+                // when archiving the lent item record
+                if (lentItemsToArchive.Status != LentItemsStatus.Returned.ToString())
                 {
-                    item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.UtcNow;
-                    await _itemRepository.UpdateAsync(item);
+                    var item = await _itemRepository.GetByIdAsync(lentItemsToArchive.ItemId);
+                    if (item != null)
+                    {
+                        item.Status = ItemStatus.Available;
+                        item.UpdatedAt = DateTime.UtcNow;
+                        await _itemRepository.UpdateAsync(item);
+                    }
                 }
+
+                var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);
+
+                // **OPERATION 1 (Starts here) - Calls ArchiveLentItemsService**
+                await _archiveLentItemsService.CreateLentItemsArchiveAsync(archiveDto);
+                // This service uses _archiveLentItemsRepository to ADD AND SAVE changes.
+                // The DbContext associated with _archiveLentItemsRepository performs a SAVE.
+
+                // **OPERATION 2 (Starts here) - Calls LentItemsRepository**
+                await _repository.PermaDeleteAsync(id); // Uses _repository (ILentItemsRepository) to MARK FOR DELETION
+
+                // **OPERATION 3 (Finishes Operation 2)**
+                var success = await _repository.SaveChangesAsync(); // Uses _repository's DbContext to SAVE.
+                
+                return success 
+                    ? (true, string.Empty) 
+                    : (false, "Failed to save changes during archiving process.");
             }
-
-            var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);
-
-            // **OPERATION 1 (Starts here) - Calls ArchiveLentItemsService**
-            await _archiveLentItemsService.CreateLentItemsArchiveAsync(archiveDto);
-            // This service uses _archiveLentItemsRepository to ADD AND SAVE changes.
-            // The DbContext associated with _archiveLentItemsRepository performs a SAVE.
-
-            // **OPERATION 2 (Starts here) - Calls LentItemsRepository**
-            await _repository.PermaDeleteAsync(id); // Uses _repository (ILentItemsRepository) to MARK FOR DELETION
-
-            // **OPERATION 3 (Finishes Operation 2)**
-            return await _repository.SaveChangesAsync(); // Uses _repository's DbContext to SAVE.
+            catch (Exception ex)
+            {
+                return (false, $"Archive operation failed: {ex.Message}");
+            }
         }
     }
 }

@@ -172,29 +172,39 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _itemRepository.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteItemAsync(Guid id) // Basically archive
+        public async Task<(bool Success, string ErrorMessage)> DeleteItemAsync(Guid id) // Basically archive
         //TODO: Make sure that once deleted it will be pushed into the Item Archive
         {
             var itemToDelete = await _itemRepository.GetByIdAsync(id);
-            if (itemToDelete == null) return false;
+            if (itemToDelete == null) 
+                return (false, "Item not found.");
 
-            //// We REMOVE the call to DeleteImage. It's not needed.
-            //// The image bytes will be deleted from the database when the row is deleted.
+            try
+            {
+                //// We REMOVE the call to DeleteImage. It's not needed.
+                //// The image bytes will be deleted from the database when the row is deleted.
 
-            // Set item status to Unavailable before archiving
-            itemToDelete.Status = ItemStatus.Unavailable;
-            itemToDelete.UpdatedAt = DateTime.UtcNow;
+                // Set item status to Unavailable before archiving
+                itemToDelete.Status = ItemStatus.Unavailable;
+                itemToDelete.UpdatedAt = DateTime.UtcNow;
 
-            var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
-            await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
+                var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
+                await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
 
-            // 4. Delete the original item from the main table
-            await _itemRepository.DeleteAsync(id);
+                // 4. Delete the original item from the main table
+                await _itemRepository.DeleteAsync(id);
 
-            // 5. Save the deletion change. This commits the removal of the item.
-            return await _itemRepository.SaveChangesAsync();
-            //await _itemRepository.DeleteAsync(id);
-            //return await _itemRepository.SaveChangesAsync();
+                // 5. Save the deletion change. This commits the removal of the item.
+                var success = await _itemRepository.SaveChangesAsync();
+                
+                return success 
+                    ? (true, string.Empty) 
+                    : (false, "Failed to save changes during archiving process.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Archive operation failed: {ex.Message}");
+            }
         }
         /// <summary>
         /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID and barcode.

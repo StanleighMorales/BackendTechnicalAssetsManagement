@@ -34,7 +34,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             Task<bool> SoftDeleteAsync(Guid id);
             Task<bool> PermaDeleteAsync(Guid id);
 
-            Task<bool> ArchiveLentItems(Guid id);
+            Task<(bool Success, string ErrorMessage)> ArchiveLentItems(Guid id);
 
             // Persistence
             Task<bool> SaveChangesAsync();

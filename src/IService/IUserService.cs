@@ -12,7 +12,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<bool> UpdateStudentProfileAsync(Guid id, UpdateStudentProfileDto dto);
         Task<bool> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
         Task UpdateStaffOrAdminProfileAsync(Guid id, UpdateStaffProfileDto dto, Guid currentUserId);
-        Task<bool> DeleteUserAsync(Guid id, Guid currentUserId);
+        Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId);
 
 
     }

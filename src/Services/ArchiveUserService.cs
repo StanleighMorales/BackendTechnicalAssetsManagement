@@ -50,13 +50,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// Moves an active user to the archive table within a database transaction.
         /// SuperAdmins cannot be archived.
         /// </summary>
-        public async Task<bool> ArchiveUserAsync(Guid targetUserId, Guid currentUserId)
+        public async Task<(bool Success, string ErrorMessage)> ArchiveUserAsync(Guid targetUserId, Guid currentUserId)
         {
             // NEW VALIDATION: Prevent self-archiving
             if (targetUserId == currentUserId)
             {
                 // You cannot archive yourself.
-                return false;
+                return (false, "Cannot archive your own account.");
             }
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -64,11 +64,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 var userToArchive = await _userRepository.GetByIdAsync(targetUserId);
 
-                // Existing validation for SuperAdmin
-                if (userToArchive == null || userToArchive.UserRole == SuperAdmin)
+                // Check if user exists
+                if (userToArchive == null)
                 {
                     await transaction.RollbackAsync();
-                    return false;
+                    return (false, "User not found.");
+                }
+
+                // Existing validation for SuperAdmin
+                if (userToArchive.UserRole == SuperAdmin)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "SuperAdmin users cannot be archived.");
                 }
 
                 // NEW VALIDATION: Check user status
@@ -77,7 +84,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     // You cannot archive a user who is currently online.
                     await transaction.RollbackAsync();
-                    return false;
+                    return (false, "Cannot archive a user who is currently online.");
                 }
                 userToArchive.Status = "Archived";
 
@@ -88,12 +95,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 await _userRepository.DeleteAsync(targetUserId); // Use targetUserId here
                 await _userRepository.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return true;
+                return (true, string.Empty);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return false;
+                return (false, $"Archive operation failed: {ex.Message}");
             }
         }
 
