@@ -111,7 +111,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
             return Ok(successResponse); 
         }
-        [HttpPatch("scan/updateStatus/{lent-item-barcode}")]
+        [HttpPatch("scan/{barcode}")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string id, [FromBody] ScanLentItemDto dto)
         {
