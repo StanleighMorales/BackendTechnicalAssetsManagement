@@ -100,7 +100,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // Helper to safely get value from dictionary, defaulting to 0
             // Note: GetValueOrDefault is an extension method often available in modern C# environments.
-            static int GetValueOrDefault<TKey>(Dictionary<TKey, int> dict, TKey key)
+            static int GetValueOrDefault<TKey>(Dictionary<TKey, int> dict, TKey key) where TKey : notnull
             {
                 return dict.TryGetValue(key, out var count) ? count : 0;
             }

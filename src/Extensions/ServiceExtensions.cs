@@ -27,7 +27,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                         //}
 
                         //return Task.CompletedTask;
-                        string token = null;
+                        string? token = null;
                         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
 
                         if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))

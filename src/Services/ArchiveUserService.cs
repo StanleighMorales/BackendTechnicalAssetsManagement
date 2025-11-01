@@ -137,11 +137,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 await transaction.CommitAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 6. If any error occurs, roll back all changes
                 await transaction.RollbackAsync();
-                // Optionally log the exception 'ex'
                 return false;
             }
         }

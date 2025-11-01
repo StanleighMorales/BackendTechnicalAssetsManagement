@@ -96,7 +96,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _userValidationService.ValidateUniqueUserAsync(
                 request.Username,
                 request.Email,
-                request.PhoneNumber
+                request.PhoneNumber ?? string.Empty
                 );
 
             User newUser;
@@ -298,7 +298,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         public async Task ChangePassword(Guid userId, ChangePasswordDto request)
         {
             // The ClaimsPrincipal represents the authenticated user's identity, derived from their access token.
-            var currentUserPrincipal = _httpContextAccessor.HttpContext.User;
+            var currentUserPrincipal = _httpContextAccessor.HttpContext?.User;
+            if (currentUserPrincipal == null)
+                throw new UnauthorizedAccessException("User context not available");
             var currentUserIdClaim = currentUserPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             // A valid Guid must be present in the token; otherwise, the request is unauthorized.
@@ -339,10 +341,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             // Hashes the new password securely before storing it in the database.
-            userToUpdate.PasswordHash = _passwordHashingService.HashPassword(request.NewPassword);
+            userToUpdate.PasswordHash = _passwordHashingService.HashPassword(request.NewPassword ?? throw new ArgumentNullException(nameof(request.NewPassword)));
 
             // Marks the user entity's state as 'Modified'. This tells the DbContext to generate an UPDATE statement.
-            _userRepository.UpdateAsync(userToUpdate);
+            await _userRepository.UpdateAsync(userToUpdate);
 
             // This is a critical security step. It revokes all active refresh tokens for the target user,
             // effectively logging them out of all devices and browser sessions.

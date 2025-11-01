@@ -354,11 +354,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 };
                                 itemsToCreate.Add(item);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 // Optional: Log an error for the specific row that failed
                                 // and continue processing the rest of the file.
-                                // For example: Console.WriteLine($"Error processing row: {ex.Message}");
                                 continue;
                             }
                         }

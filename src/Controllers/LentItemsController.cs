@@ -96,25 +96,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
 
-        // GET: api/v1/lentitems/debug
-        [HttpGet("debug")]
-        [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> GetDebugInfo()
-        {
-            var items = await _service.GetAllAsync();
-            var debugInfo = items.Where(i => i.LentAtFormatted != null).Select(i => new
-            {
-                Id = i.Id,
-                BorrowerName = i.BorrowerFullName,
-                LentAtOriginal = i.LentAt,
-                LentAtFormatted = i.LentAtFormatted,
-                LentAtUtc = i.LentAt?.ToString("yyyy-MM-dd HH:mm:ss.fff UTC"),
-                Status = i.Status
-            }).ToList();
-            
-            var response = ApiResponse<object>.SuccessResponse(debugInfo, $"Debug info for {debugInfo.Count} items with LentAt values.");
-            return Ok(response);
-        }
+
 
         // GET: api/v1/lentitems/{id}
         [HttpGet("{id}")]
@@ -186,7 +168,11 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         [Authorize]
         public async Task<ActionResult<ApiResponse<object>>> HideFromHistory(Guid lentItemId)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized(new ApiResponse<object> { Success = false, Message = "User not authenticated" });
+            
+            var userId = Guid.Parse(userIdClaim);
 
             // 1. Service verifies: Does the LentItems record exist AND does it belong to this userId?
             var success = await _service.UpdateHistoryVisibility(lentItemId, userId, true);

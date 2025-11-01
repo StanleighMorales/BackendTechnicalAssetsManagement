@@ -45,10 +45,10 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
     public class RegisterTeacherDto : RegisterUserDto
     {
         [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
+        public new string LastName { get; set; } = string.Empty;
+        public new string? MiddleName { get; set; }
         [Required]
-        public string FirstName { get; set; } = string.Empty;
+        public new string FirstName { get; set; } = string.Empty;
 
         [Required]
         public string Department { get; set; } = string.Empty;
@@ -59,10 +59,10 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public IFormFile? BackStudentIdPicture { get; set; }
 
         [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? MiddleName { get; set; }
+        public new string LastName { get; set; } = string.Empty;
+        public new string? MiddleName { get; set; }
         [Required]
-        public string FirstName { get; set; } = string.Empty;
+        public new string FirstName { get; set; } = string.Empty;
         public string? StudentIdNumber { get; set; }
         public string Course { get; set; } = string.Empty;
         [Required]

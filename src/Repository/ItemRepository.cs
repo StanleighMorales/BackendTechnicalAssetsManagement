@@ -42,7 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             // Using a case-insensitive comparison is more robust for serial numbers
             return await _context.Items
-                .FirstOrDefaultAsync(i => i.SerialNumber.ToLower() == serialNumber.ToLower());
+                .FirstOrDefaultAsync(i => i.SerialNumber != null && i.SerialNumber.ToLower() == serialNumber.ToLower());
         }
         public async Task<Item?> GetByBarcodeAsync(string barcode)
         {

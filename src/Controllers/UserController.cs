@@ -139,7 +139,11 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
         // We get the current user's ID securely from the token claims.
-        var currentUserId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            throw new UnauthorizedAccessException("User not authenticated");
+        
+        var currentUserId = new Guid(userIdClaim);
 
         // The controller's job is now just to orchestrate the call.
         // It lives in the "happy path." All error handling is offloaded.

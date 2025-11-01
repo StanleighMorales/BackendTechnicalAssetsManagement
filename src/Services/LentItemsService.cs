@@ -255,7 +255,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 3. Handle status changes and corresponding item status updates
             if (!string.IsNullOrEmpty(dto.Status))
             {
-                var oldStatus = entity.Status;
+                var oldStatus = entity.Status ?? string.Empty;
                 var newStatus = dto.Status;
 
                 // If status is changing, update the corresponding item status
@@ -471,7 +471,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var allLentItems = await _repository.GetAllAsync();
             var activeLentItem = allLentItems.FirstOrDefault(li => 
                 li.ItemId == item.Id && 
-                !li.Status.Equals("Returned", StringComparison.OrdinalIgnoreCase));
+                !(li.Status ?? string.Empty).Equals("Returned", StringComparison.OrdinalIgnoreCase));
 
             if (activeLentItem == null)
             {
