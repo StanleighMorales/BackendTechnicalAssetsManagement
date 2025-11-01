@@ -43,50 +43,51 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var response = ApiResponse<SummaryDto>.SuccessResponse(summary, "Overall summary retrieved successfully.");
             return Ok(response);
         }
+        #region detailed summary
+        // /// <summary>
+        // /// Retrieves a detailed summary of all items, categorized by condition and type.
+        // /// </summary>
+        // /// <remarks>
+        // /// **Endpoint:** `GET /api/summary/items`
+        // /// </remarks>
+        // /// <returns>An ApiResponse containing the detailed item summary.</returns>
+        // [HttpGet("items")]
+        // public async Task<ActionResult<ApiResponse<ItemCount>>> GetItemSummary()
+        // {
+        //     var summary = await _summaryService.GetItemCountAsync();
+        //     var response = ApiResponse<ItemCount>.SuccessResponse(summary, "Item summary retrieved successfully.");
+        //     return Ok(response);
+        // }
 
-        /// <summary>
-        /// Retrieves a detailed summary of all items, categorized by condition and type.
-        /// </summary>
-        /// <remarks>
-        /// **Endpoint:** `GET /api/summary/items`
-        /// </remarks>
-        /// <returns>An ApiResponse containing the detailed item summary.</returns>
-        [HttpGet("items")]
-        public async Task<ActionResult<ApiResponse<ItemCount>>> GetItemSummary()
-        {
-            var summary = await _summaryService.GetItemCountAsync();
-            var response = ApiResponse<ItemCount>.SuccessResponse(summary, "Item summary retrieved successfully.");
-            return Ok(response);
-        }
+        // /// <summary>
+        // /// Retrieves a detailed summary of lent items, including currently lent and returned counts.
+        // /// </summary>
+        // /// <remarks>
+        // /// **Endpoint:** `GET /api/summary/lent-items`
+        // /// </remarks>
+        // /// <returns>An ApiResponse containing the detailed lending summary.</returns>
+        // [HttpGet("lent-items")]
+        // public async Task<ActionResult<ApiResponse<LentItemsCount>>> GetLentSummary()
+        // {
+        //     var summary = await _summaryService.GetLentItemsCountAsync();
+        //     var response = ApiResponse<LentItemsCount>.SuccessResponse(summary, "Lent items summary retrieved successfully.");
+        //     return Ok(response);
+        // }
 
-        /// <summary>
-        /// Retrieves a detailed summary of lent items, including currently lent and returned counts.
-        /// </summary>
-        /// <remarks>
-        /// **Endpoint:** `GET /api/summary/lent-items`
-        /// </remarks>
-        /// <returns>An ApiResponse containing the detailed lending summary.</returns>
-        [HttpGet("lent-items")]
-        public async Task<ActionResult<ApiResponse<LentItemsCount>>> GetLentSummary()
-        {
-            var summary = await _summaryService.GetLentItemsCountAsync();
-            var response = ApiResponse<LentItemsCount>.SuccessResponse(summary, "Lent items summary retrieved successfully.");
-            return Ok(response);
-        }
-
-        /// <summary>
-        /// Retrieves a detailed summary of all active users, categorized by role.
-        /// </summary>
-        /// <remarks>
-        /// **Endpoint:** `GET /api/summary/users`
-        /// </remarks>
-        /// <returns>An ApiResponse containing the detailed active user summary.</returns>
-        [HttpGet("users")]
-        public async Task<ActionResult<ApiResponse<ActiveUserCount>>> GetUserSummary()
-        {
-            var summary = await _summaryService.GetActiveUserCountAsync();
-            var response = ApiResponse<ActiveUserCount>.SuccessResponse(summary, "Active user summary retrieved successfully.");
-            return Ok(response);
-        }
+        // /// <summary>
+        // /// Retrieves a detailed summary of all active users, categorized by role.
+        // /// </summary>
+        // /// <remarks>
+        // /// **Endpoint:** `GET /api/summary/users`
+        // /// </remarks>
+        // /// <returns>An ApiResponse containing the detailed active user summary.</returns>
+        // [HttpGet("users")]
+        // public async Task<ActionResult<ApiResponse<ActiveUserCount>>> GetUserSummary()
+        // {
+        //     var summary = await _summaryService.GetActiveUserCountAsync();
+        //     var response = ApiResponse<ActiveUserCount>.SuccessResponse(summary, "Active user summary retrieved successfully.");
+        //     return Ok(response);
+        // }
+        #endregion
     }
 }
