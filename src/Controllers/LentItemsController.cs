@@ -111,38 +111,29 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
             return Ok(successResponse); 
         }
-        [HttpPatch("scan/updateStatus{id}")]
+        [HttpPatch("scan/updateStatus/{lent-item-barcode}")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string id, [FromBody] ScanLentItemDto dto)
         {
             const string prefix = "LENT-";
 
-            // Now this line is valid because 'id' is a string.
-            string guidString = id;
-
-            // Sanitize the input by removing the prefix.
-            if (guidString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            // Validate that the barcode starts with the expected prefix
+            if (!id.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             {
-                guidString = guidString.Substring(prefix.Length);
+                return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
             }
 
-            // Validate and parse the cleaned string into a Guid.
-            if (!Guid.TryParse(guidString, out var entityId))
-            {
-                // The input was invalid after stripping the prefix.
-                return BadRequest("Invalid ID format.");
-            }
-
-            // 3. Call your service with the clean 'entityId' (which is a Guid).
-            // Assuming your service is called _lentItemService
-            var success = await _service.UpdateStatusAsync(entityId, dto);
+            // Find the lent item by barcode instead of trying to parse as GUID
+            var success = await _service.UpdateStatusByBarcodeAsync(id, dto);
 
             if (!success)
             {
-                return NotFound(); // Or return a more detailed ApiResponse
+                var errorResponse = ApiResponse<object>.FailResponse("Lent item not found or update failed.");
+                return NotFound(errorResponse);
             }
 
-            return Ok(); // Or return NoContent()
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Status updated successfully.");
+            return Ok(successResponse);
         }
 
         [HttpPatch("hide/{lentItemId}")]

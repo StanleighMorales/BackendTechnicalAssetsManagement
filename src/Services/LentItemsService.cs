@@ -118,20 +118,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     throw new KeyNotFoundException($"Teacher with ID {dto.TeacherId.Value} not found.");
                 }
             }
-            await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync(); // This saves the item and the database generates the lentItem.Id
-
-            // 3. Now that lentItem.Id is valid, generate the barcode
-            string barcodeText = BarcodeGenerator.GenerateLentItemBarcode(lentItem.Id.ToString());
+            // Generate the new barcode before saving
+            string barcodeText = await BarcodeGenerator.GenerateLentItemBarcode(_repository.GetDbContext());
             byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
-            // 4. Update the entity with the new barcode information
+            // Set the barcode information
             lentItem.Barcode = barcodeText;
             lentItem.BarcodeImage = barcodeImageBytes;
 
-            // No need to call AddAsync again, just update the tracked entity
-            await _repository.UpdateAsync(lentItem);
-            await _repository.SaveChangesAsync(); // Save the final changes
+            await _repository.AddAsync(lentItem);
+            await _repository.SaveChangesAsync(); // This saves the item with the barcode
 
             // 5. Map the fully created and updated entity to the DTO and return it
             return _mapper.Map<LentItemsDto>(lentItem);
@@ -207,21 +203,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
             }
 
-            // 4. Add the fully-populated object to the repository and save.
-            await _repository.AddAsync(lentItem);
-            await _repository.SaveChangesAsync(); // This saves the item and the database generates the lentItem.Id
-
-            // 5. Now that lentItem.Id is valid, generate the barcode
-            string barcodeText = BarcodeGenerator.GenerateLentItemBarcode(lentItem.Id.ToString());
+            // 4. Generate the new barcode before saving
+            string barcodeText = await BarcodeGenerator.GenerateLentItemBarcode(_repository.GetDbContext());
             byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
 
-            // 6. Update the entity with the new barcode information
+            // Set the barcode information
             lentItem.Barcode = barcodeText;
             lentItem.BarcodeImage = barcodeImageBytes;
 
-            // No need to call AddAsync again, just update the tracked entity
-            await _repository.UpdateAsync(lentItem);
-            await _repository.SaveChangesAsync(); // Save the final changes
+            // 5. Add the fully-populated object to the repository and save.
+            await _repository.AddAsync(lentItem);
+            await _repository.SaveChangesAsync(); // This saves the item with the barcode
 
             var createdItem = await _repository.GetByIdAsync(lentItem.Id);
             return _mapper.Map<LentItemsDto>(createdItem);
@@ -452,6 +444,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Save the changes to the database.
             await _repository.UpdateAsync(lentItem);
             return await _repository.SaveChangesAsync();
+        }
+
+        public async Task<bool> UpdateStatusByBarcodeAsync(string barcode, ScanLentItemDto dto)
+        {
+            var entity = await _repository.GetByBarcodeAsync(barcode);
+            if (entity == null)
+            {
+                return false;
+            }
+
+            // Use the existing UpdateStatusAsync logic with the found entity's ID
+            return await UpdateStatusAsync(entity.Id, dto);
         }
 
         public async Task<bool> ArchiveLentItems(Guid id)
