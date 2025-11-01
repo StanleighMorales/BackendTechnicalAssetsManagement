@@ -136,7 +136,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
-        [HttpPatch("hide/{lentItemId}")]
+        [HttpPatch("hide/{lent-item-id}")]
         [Authorize]
         public async Task<ActionResult<ApiResponse<object>>> HideFromHistory(Guid lentItemId)
         {
@@ -152,6 +152,20 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return Ok(ApiResponse<object>.SuccessResponse(null, "Item hidden from history."));
         }
+        [HttpPatch("return/item/{itemBarcode}")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<object>>> ReturnItemByItemBarcode(string itemBarcode)
+        {
+            var success = await _service.ReturnItemByItemBarcodeAsync(itemBarcode);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse("Return failed. Item not found, not currently lent, or already returned.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item returned successfully.");
+            return Ok(successResponse);
+        }
+
         [HttpDelete("archive/{id}")]
         [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveLentItems(Guid id)

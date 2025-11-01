@@ -458,6 +458,40 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await UpdateStatusAsync(entity.Id, dto);
         }
 
+        public async Task<bool> ReturnItemByItemBarcodeAsync(string itemBarcode)
+        {
+            // 1. Find the item by its barcode
+            var item = await _itemRepository.GetByBarcodeAsync(itemBarcode);
+            if (item == null)
+            {
+                return false; // Item not found
+            }
+
+            // 2. Find the active lent item for this item (not returned yet)
+            var allLentItems = await _repository.GetAllAsync();
+            var activeLentItem = allLentItems.FirstOrDefault(li => 
+                li.ItemId == item.Id && 
+                !li.Status.Equals("Returned", StringComparison.OrdinalIgnoreCase));
+
+            if (activeLentItem == null)
+            {
+                return false; // No active lent item found for this item
+            }
+
+            // 3. Update the lent item status to "Returned" and set ReturnedAt timestamp
+            activeLentItem.Status = "Returned";
+            activeLentItem.ReturnedAt = DateTime.UtcNow;
+
+            // 4. Update the item status to Available
+            item.Status = ItemStatus.Available;
+            item.UpdatedAt = DateTime.UtcNow;
+
+            // 5. Save the changes
+            await _itemRepository.UpdateAsync(item);
+            await _repository.UpdateAsync(activeLentItem);
+            return await _repository.SaveChangesAsync();
+        }
+
         public async Task<bool> ArchiveLentItems(Guid id)
         {
             var lentItemsToArchive = await _repository.GetByIdAsync(id); // Uses _repository (ILentItemsRepository)

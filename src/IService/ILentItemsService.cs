@@ -28,6 +28,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             Task<bool> UpdateAsync(Guid id, UpdateLentItemDto dto);
             Task<bool> UpdateStatusAsync(Guid id, ScanLentItemDto dto);
             Task<bool> UpdateStatusByBarcodeAsync(string barcode, ScanLentItemDto dto);
+            Task<bool> ReturnItemByItemBarcodeAsync(string itemBarcode);
 
             // Delete
             Task<bool> SoftDeleteAsync(Guid id);

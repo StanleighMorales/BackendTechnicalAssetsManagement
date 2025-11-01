@@ -4,3 +4,10 @@ GET {{BackendTechnicalAssetsManagement_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Return Item by Item Barcode (scan the physical item)
+PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/return/item/ITEM-12345
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+###
