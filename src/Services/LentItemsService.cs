@@ -39,6 +39,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                 if (item != null)
                 {
+                    // Check if item condition is broken (Defective or NeedRepair)
+                    if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+                    }
+
                     // Check if item is already unavailable
                     if (item.Status == ItemStatus.Unavailable)
                     {
@@ -166,6 +172,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
                 if (item != null)
                 {
+                    // Check if item condition is broken (Defective or NeedRepair)
+                    if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
+                    {
+                        throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+                    }
+
                     // Check if item is already unavailable
                     if (item.Status == ItemStatus.Unavailable)
                     {
@@ -264,6 +276,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     var item = await _itemRepository.GetByIdAsync(entity.ItemId);
                     if (item != null)
                     {
+                        // Check if item condition is broken when trying to borrow or set to pending
+                        if ((newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) || 
+                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)) &&
+                            (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair))
+                        {
+                            throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+                        }
+
                         // Check if trying to set an active status on an item that's already unavailable
                         if ((newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) || 
                              newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)) && 
@@ -349,6 +369,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
             if (item != null)
             {
+                // Check if item condition is broken when trying to borrow or set to pending
+                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending) &&
+                    (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair))
+                {
+                    throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
+                }
+
                 // Check if trying to set an active status on an item that's already unavailable
                 // (unless it's already in an active status by this same lent item)
                 if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending) && 
