@@ -168,18 +168,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("Invalid username or password.");
             }
 
-            // Revoke any existing refresh tokens for security (common to both)
-            var existingTokens = await _context.RefreshTokens
-                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
-                                            .ToListAsync();
-            foreach (var token in existingTokens)
-            {
-                token.IsRevoked = true;
-                token.RevokedAt = DateTime.UtcNow;
-            }
+            // Revoke any existing refresh tokens for security (using repository)
+            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
 
             // --- SHARED LOGIC ---
-            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
+            var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
             // --- WEB-SPECIFIC ACTION: Set Cookie ---
             SetAccessTokenCookie(accessToken);
@@ -190,7 +183,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             user.Status = "Online";
-            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
 
             return _mapper.Map<UserDto>(user);
         }
@@ -208,22 +201,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new Exception("Invalid username or password.");
             }
 
-            // Revoke any existing refresh tokens for security (common to both)
-            var existingTokens = await _context.RefreshTokens
-                                            .Where(rt => rt.UserId == user.Id && !rt.IsRevoked)
-                                            .ToListAsync();
-            foreach (var token in existingTokens)
-            {
-                token.IsRevoked = true;
-                token.RevokedAt = DateTime.UtcNow;
-            }
+            // Revoke any existing refresh tokens for security (using repository)
+            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
 
             // --- SHARED LOGIC ---
-            var (accessToken, refreshTokenEntity) = GenerateAndPersistTokens(user);
+            var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
             // --- MOBILE-SPECIFIC ACTION: No cookie, just update status and save ---
             user.Status = "Online";
-            await _context.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
 
             if (_env.IsDevelopment())
             {
@@ -251,13 +237,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return;
             }
 
-            // Find the active refresh token for the user and revoke it.
-            // We assume the latest unrevoked token is the current one.
-            var tokenEntity = await _context.RefreshTokens
-                .Include(rt => rt.User)
-                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
-                .OrderByDescending(rt => rt.CreatedAt)
-                .FirstOrDefaultAsync();
+            // Find the active refresh token for the user and revoke it using repository
+            var tokenEntity = await _refreshTokenRepository.GetLatestActiveTokenForUserAsync(userId);
 
             if (tokenEntity != null)
             {
@@ -270,7 +251,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     tokenEntity.User.Status = "Offline";
                 }
 
-                await _context.SaveChangesAsync();
+                await _refreshTokenRepository.SaveChangesAsync();
             }
 
             // Clear the access token cookie from the client's browser
@@ -364,7 +345,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         #endregion
 
         #region Token Generations/Set
-        private (string accessToken, RefreshToken refreshTokenEntity) GenerateAndPersistTokens(User user)
+        private async Task<(string accessToken, RefreshToken refreshTokenEntity)> GenerateAndPersistTokensAsync(User user)
         {
             string accessToken = CreateAccessToken(user);
             var refreshTokenEntity = GenerateRefreshToken();
@@ -372,8 +353,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 1. Link the Refresh Token to the user
             refreshTokenEntity.UserId = user.Id;
 
-            // 2. Add the refresh token to the database context (will be saved later)
-            _context.RefreshTokens.Add(refreshTokenEntity);
+            // 2. Add the refresh token using repository (will be saved later)
+            await _refreshTokenRepository.AddAsync(refreshTokenEntity);
 
             return (accessToken, refreshTokenEntity);
         }

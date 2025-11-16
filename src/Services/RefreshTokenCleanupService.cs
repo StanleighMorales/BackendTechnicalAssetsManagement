@@ -46,10 +46,6 @@ namespace BackendTechnicalAssetsManagement.src.BackgroundServices
             {
                 try
                 {
-                    // This is a non-blocking timer. It pauses the execution of this loop for the specified duration
-                    // without consuming a thread. We set it to 24 hours so the cleanup task runs once a day.
-                    await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
-
                     _logger.LogInformation("Running refresh token cleanup task.");
 
                     // IMPORTANT: We must create a new 'scope' to resolve our DbContext.
@@ -83,6 +79,9 @@ namespace BackendTechnicalAssetsManagement.src.BackgroundServices
                             _logger.LogInformation("No old refresh tokens to remove.");
                         }
                     } // The scope (and the DbContext instance) is automatically disposed of here.
+
+                    // Wait 24 hours before the next cleanup cycle
+                    await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {

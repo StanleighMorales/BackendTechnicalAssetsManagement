@@ -19,6 +19,16 @@ public class RefreshTokenRepository : IRefreshTokenRepository
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == token);
     }
+
+    public async Task<RefreshToken?> GetLatestActiveTokenForUserAsync(Guid userId)
+    {
+        return await _context.RefreshTokens
+            .Include(rt => rt.User)
+            .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+            .OrderByDescending(rt => rt.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task RevokeAllForUserAsync(Guid userId)
     {
         var tokensToRevoke = await _context.RefreshTokens
