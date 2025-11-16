@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
@@ -10,7 +11,9 @@ namespace BackendTechnicalAssetsManagement.src.Data
         public static void Seed(this ModelBuilder modelBuilder)
         {
             string defaultPassword = "@Pass123";
-            string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "image", "mockImage.png");
+            
+            // Load mock image for items and users
+            string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "mockImage.png");
             byte[]? mockImageBytes = File.Exists(imagePath) ? File.ReadAllBytes(imagePath) : null;
 
             // ===============================
@@ -84,24 +87,284 @@ namespace BackendTechnicalAssetsManagement.src.Data
             var item3Id = Guid.NewGuid();
             var item4Id = Guid.NewGuid();
             var item5Id = Guid.NewGuid();
+            var item6Id = Guid.NewGuid();
+            var item7Id = Guid.NewGuid();
+            var item8Id = Guid.NewGuid();
+
+            var now = DateTime.UtcNow;
+
+            // Generate barcodes and barcode images for items
+            var barcode1 = BarcodeGenerator.GenerateItemBarcode("SN-HDMI-001");
+            var barcodeImage1 = BarcodeImageUtil.GenerateBarcodeImageBytes(barcode1);
 
             modelBuilder.Entity<Item>().HasData(
-                new Item { Id = item1Id, SerialNumber = "SN-LP-DELL-001", ItemName = "Dell XPS 15 Laptop", ItemType = "Laptop", ItemModel = "XPS 15 9510", ItemMake = "Dell", Description = "High-performance laptop for video editing.", Category = ItemCategory.Electronics, Condition = ItemCondition.Good, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Item { Id = item2Id, SerialNumber = "SN-PR-EPS-002", ItemName = "Epson Home Cinema Projector", ItemType = "Projector", ItemModel = "HC 2250", ItemMake = "Epson", Description = "1080p projector for classroom presentations.", Category = ItemCategory.MediaEquipment, Condition = ItemCondition.New, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Item { Id = item3Id, SerialNumber = "SN-CM-CAN-003", ItemName = "Canon EOS R6 Camera", ItemType = "Camera", ItemModel = "EOS R6", ItemMake = "Canon", Description = "Full-frame mirrorless camera with 4K video.", Category = ItemCategory.MediaEquipment, Condition = ItemCondition.Good, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Item { Id = item4Id, SerialNumber = "SN-MC-SHR-004", ItemName = "Shure SM7B Microphone", ItemType = "Microphone", ItemModel = "SM7B", ItemMake = "Shure", Description = "Dynamic microphone for vocal recording.", Category = ItemCategory.MediaEquipment, Condition = ItemCondition.Good, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow },
-                new Item { Id = item5Id, SerialNumber = "SN-TB-APL-005", ItemName = "Apple iPad Pro", ItemType = "Tablet", ItemModel = "iPad Pro 12.9-inch", ItemMake = "Apple", Description = "Tablet for digital art and design classes.", Category = ItemCategory.Electronics, Condition = ItemCondition.Good, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow }
+                new Item 
+                { 
+                    Id = item1Id, 
+                    SerialNumber = "SN-HDMI-001", 
+                    ItemName = "HDMI Cable 10ft", 
+                    ItemType = "Cable", 
+                    ItemModel = "HDMI 2.0", 
+                    ItemMake = "Belkin", 
+                    Description = "10-foot HDMI cable for display connections.", 
+                    Category = ItemCategory.Electronics, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = barcode1,
+                    BarcodeImage = barcodeImage1,
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item2Id, 
+                    SerialNumber = "SN-MIC-002", 
+                    ItemName = "Wireless Microphone", 
+                    ItemType = "Microphone", 
+                    ItemModel = "WM-200", 
+                    ItemMake = "Shure", 
+                    Description = "Wireless microphone for presentations.", 
+                    Category = ItemCategory.MediaEquipment, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-MIC-002"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-MIC-002")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item3Id, 
+                    SerialNumber = "SN-SPK-003", 
+                    ItemName = "Portable Bluetooth Speaker", 
+                    ItemType = "Speaker", 
+                    ItemModel = "Flip 6", 
+                    ItemMake = "JBL", 
+                    Description = "Portable speaker for classroom audio.", 
+                    Category = ItemCategory.MediaEquipment, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Available, // Returned
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-SPK-003"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-SPK-003")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item4Id, 
+                    SerialNumber = "SN-MOUSE-004", 
+                    ItemName = "Wireless Mouse", 
+                    ItemType = "Mouse", 
+                    ItemModel = "MX Master 3", 
+                    ItemMake = "Logitech", 
+                    Description = "Ergonomic wireless mouse.", 
+                    Category = ItemCategory.Electronics, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-MOUSE-004"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-MOUSE-004")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item5Id, 
+                    SerialNumber = "SN-KB-005", 
+                    ItemName = "Mechanical Keyboard", 
+                    ItemType = "Keyboard", 
+                    ItemModel = "K380", 
+                    ItemMake = "Logitech", 
+                    Description = "Compact mechanical keyboard.", 
+                    Category = ItemCategory.Electronics, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Available, // Returned
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-KB-005"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-KB-005")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item6Id, 
+                    SerialNumber = "SN-EXT-006", 
+                    ItemName = "Extension Wire 15ft", 
+                    ItemType = "Extension Wire", 
+                    ItemModel = "Heavy Duty", 
+                    ItemMake = "Belkin", 
+                    Description = "15-foot extension cord with surge protection.", 
+                    Category = ItemCategory.Electronics, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Available,
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-EXT-006"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-EXT-006")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item7Id, 
+                    SerialNumber = "SN-HDMI-007", 
+                    ItemName = "HDMI Cable 6ft", 
+                    ItemType = "Cable", 
+                    ItemModel = "HDMI 2.1", 
+                    ItemMake = "AmazonBasics", 
+                    Description = "6-foot HDMI cable for short connections.", 
+                    Category = ItemCategory.Electronics, 
+                    Condition = ItemCondition.New, 
+                    Status = ItemStatus.Available,
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-HDMI-007"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-HDMI-007")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                },
+                new Item 
+                { 
+                    Id = item8Id, 
+                    SerialNumber = "SN-MIC-008", 
+                    ItemName = "USB Microphone", 
+                    ItemType = "Microphone", 
+                    ItemModel = "Yeti", 
+                    ItemMake = "Blue", 
+                    Description = "USB condenser microphone for recording.", 
+                    Category = ItemCategory.MediaEquipment, 
+                    Condition = ItemCondition.Good, 
+                    Status = ItemStatus.Available,
+                    Image = mockImageBytes,
+                    ImageMimeType = "image/png",
+                    Barcode = BarcodeGenerator.GenerateItemBarcode("SN-MIC-008"),
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(BarcodeGenerator.GenerateItemBarcode("SN-MIC-008")),
+                    CreatedAt = now, 
+                    UpdatedAt = now 
+                }
             );
 
             // ===============================
             // SECTION 4 — SEED LENT ITEMS (Referencing the users created above)
             // ===============================
+            var lentDate1 = now.AddDays(-5);
+            var lentDate2 = now.AddDays(-10);
+            var lentDate3 = now.AddDays(-1);
+            var lentDate4 = now.AddDays(-3);
+            var lentDate5 = now.AddDays(-30);
+
+            // Generate barcodes for lent items
+            var lentBarcode1 = $"LENT-{lentDate1:yyyyMMdd}-001";
+            var lentBarcode2 = $"LENT-{lentDate2:yyyyMMdd}-001";
+            var lentBarcode3 = $"LENT-{lentDate3:yyyyMMdd}-001";
+            var lentBarcode4 = $"LENT-{lentDate4:yyyyMMdd}-001";
+            var lentBarcode5 = $"LENT-{lentDate5:yyyyMMdd}-001";
+
             modelBuilder.Entity<LentItems>().HasData(
-                new LentItems { Id = Guid.NewGuid(), ItemId = item1Id, ItemName = "Dell XPS 15 Laptop", UserId = student1.Id, BorrowerFullName = $"{student1.FirstName} {student1.LastName}", BorrowerRole = "Student", StudentIdNumber = student1.StudentIdNumber, TeacherId = teacher1.Id, TeacherFullName = $"{teacher1.FirstName} {teacher1.LastName}", LentAt = DateTime.UtcNow.AddDays(-5), Status = "Borrowed" },
-                new LentItems { Id = Guid.NewGuid(), ItemId = item3Id, ItemName = "Canon EOS R6 Camera", UserId = student2.Id, BorrowerFullName = $"{student2.FirstName} {student2.LastName}", BorrowerRole = "Student", StudentIdNumber = student2.StudentIdNumber, TeacherId = teacher2.Id, TeacherFullName = $"{teacher2.FirstName} {teacher2.LastName}", LentAt = DateTime.UtcNow.AddDays(-10), ReturnedAt = DateTime.UtcNow.AddDays(-2), Status = "Returned" },
-                new LentItems { Id = Guid.NewGuid(), ItemId = item2Id, ItemName = "Epson Home Cinema Projector", UserId = student3.Id, BorrowerFullName = $"{student3.FirstName} {student3.LastName}", BorrowerRole = "Student", StudentIdNumber = student3.StudentIdNumber, TeacherId = teacher1.Id, TeacherFullName = $"{teacher1.FirstName} {teacher1.LastName}", LentAt = DateTime.UtcNow.AddDays(-1), Status = "Borrowed" },
-                new LentItems { Id = Guid.NewGuid(), ItemId = item4Id, ItemName = "Shure SM7B Microphone", UserId = teacher1.Id, BorrowerFullName = $"{teacher1.FirstName} {teacher1.LastName}", BorrowerRole = "Teacher", LentAt = DateTime.UtcNow.AddDays(-3), Status = "Borrowed" },
-                new LentItems { Id = Guid.NewGuid(), ItemId = item5Id, ItemName = "Apple iPad Pro", UserId = teacher2.Id, BorrowerFullName = $"{teacher2.FirstName} {teacher2.LastName}", BorrowerRole = "Teacher", LentAt = DateTime.UtcNow.AddDays(-30), ReturnedAt = DateTime.UtcNow.AddDays(-15), Status = "Returned" }
+                // Student 1 borrowed HDMI Cable - Currently Borrowed
+                new LentItems 
+                { 
+                    Id = Guid.NewGuid(), 
+                    ItemId = item1Id, 
+                    ItemName = "HDMI Cable 10ft", 
+                    UserId = student1.Id, 
+                    BorrowerFullName = $"{student1.FirstName} {student1.LastName}", 
+                    BorrowerRole = "Student", 
+                    StudentIdNumber = student1.StudentIdNumber, 
+                    TeacherId = teacher1.Id, 
+                    TeacherFullName = $"{teacher1.FirstName} {teacher1.LastName}", 
+                    Room = "Room 301",
+                    SubjectTimeSchedule = "CS101 - MWF 9:00-10:30 AM",
+                    LentAt = lentDate1, 
+                    Status = "Borrowed",
+                    Barcode = lentBarcode1,
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(lentBarcode1),
+                    IsHiddenFromUser = false
+                },
+                // Student 2 borrowed Speaker - Returned
+                new LentItems 
+                { 
+                    Id = Guid.NewGuid(), 
+                    ItemId = item3Id, 
+                    ItemName = "Portable Bluetooth Speaker", 
+                    UserId = student2.Id, 
+                    BorrowerFullName = $"{student2.FirstName} {student2.LastName}", 
+                    BorrowerRole = "Student", 
+                    StudentIdNumber = student2.StudentIdNumber, 
+                    TeacherId = teacher2.Id, 
+                    TeacherFullName = $"{teacher2.FirstName} {teacher2.LastName}", 
+                    Room = "Room 205",
+                    SubjectTimeSchedule = "MEDIA101 - TTH 1:00-2:30 PM",
+                    LentAt = lentDate2, 
+                    ReturnedAt = now.AddDays(-2), 
+                    Status = "Returned",
+                    Barcode = lentBarcode2,
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(lentBarcode2),
+                    IsHiddenFromUser = false
+                },
+                // Student 3 borrowed Wireless Microphone - Currently Borrowed
+                new LentItems 
+                { 
+                    Id = Guid.NewGuid(), 
+                    ItemId = item2Id, 
+                    ItemName = "Wireless Microphone", 
+                    UserId = student3.Id, 
+                    BorrowerFullName = $"{student3.FirstName} {student3.LastName}", 
+                    BorrowerRole = "Student", 
+                    StudentIdNumber = student3.StudentIdNumber, 
+                    TeacherId = teacher1.Id, 
+                    TeacherFullName = $"{teacher1.FirstName} {teacher1.LastName}", 
+                    Room = "Room 401",
+                    SubjectTimeSchedule = "CS201 - MWF 2:00-3:30 PM",
+                    LentAt = lentDate3, 
+                    Status = "Borrowed",
+                    Barcode = lentBarcode3,
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(lentBarcode3),
+                    IsHiddenFromUser = false
+                },
+                // Teacher 1 borrowed Wireless Mouse - Currently Borrowed
+                new LentItems 
+                { 
+                    Id = Guid.NewGuid(), 
+                    ItemId = item4Id, 
+                    ItemName = "Wireless Mouse", 
+                    UserId = teacher1.Id, 
+                    BorrowerFullName = $"{teacher1.FirstName} {teacher1.LastName}", 
+                    BorrowerRole = "Teacher",
+                    Room = "Room 101",
+                    SubjectTimeSchedule = "Faculty Meeting - Friday 3:00 PM",
+                    LentAt = lentDate4, 
+                    Status = "Borrowed",
+                    Barcode = lentBarcode4,
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(lentBarcode4),
+                    IsHiddenFromUser = false
+                },
+                // Teacher 2 borrowed Mechanical Keyboard - Returned
+                new LentItems 
+                { 
+                    Id = Guid.NewGuid(), 
+                    ItemId = item5Id, 
+                    ItemName = "Mechanical Keyboard", 
+                    UserId = teacher2.Id, 
+                    BorrowerFullName = $"{teacher2.FirstName} {teacher2.LastName}", 
+                    BorrowerRole = "Teacher",
+                    Room = "Room 302",
+                    SubjectTimeSchedule = "IT Workshop - Daily",
+                    LentAt = lentDate5, 
+                    ReturnedAt = now.AddDays(-15), 
+                    Status = "Returned",
+                    Barcode = lentBarcode5,
+                    BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(lentBarcode5),
+                    IsHiddenFromUser = false
+                }
             );
         }
     }
