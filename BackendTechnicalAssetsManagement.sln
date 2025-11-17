@@ -5,8 +5,6 @@ VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendTechnicalAssetsManagement", "BackendTechnicalAssetsManagement.csproj", "{568D8AFB-4418-4284-AFCE-34EA91C8E991}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{747C7170-15BB-446A-ACED-3E4CDF64E7B0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendTechnicalAssetsManagementTest", "..\BackendTechnicalAssetsManagementTest\BackendTechnicalAssetsManagementTest.csproj", "{D111D13E-C40F-452E-80F3-6C9009E538C9}"
 EndProject
 Global
@@ -19,13 +17,9 @@ Global
 		{568D8AFB-4418-4284-AFCE-34EA91C8E991}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{568D8AFB-4418-4284-AFCE-34EA91C8E991}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{568D8AFB-4418-4284-AFCE-34EA91C8E991}.Release|Any CPU.Build.0 = Release|Any CPU
-		{747C7170-15BB-446A-ACED-3E4CDF64E7B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{747C7170-15BB-446A-ACED-3E4CDF64E7B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{747C7170-15BB-446A-ACED-3E4CDF64E7B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{747C7170-15BB-446A-ACED-3E4CDF64E7B0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D111D13E-C40F-452E-80F3-6C9009E538C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D111D13E-C40F-452E-80F3-6C9009E538C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D111D13E-C40F-452E-80F3-6C9009E538C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D111D13E-C40F-452E-9E538C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D111D13E-C40F-452E-80F3-6C9009E538C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
