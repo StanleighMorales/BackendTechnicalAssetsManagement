@@ -74,17 +74,17 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <summary>
         /// Permanently deletes a user from the archive. This action is irreversible.
         /// </summary>
-        /// <param name="archiveUserId">The GUID of the archived user to delete permanently.</param>
+        /// <param name="id">The GUID of the archived user to delete permanently.</param>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")] // Example: Restrict permanent deletion to only Admins
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> PermanentDeleteUser(Guid archiveUserId)
+        public async Task<IActionResult> PermanentDeleteUser(Guid id)
         {
-            var result = await _archiveUserService.PermanentDeleteArchivedUserAsync(archiveUserId);
+            var result = await _archiveUserService.PermanentDeleteArchivedUserAsync(id);
             if (!result)
             {
-                var failResponse = ApiResponse<object>.FailResponse($"Archived user with ID {archiveUserId} not found.");
+                var failResponse = ApiResponse<object>.FailResponse($"Archived user with ID {id} not found.");
                 return NotFound(failResponse);
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Archived user has been permanently deleted.");
