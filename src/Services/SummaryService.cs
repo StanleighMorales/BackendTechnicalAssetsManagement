@@ -45,22 +45,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 .OrderBy(s => s.ItemName)
                 .ToList();
 
-            var stockSummary = new ItemStockSummary
-            {
-                ItemStocks = itemStocks,
-                TotalUniqueItems = itemStocks.Count,
-                TotalItemsCount = itemStocks.Sum(s => s.TotalCount),
-                TotalAvailableCount = itemStocks.Sum(s => s.AvailableCount),
-                TotalBorrowedCount = itemStocks.Sum(s => s.BorrowedCount)
-            };
-
             return new SummaryDto
             {
                 TotalItems = allItems.Count(),
                 TotalLentItems = allLentRecords.Count(),
                 TotalActiveUsers = allUsers.Count(u => u.Status == "Online"),
                 TotalItemsCategories = allCategories.Count(),
-                ItemStocks = stockSummary
+                ItemStocks = itemStocks
             };
         }
 

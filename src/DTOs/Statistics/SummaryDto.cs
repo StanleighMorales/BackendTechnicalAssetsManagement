@@ -32,7 +32,7 @@
         /// <summary>
         /// Stock information for all items grouped by name.
         /// </summary>
-        public ItemStockSummary? ItemStocks { get; set; }
+        public List<ItemStockDto>? ItemStocks { get; set; }
     }
 
     /// <summary>
