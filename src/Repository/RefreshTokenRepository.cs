@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +38,7 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         foreach (var token in tokensToRevoke)
         {
             token.IsRevoked = true;
-            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedAt = DateTime.Now;
         }
     }
 

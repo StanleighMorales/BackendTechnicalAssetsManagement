@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
@@ -68,14 +68,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        lentItem.LentAt = DateTime.UtcNow;
+                        item.UpdatedAt = DateTime.Now;
+                        lentItem.LentAt = DateTime.Now;
                         await _itemRepository.UpdateAsync(item);
                     }
                     else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
-                        item.UpdatedAt = DateTime.UtcNow;
+                        item.UpdatedAt = DateTime.Now;
                         // Don't set LentAt for Pending status
                         await _itemRepository.UpdateAsync(item);
                     }
@@ -201,14 +201,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (dto.Status?.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
-                        item.UpdatedAt = DateTime.UtcNow;
-                        lentItem.LentAt = DateTime.UtcNow;
+                        item.UpdatedAt = DateTime.Now;
+                        lentItem.LentAt = DateTime.Now;
                         await _itemRepository.UpdateAsync(item);
                     }
                     else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Unavailable;
-                        item.UpdatedAt = DateTime.UtcNow;
+                        item.UpdatedAt = DateTime.Now;
                         // Don't set LentAt for Pending status
                         await _itemRepository.UpdateAsync(item);
                     }
@@ -298,25 +298,25 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         if (newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Unavailable;
-                            item.UpdatedAt = DateTime.UtcNow;
-                            entity.LentAt = DateTime.UtcNow;
+                            item.UpdatedAt = DateTime.Now;
+                            entity.LentAt = DateTime.Now;
                         }
                         else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Unavailable;
-                            item.UpdatedAt = DateTime.UtcNow;
+                            item.UpdatedAt = DateTime.Now;
                             entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Returned", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.UtcNow;
-                            entity.ReturnedAt = DateTime.UtcNow;
+                            item.UpdatedAt = DateTime.Now;
+                            entity.ReturnedAt = DateTime.Now;
                         }
                         else if (newStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
-                            item.UpdatedAt = DateTime.UtcNow;
+                            item.UpdatedAt = DateTime.Now;
                             entity.LentAt = null;
                         }
 
@@ -363,7 +363,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return false;
             }
 
-            var scanTimestamp = DateTime.UtcNow;
+            var scanTimestamp = DateTime.Now;
 
             // Update the corresponding Item status based on LentItems status
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
@@ -390,28 +390,28 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 {
                     // Set item status back to Available when returned
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.UtcNow;
+                    item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
                 }
                 else if (dto.LentItemsStatus == LentItemsStatus.Borrowed)
                 {
                     // Ensure item status is Unavailable when borrowed
                     item.Status = ItemStatus.Unavailable;
-                    item.UpdatedAt = DateTime.UtcNow;
+                    item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Pending, set item to Unavailable (reserved)
                 else if (dto.LentItemsStatus == LentItemsStatus.Pending)
                 {
                     item.Status = ItemStatus.Unavailable;
-                    item.UpdatedAt = DateTime.UtcNow;
+                    item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
                 }
                 // For Canceled, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
                 {
                     item.Status = ItemStatus.Available;
-                    item.UpdatedAt = DateTime.UtcNow;
+                    item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
                 }
             }
@@ -507,11 +507,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 3. Update the lent item status to "Returned" and set ReturnedAt timestamp
             activeLentItem.Status = "Returned";
-            activeLentItem.ReturnedAt = DateTime.UtcNow;
+            activeLentItem.ReturnedAt = DateTime.Now;
 
             // 4. Update the item status to Available
             item.Status = ItemStatus.Available;
-            item.UpdatedAt = DateTime.UtcNow;
+            item.UpdatedAt = DateTime.Now;
 
             // 5. Save the changes
             await _itemRepository.UpdateAsync(item);
@@ -535,7 +535,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (item != null)
                     {
                         item.Status = ItemStatus.Available;
-                        item.UpdatedAt = DateTime.UtcNow;
+                        item.UpdatedAt = DateTime.Now;
                         await _itemRepository.UpdateAsync(item);
                     }
                 }

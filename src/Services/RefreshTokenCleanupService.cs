@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Data;
+using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.BackgroundServices
@@ -61,7 +61,7 @@ namespace BackendTechnicalAssetsManagement.src.BackgroundServices
                         // 1. The token's expiration date is in the past (it's expired).
                         // 2. The token has been manually revoked (e.g., via logout or token rotation).
                         var tokensToRemove = await dbContext.RefreshTokens
-                            .Where(rt => rt.ExpiresAt <= DateTime.UtcNow || rt.IsRevoked)
+                            .Where(rt => rt.ExpiresAt <= DateTime.Now || rt.IsRevoked)
                             .ToListAsync(stoppingToken);
 
                         // Check if the query found any tokens to delete.

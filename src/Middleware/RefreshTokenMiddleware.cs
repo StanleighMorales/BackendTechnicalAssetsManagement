@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Exceptions;
+using BackendTechnicalAssetsManagement.src.Exceptions;
 using BackendTechnicalAssetsManagement.src.IService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -37,7 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Middleware
                 {
                     // Convert Unix timestamp to DateTime
                     var expirationTime = DateTimeOffset.FromUnixTimeSeconds(expTimeSeconds).UtcDateTime;
-                    var timeUntilExpiry = expirationTime.Subtract(DateTime.UtcNow);
+                    var timeUntilExpiry = expirationTime.Subtract(DateTime.Now);
 
                     // Check if the token is within the refresh threshold (e.g., less than 5 minutes remaining)
                     // Note: We are relying on the JWT middleware to have successfully validated the token

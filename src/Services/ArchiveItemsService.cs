@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
@@ -24,8 +24,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             var itemArchive = _mapper.Map<ArchiveItems>(createItemArchive);
 
-            itemArchive.CreatedAt = DateTime.UtcNow;
-            itemArchive.UpdatedAt = DateTime.UtcNow;
+            itemArchive.CreatedAt = DateTime.Now;
+            itemArchive.UpdatedAt = DateTime.Now;
 
             await _archiveItemRepository.CreateItemArchiveAsync(itemArchive);
 
@@ -71,8 +71,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var restoredItem = _mapper.Map<Item>(archivedItem);
 
             // Set new timestamps and ensure status is Available when restored
-            restoredItem.CreatedAt = DateTime.UtcNow;
-            restoredItem.UpdatedAt = DateTime.UtcNow;
+            restoredItem.CreatedAt = DateTime.Now;
+            restoredItem.UpdatedAt = DateTime.Now;
             restoredItem.Status = ItemStatus.Available; // Restored items should be available
 
             // EF Core will now happily add this item with its specified Id
@@ -107,3 +107,4 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
     }
 }
+

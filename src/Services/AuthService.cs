@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
@@ -244,7 +244,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 // Revoke the token in the DB
                 tokenEntity.IsRevoked = true;
-                tokenEntity.RevokedAt = DateTime.UtcNow;
+                tokenEntity.RevokedAt = DateTime.Now;
 
                 if (tokenEntity.User != null)
                 {
@@ -367,7 +367,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
             // 2. Perform validity checks
-            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
+            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.Now)
             {
                 throw new RefreshTokenException("Invalid or expired refresh token.");
             }
@@ -382,7 +382,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 3. Revoke the old refresh token (Security: Token Rotation)
             tokenEntity.IsRevoked = true;
-            tokenEntity.RevokedAt = DateTime.UtcNow;
+            tokenEntity.RevokedAt = DateTime.Now;
             _context.Update(tokenEntity);
 
             // 4. Generate new tokens
@@ -446,7 +446,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 ClearRefreshTokenCookie();
                 throw new RefreshTokenException("Refresh token is revoked. Please log in again.");
             }
-            if (tokenEntity.ExpiresAt < DateTime.UtcNow)
+            if (tokenEntity.ExpiresAt < DateTime.Now)
             {
                 // The long-lived RT has finally expired.
                 ClearRefreshTokenCookie(); // Clear the expired cookie
@@ -465,7 +465,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Revoke the old refresh token (Security: Token Rotation)
             // This ensures a stolen token can only be used ONCE.
             tokenEntity.IsRevoked = true;
-            tokenEntity.RevokedAt = DateTime.UtcNow;
+            tokenEntity.RevokedAt = DateTime.Now;
             _context.Update(tokenEntity);
 
             // 5. Generate NEW tokens (AT and RT)
@@ -512,8 +512,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
-                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
+                //expires: DateTime.Now.AddSeconds(30), // <-- Set to 30 seconds for dev test
+                expires: DateTime.Now.AddMinutes(15), // Access Token expiry time
 
                 signingCredentials: creds
             );
@@ -527,8 +527,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                ExpiresAt = DateTime.UtcNow.AddDays(7), // You might want to make this configurable
-                CreatedAt = DateTime.UtcNow
+                ExpiresAt = DateTime.Now.AddDays(7), // You might want to make this configurable
+                CreatedAt = DateTime.Now
             };
         }
 
@@ -546,8 +546,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 //SameSite = SameSiteMode.None,
                 Secure = false,
                 SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
-                //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
-                Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
+                //Expires = DateTime.Now.AddSeconds(30), // <-- Set to 30 seconds for dev 
+                Expires = DateTime.Now.AddMinutes(15) // Access Token expiry time
 
             };
 
@@ -613,3 +613,4 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
     }
 }
+

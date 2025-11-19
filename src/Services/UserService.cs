@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -174,3 +174,4 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
     }
 }
+

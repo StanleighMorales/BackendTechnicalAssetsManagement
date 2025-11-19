@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Users;
 
@@ -12,7 +12,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
             // Base mapping from active User to ArchiveUser
             CreateMap<User, ArchiveUser>()
                 .ForMember(dest => dest.OriginalUserId, opt => opt.MapFrom(src => src.Id)) // Link to original ID
-                .ForMember(dest => dest.ArchivedAt, opt => opt.MapFrom(src => DateTime.UtcNow)) // Set archive timestamp
+                .ForMember(dest => dest.ArchivedAt, opt => opt.MapFrom(src => DateTime.Now)) // Set archive timestamp
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Archived")) // Set status upon archiving
                                                                                        // Handle properties that should not be copied or have specific logic (e.g., collections)
                 .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => src.PasswordHash)) // Copy password hash to archive

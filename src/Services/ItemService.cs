@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
@@ -166,7 +166,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // ... (Image logic is fine)
 
             // 4. Update the timestamp and save.
-            existingItem.UpdatedAt = DateTime.UtcNow;
+            existingItem.UpdatedAt = DateTime.Now;
 
             await _itemRepository.UpdateAsync(existingItem);
             return await _itemRepository.SaveChangesAsync();
@@ -186,7 +186,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                 // Set item status to Unavailable before archiving
                 itemToDelete.Status = ItemStatus.Unavailable;
-                itemToDelete.UpdatedAt = DateTime.UtcNow;
+                itemToDelete.UpdatedAt = DateTime.Now;
 
                 var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
                 await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
@@ -349,8 +349,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     Barcode = barcodeText,
                                     BarcodeImage = barcodeImageBytes,
 
-                                    CreatedAt = DateTime.UtcNow,
-                                    UpdatedAt = DateTime.UtcNow
+                                    CreatedAt = DateTime.Now,
+                                    UpdatedAt = DateTime.Now
                                 };
                                 itemsToCreate.Add(item);
                             }

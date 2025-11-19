@@ -1,4 +1,4 @@
-﻿using BackendTechnicalAssetsManagement.src.Data;
+using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.Utils
@@ -23,7 +23,7 @@ namespace BackendTechnicalAssetsManagement.src.Utils
         /// <returns>Generated barcode string</returns>
         public static async Task<string> GenerateLentItemBarcode(AppDbContext dbContext, DateTime? date = null)
         {
-            var targetDate = date ?? DateTime.UtcNow.Date;
+            var targetDate = date ?? DateTime.Now.Date;
             var dateString = targetDate.ToString("yyyyMMdd");
             var barcodePrefix = $"{LentItemsFormPrefix}{dateString}-";
 
@@ -53,3 +53,4 @@ namespace BackendTechnicalAssetsManagement.src.Utils
         }
     }
 }
+

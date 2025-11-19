@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -23,8 +23,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             var lentItemsArchive = _mapper.Map<ArchiveLentItems>(createLentItemsArchive);
 
-            lentItemsArchive.CreatedAt = DateTime.UtcNow;
-            lentItemsArchive.UpdatedAt = DateTime.UtcNow;
+            lentItemsArchive.CreatedAt = DateTime.Now;
+            lentItemsArchive.UpdatedAt = DateTime.Now;
 
             await _repository.CreateArchiveLentItemsAsync(lentItemsArchive);
 
@@ -77,3 +77,4 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
     }
 }
+
