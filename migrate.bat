@@ -1,0 +1,3 @@
+@echo off
+echo Applying Database Migrations...
+dotnet ef database update --project BackendTechnicalAssetsManagement.csproj

@@ -1,0 +1,3 @@
+@echo off
+echo Starting Backend Technical Assets Management...
+dotnet run --project BackendTechnicalAssetsManagement.csproj --launch-profile http

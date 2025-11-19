@@ -1,0 +1,3 @@
+@echo off
+echo Building Backend Technical Assets Management...
+dotnet build BackendTechnicalAssetsManagement.csproj

@@ -1,0 +1,3 @@
+@echo off
+echo Starting Backend Technical Assets Management in Development Mode (Hot Reload)...
+dotnet watch run --project BackendTechnicalAssetsManagement.csproj --launch-profile http
