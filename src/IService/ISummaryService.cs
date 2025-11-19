@@ -44,5 +44,6 @@ namespace BackendTechnicalAssetsManagement.src.IService
         /// <see cref="SummaryDto"/> with the total counts of items, lent items, and active users.
         /// </returns>
         Task<SummaryDto> GetOverallSummaryAsync();
+
     }
 }

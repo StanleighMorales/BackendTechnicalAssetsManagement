@@ -1,0 +1,32 @@
+# Quick Make Commands Reference
+
+## Essential Commands
+make run          # Start the application
+make dev          # Start with hot reload (recommended for development)
+make test         # Run all tests
+make build        # Build the project
+
+## Database Commands
+make migrate      # Apply database migrations
+make migration    # Create new migration (add NAME=YourMigrationName)
+make db-drop      # Drop the database
+
+## Maintenance Commands
+make clean        # Clean build artifacts
+make restore      # Restore NuGet packages
+make format       # Format code
+
+## Testing Commands
+make test         # Run all tests
+make test-watch   # Run tests in watch mode
+make test-coverage # Run tests with code coverage
+
+## Help
+make help         # Show all available commands
+
+## First Time Setup
+1. Install make: winget install GnuWin32.Make
+2. Restart terminal
+3. Run: make restore
+4. Run: make migrate
+5. Run: make dev

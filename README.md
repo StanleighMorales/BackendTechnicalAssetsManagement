@@ -1,205 +1,269 @@
-# Technical Assets Management System - Backend API
+# Backend Technical Assets Management
 
-A comprehensive .NET 8 Web API for managing technical assets, lending operations, and user management in educational or organizational environments.
+A comprehensive ASP.NET Core Web API for managing technical assets, lending operations, and user management.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-### Core Functionality
-- **Asset Management**: Complete CRUD operations for technical items with barcode generation
-- **Lending System**: Track item loans, returns, and lending history
-- **User Management**: Multi-role user system (SuperAdmin, Admin, Staff, Student, Teacher)
-- **Archive System**: Maintain historical records of items, users, and lending operations
-- **Barcode Integration**: Generate and manage barcodes for items and lending operations
-- **Statistics & Reporting**: Comprehensive summary and analytics endpoints
+**Already set up?** Just run:
+```bash
+make dev    # Development mode with hot reload
+```
 
-### Technical Features
-- **JWT Authentication**: Secure token-based authentication with refresh tokens
-- **Role-based Authorization**: Granular permission system
-- **Health Checks**: Built-in health monitoring for database connectivity
-- **Excel Import/Export**: Bulk operations support
-- **Image Handling**: Asset image management with MIME type support
-- **Background Services**: Automated cleanup tasks
-- **Global Exception Handling**: Centralized error management
-- **CORS Support**: Cross-origin resource sharing for frontend integration
+**First time here?** Jump to [First Time Setup](#-first-time-setup) below.
+
+The API will be available at: **http://localhost:5278**
+
+## ✨ Features
+
+- **Item Management**: Track technical assets with serial numbers, barcodes, and images
+- **Lending System**: Manage item borrowing and returns with barcode scanning
+- **User Management**: Support for multiple user roles (Admin, Staff, Teacher, Student)
+- **Stock Tracking**: Real-time inventory levels grouped by item name
+- **Excel Import**: Bulk import items from Excel files
+- **Archive System**: Soft delete for users and items
+- **Authentication**: JWT-based authentication with role-based access control
 
 ## 🛠️ Technology Stack
 
-- **.NET 8**: Latest .NET framework
-- **Entity Framework Core 8**: ORM with SQL Server support
-- **AutoMapper**: Object-to-object mapping
-- **BCrypt.Net**: Password hashing
-- **JWT Bearer**: Authentication tokens
-- **ZXing.Net**: Barcode generation
-- **Swagger/OpenAPI**: API documentation
-- **Scalar**: Enhanced API documentation UI
-- **xUnit**: Testing framework
+- **Framework**: ASP.NET Core 8.0
+- **Database**: SQL Server with Entity Framework Core
+- **Authentication**: JWT Bearer tokens
+- **Testing**: xUnit with Moq
+- **Documentation**: Swagger/OpenAPI
 
 ## 📋 Prerequisites
 
-- .NET 8 SDK
-- SQL Server (LocalDB or full instance)
-- Visual Studio 2022 or VS Code
+- .NET 8 SDK - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
+- SQL Server or SQL Server LocalDB
+- Make (see installation below)
+- (Optional) Visual Studio 2022, VS Code, or Rider
 
-## ⚙️ Installation & Setup
+## 🎯 First Time Setup
 
-### 1. Clone the Repository
+### 1. Install Make
+
+**Windows** (PowerShell as Administrator):
+```powershell
+winget install GnuWin32.Make
+```
+Then **restart your terminal**.
+
+**Linux**:
 ```bash
-git clone <repository-url>
+sudo apt-get install build-essential  # Ubuntu/Debian
+```
+
+**macOS**:
+```bash
+brew install make
+```
+
+### 2. Clone and Navigate
+```bash
+git clone <your-repo-url>
 cd BackendTechnicalAssetsManagement
 ```
 
-### 2. Environment Configuration
-Copy the example environment file and configure your settings:
-```bash
-copy .env.example .env
-```
+### 3. Configure Database
 
-Edit `.env` with your configuration:
-```env
-# Connection Strings
-ConnectionStrings__DefaultConnection=Server=localhost;Database=TechnicalAssetsDB;Trusted_Connection=True;
-
-# JWT Settings
-AppSettings__Token=your-super-secure-jwt-secret-key-here
-
-# Logging
-Logging__LogLevel__Default=Information
-Logging__LogLevel__Microsoft.AspNetCore=Warning
-```
-
-### 3. Database Setup
-```bash
-# Install EF Core tools (if not already installed)
-dotnet tool install --global dotnet-ef
-
-# Update database with migrations
-dotnet ef database update
-```
-
-### 4. Run the Application
-```bash
-dotnet run
-```
-
-The API will be available at:
-- **HTTPS**: `https://localhost:7000`
-- **HTTP**: `http://localhost:5000`
-- **Swagger UI**: `https://localhost:7000/swagger`
-- **Scalar API Docs**: `https://localhost:7000/scalar/v1`
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Refresh JWT token
-- `POST /api/auth/logout` - User logout
-
-### Core Resource Endpoints
-- `GET|POST|PUT|DELETE /api/items` - Item management
-- `GET|POST|PUT|DELETE /api/users` - User management
-- `GET|POST|PUT|DELETE /api/lentitems` - Lending operations
-- `GET /api/summary` - Statistics and summaries
-
-### Archive Endpoints
-- `GET /api/archive/items` - Archived items
-- `GET /api/archive/users` - Archived users
-- `GET /api/archive/lentitems` - Archived lending records
-
-### Utility Endpoints
-- `GET /api/barcode/{id}` - Generate barcode images
-- `GET /api/health` - Health check status
-
-## 🏗️ Project Structure
-
-```
-src/
-├── Authorization/          # Custom authorization handlers
-├── Classes/               # Entity models
-├── Controllers/           # API controllers
-├── Data/                 # Database context and factory
-├── DTOs/                 # Data transfer objects
-├── Exceptions/           # Custom exceptions
-├── Extensions/           # Service and model extensions
-├── IRepository/          # Repository interfaces
-├── IService/            # Service interfaces
-├── Middleware/          # Custom middleware
-├── Profiles/            # AutoMapper profiles
-├── Repository/          # Data access layer
-├── Services/            # Business logic layer
-└── Utils/               # Utility classes
-```
-
-## 🔐 User Roles & Permissions
-
-- **SuperAdmin**: Full system access, bypasses most restrictions
-- **Admin**: Manage users, items, and lending operations
-- **Staff**: Handle lending operations and item management
-- **Student**: View personal lending history
-- **Teacher**: Enhanced student permissions with additional access
-
-## 🗄️ Database Schema
-
-The system uses Entity Framework Code-First approach with the following main entities:
-
-- **Users**: Base user information with role-based inheritance
-- **Items**: Technical assets with barcode and image support
-- **LentItems**: Active lending records
-- **Archive Tables**: Historical data preservation
-- **RefreshTokens**: JWT refresh token management
-
-## 🔧 Configuration
-
-### CORS Settings
-Configure allowed origins in `appsettings.json`:
+Update `appsettings.json` if needed:
 ```json
-{
-  "AllowedOrigins": [
-    "https://localhost:5173",
-    "http://localhost:3000"
-  ]
+"ConnectionStrings": {
+  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=TechnicalAssetsDB;Trusted_Connection=true;MultipleActiveResultSets=true"
 }
 ```
 
-### Health Checks
-Health check endpoint provides database connectivity status and can be extended for additional monitoring.
+### 4. Setup and Run
+```bash
+make restore    # Restore packages
+make migrate    # Setup database
+make dev        # Run with hot reload
+```
+
+### 5. Verify
+Open **http://localhost:5278/swagger** - you should see the API documentation.
+
+### 6. Create First User
+
+Use Swagger or the `.http` file:
+```http
+POST http://localhost:5278/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "YourSecurePassword123!",
+  "email": "admin@example.com",
+  "firstName": "Admin",
+  "lastName": "User",
+  "userRole": "Admin"
+}
+```
+
+## 🏃 Common Commands
+
+```bash
+# Development
+make dev         # Run with hot reload (recommended for development)
+make run         # Run normally
+make build       # Build project
+
+# Database
+make migrate     # Apply database migrations
+make migration NAME=YourMigrationName  # Create new migration
+make db-drop     # Drop database
+make db-update   # Update to latest migration
+
+# Testing
+make test        # Run all tests
+make test-watch  # Run tests in watch mode
+make test-coverage  # Run with coverage
+
+# Maintenance
+make clean       # Clean build artifacts
+make restore     # Restore NuGet packages
+make help        # Show all available commands
+```
+
+### Manual Commands (without Make)
+
+```bash
+# Run
+dotnet run --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj --launch-profile http
+
+# Run with hot reload
+dotnet watch run --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj --launch-profile http
+
+# Build
+dotnet build BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
+
+# Test
+dotnet test BackendTechnicalAssetsManagementTest/BackendTechnicalAssetsManagementTest.csproj
+
+# Migrations
+dotnet ef migrations add MigrationName --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
+dotnet ef database update --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
+```
+
+## 📊 API Endpoints
+
+### Summary
+- `GET /api/v1/summary` - Complete system summary with stock information
+
+### Items
+- `GET /api/v1/items` - Get all items
+- `POST /api/v1/items` - Create new item
+- `GET /api/v1/items/{id}` - Get item by ID
+- `PUT /api/v1/items/{id}` - Update item
+- `DELETE /api/v1/items/{id}` - Delete item
+
+### Lent Items
+- `GET /api/v1/lentItems` - Get all lent items
+- `POST /api/v1/lentItems` - Create lending transaction
+- `PATCH /api/v1/lentItems/return/item/{barcode}` - Return item by barcode
+- `GET /api/v1/lentItems/date/{date}` - Get lent items by date
+
+### Users
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login
+- `GET /api/v1/users` - Get all users
+- `GET /api/v1/users/{id}` - Get user by ID
+- `PUT /api/v1/users/{id}` - Update user
+- `DELETE /api/v1/users/{id}` - Archive user
+
+See full documentation at `/swagger` when running the application.
+
+## 🔐 Authentication
+
+The API uses JWT Bearer tokens. Include the token in requests:
+```
+Authorization: Bearer {your-jwt-token}
+```
+
+## 📦 Stock Tracking
+
+The system automatically tracks inventory levels for items with the same name:
+
+**Example**: If you have 10 "HDMI Cable" items with unique serial numbers:
+- Total: 10
+- Available: 7 (Status = Available)
+- Borrowed: 3 (Status = Unavailable)
+
+Stock counts update automatically when items are borrowed or returned.
+
+## 📥 Excel Import
+
+Import multiple items from Excel files with support for:
+- Item details (name, type, make, model)
+- Images (file paths or URLs)
+- Status and condition
+- Automatic barcode generation
+
+See [IMPORT_GUIDE.md](IMPORT_GUIDE.md) for Excel format and instructions.
 
 ## 🧪 Testing
 
+Run all tests:
 ```bash
-# Run all tests
-dotnet test
-
-# Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
+make test
 ```
 
-## 📦 Deployment
+See [TESTING_SETUP_GUIDE.md](TESTING_SETUP_GUIDE.md) for detailed testing information.
 
-### Production Configuration
-1. Update connection strings for production database
-2. Set secure JWT secrets
-3. Configure CORS for production domains
-4. Enable HTTPS redirection
-5. Set appropriate logging levels
+## 🎯 Project Structure
 
-### Docker Support
-The application can be containerized using standard .NET Docker practices.
+```
+BackendTechnicalAssetsManagement/
+├── Makefile                 # Command shortcuts
+├── src/
+│   ├── Classes/            # Domain models
+│   ├── Controllers/        # API endpoints
+│   ├── Services/           # Business logic
+│   ├── Repository/         # Data access
+│   ├── DTOs/              # Data transfer objects
+│   └── Utils/             # Utilities and helpers
+├── Migrations/            # EF Core migrations
+└── Test/                  # Unit tests
+```
+
+## 🔧 Troubleshooting
+
+### Port Already in Use
+Stop any running instances or check Task Manager for `BackendTechnicalAssetsManagement.exe`
+
+### Build Errors
+```bash
+make clean
+make restore
+make build
+```
+
+### Database Issues
+```bash
+make db-drop
+make migrate
+```
+
+### Migration Failed
+Verify SQL Server is running and check connection string in `appsettings.json`
+
+## 📚 Additional Documentation
+
+- **[IMPORT_GUIDE.md](IMPORT_GUIDE.md)** - Excel import functionality
+- **[TESTING_SETUP_GUIDE.md](TESTING_SETUP_GUIDE.md)** - Testing guide
+- **[INSTALL_MAKE.md](INSTALL_MAKE.md)** - Detailed Make installation
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+1. Create a feature branch
+2. Make your changes
+3. Run tests: `make test`
+4. Submit a pull request
 
-## 📄 License
+## 📝 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+[Your License Here]
 
-## 🆘 Support
+---
 
-For support and questions:
-- Check the API documentation at `/swagger` or `/scalar/v1`
-- Review the health check endpoint at `/api/health`
-- Examine logs for detailed error information
+**Made with ❤️ for efficient asset management**

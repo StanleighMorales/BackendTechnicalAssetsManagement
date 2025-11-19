@@ -30,14 +30,19 @@ GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/date/2025-
 Authorization: Bearer {your-jwt-token}
 Accept: application/json
 
-#### Debug en
-dpoint to see all LentAt values
+#### Debug endpoint to see all LentAt values
 GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/debug
+
+###
+
+# Get comprehensive summary (includes total items, lent items, active users, and stock information)
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/summary
 Authorization: Bearer {your-jwt-token}
 Accept: application/json
 
-#### Scan
- LentItem Barcode to Update Status
+###
+
+#### Scan LentItem Barcode to Update Status
 PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/scan/LENT-20251101-003
 Authorization: Bearer {your-jwt-token}
 Content-Type: application/json

@@ -28,19 +28,23 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         /// <summary>
-        /// Retrieves a high-level, overall summary of the system's core entities.
+        /// Retrieves a comprehensive summary of the system including items, users, lent items, and stock information.
         /// </summary>
         /// <remarks>
-        /// This endpoint provides the total counts for items, lending transactions, and active users.
+        /// This endpoint provides:
+        /// - Total counts for items, lending transactions, and active users
+        /// - Detailed stock information for all items grouped by name
+        /// - Available vs borrowed counts for inventory management
         /// <br/>
-        /// **Endpoint:** `GET /api/summary`
+        /// **Endpoint:** `GET /api/v1/summary`
         /// </remarks>
-        /// <returns>An ApiResponse containing the overall summary data.</returns>
+        /// <returns>An ApiResponse containing the complete summary data including stock information.</returns>
         [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<SummaryDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<ApiResponse<SummaryDto>>> GetOverallSummary()
         {
             var summary = await _summaryService.GetOverallSummaryAsync();
-            var response = ApiResponse<SummaryDto>.SuccessResponse(summary, "Overall summary retrieved successfully.");
+            var response = ApiResponse<SummaryDto>.SuccessResponse(summary, "Overall summary with stock information retrieved successfully.");
             return Ok(response);
         }
         #region detailed summary

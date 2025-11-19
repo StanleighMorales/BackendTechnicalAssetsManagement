@@ -22,8 +22,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         /// <summary>
-        /// Calculates a high-level, overall summary.
-        /// THIS METHOD REMAINS THE SAME.
+        /// Calculates a high-level, overall summary including stock information.
         /// </summary>
         public async Task<SummaryDto> GetOverallSummaryAsync()
         {
@@ -32,12 +31,36 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var allUsers = await _userRepository.GetAllAsync();
             var allCategories = Enum.GetValues(typeof(ItemCategory)).Cast<ItemCategory>();
 
+            // Calculate stock information
+            var itemStocks = allItems
+                .GroupBy(i => new { i.ItemName, i.ItemType })
+                .Select(g => new ItemStockDto
+                {
+                    ItemName = g.Key.ItemName,
+                    ItemType = g.Key.ItemType,
+                    TotalCount = g.Count(),
+                    AvailableCount = g.Count(i => i.Status == ItemStatus.Available),
+                    BorrowedCount = g.Count(i => i.Status == ItemStatus.Unavailable)
+                })
+                .OrderBy(s => s.ItemName)
+                .ToList();
+
+            var stockSummary = new ItemStockSummary
+            {
+                ItemStocks = itemStocks,
+                TotalUniqueItems = itemStocks.Count,
+                TotalItemsCount = itemStocks.Sum(s => s.TotalCount),
+                TotalAvailableCount = itemStocks.Sum(s => s.AvailableCount),
+                TotalBorrowedCount = itemStocks.Sum(s => s.BorrowedCount)
+            };
+
             return new SummaryDto
             {
                 TotalItems = allItems.Count(),
                 TotalLentItems = allLentRecords.Count(),
                 TotalActiveUsers = allUsers.Count(u => u.Status == "Online"),
-                TotalItemsCategories = allCategories.Count()
+                TotalItemsCategories = allCategories.Count(),
+                ItemStocks = stockSummary
             };
         }
 
@@ -114,5 +137,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 TotalActiveStudents = GetValueOrDefault(roleCounts, UserRole.Student)
             };
         }
+
     }
 }

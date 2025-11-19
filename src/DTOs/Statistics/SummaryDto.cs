@@ -28,6 +28,11 @@
         /// </summary>
         /// <example>5</example>
         public int? TotalItemsCategories { get; set; }
+
+        /// <summary>
+        /// Stock information for all items grouped by name.
+        /// </summary>
+        public ItemStockSummary? ItemStocks { get; set; }
     }
 
     /// <summary>
@@ -145,5 +150,76 @@
         /// </summary>
         /// <example>25</example>
         public int? TotalActiveStudents { get; set; }
+    }
+
+    /// <summary>
+    /// Represents stock information for a specific item grouped by name.
+    /// </summary>
+    public class ItemStockDto
+    {
+        /// <summary>
+        /// The name of the item.
+        /// </summary>
+        /// <example>HDMI Cable</example>
+        public string ItemName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The type of the item.
+        /// </summary>
+        /// <example>Cable</example>
+        public string ItemType { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The total count of this item (all statuses).
+        /// </summary>
+        /// <example>10</example>
+        public int TotalCount { get; set; }
+
+        /// <summary>
+        /// The count of available items (not borrowed).
+        /// </summary>
+        /// <example>7</example>
+        public int AvailableCount { get; set; }
+
+        /// <summary>
+        /// The count of unavailable items (currently borrowed).
+        /// </summary>
+        /// <example>3</example>
+        public int BorrowedCount { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a summary of all item stocks in the system.
+    /// </summary>
+    public class ItemStockSummary
+    {
+        /// <summary>
+        /// List of stock information grouped by item name.
+        /// </summary>
+        public List<ItemStockDto> ItemStocks { get; set; } = new List<ItemStockDto>();
+
+        /// <summary>
+        /// Total number of unique item names in the system.
+        /// </summary>
+        /// <example>25</example>
+        public int TotalUniqueItems { get; set; }
+
+        /// <summary>
+        /// Total count of all items across all names.
+        /// </summary>
+        /// <example>150</example>
+        public int TotalItemsCount { get; set; }
+
+        /// <summary>
+        /// Total count of all available items.
+        /// </summary>
+        /// <example>120</example>
+        public int TotalAvailableCount { get; set; }
+
+        /// <summary>
+        /// Total count of all borrowed items.
+        /// </summary>
+        /// <example>30</example>
+        public int TotalBorrowedCount { get; set; }
     }
 }
