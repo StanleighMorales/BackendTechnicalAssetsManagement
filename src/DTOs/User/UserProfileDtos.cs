@@ -11,6 +11,9 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
  
             public string? FirstName { get; set; }
 
+            [EmailAddress]
+            public string? Email { get; set; }
+
             public string? StudentIdNumber { get; set; }
 
             public string? Course { get; set; }

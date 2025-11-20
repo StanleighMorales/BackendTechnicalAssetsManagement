@@ -13,7 +13,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<bool> UpdateUserProfileAsync(Guid id, UpdateUserProfileDto dto);
         Task UpdateStaffOrAdminProfileAsync(Guid id, UpdateStaffProfileDto dto, Guid currentUserId);
         Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId);
-
-
+        Task<ImportStudentsResponseDto> ImportStudentsFromExcelAsync(IFormFile file);
+        Task<bool> CompleteStudentRegistrationAsync(Guid userId, CompleteStudentRegistrationDto dto);
     }
 }

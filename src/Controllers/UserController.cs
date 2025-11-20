@@ -181,4 +181,79 @@ public class UserController : ControllerBase
 
         return Ok(ApiResponse<object>.SuccessResponse(null, "User has been successfully archived."));
     }
+
+    /// <summary>
+    /// Imports multiple students from an Excel (.xlsx) file with auto-generated usernames and passwords.
+    /// Excel file should contain columns: LastName, FirstName, MiddleName (optional)
+    /// Returns detailed results including generated credentials for each student.
+    /// Access is restricted to users with 'Admin' or 'Staff' roles.
+    /// </summary>
+    [HttpPost("students/import")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<ActionResult<ApiResponse<ImportStudentsResponseDto>>> ImportStudents(IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(ApiResponse<ImportStudentsResponseDto>.FailResponse("No file uploaded."));
+            }
+
+            // Validate file extension
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (fileExtension != ".xlsx" && fileExtension != ".xls")
+            {
+                return BadRequest(ApiResponse<ImportStudentsResponseDto>.FailResponse("Only Excel files (.xlsx or .xls) are allowed."));
+            }
+
+            var result = await _userService.ImportStudentsFromExcelAsync(file);
+            
+            var message = $"Import completed. Success: {result.SuccessCount}, Failed: {result.FailureCount}";
+            var response = ApiResponse<ImportStudentsResponseDto>.SuccessResponse(result, message);
+            
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<ImportStudentsResponseDto>.FailResponse($"Import failed: {ex.Message}"));
+        }
+    }
+
+    /// <summary>
+    /// Completes student registration by updating remaining required profile information.
+    /// This endpoint is used after initial registration to add email, phone, student ID, course details, address, and ID pictures.
+    /// Does not update FirstName, MiddleName, or LastName as they are already set during initial registration.
+    /// Students can only complete their own registration.
+    /// </summary>
+    [HttpPatch("students/complete-registration/{id}")]
+    [Authorize(Roles = "Student")]
+    public async Task<ActionResult<ApiResponse<object>>> CompleteStudentRegistration(Guid id, [FromForm] CompleteStudentRegistrationDto dto)
+    {
+        // Ensure student can only update their own profile
+        var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(currentUserIdString, out var currentUserId) || currentUserId != id)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var success = await _userService.CompleteStudentRegistrationAsync(id, dto);
+
+            if (!success)
+            {
+                return NotFound(ApiResponse<object>.FailResponse("Student not found."));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Student registration completed successfully."));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
+        }
+    }
 }
