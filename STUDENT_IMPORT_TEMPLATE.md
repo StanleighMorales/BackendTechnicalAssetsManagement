@@ -110,5 +110,22 @@ file: students.xlsx
 
 1. Distribute usernames and passwords to students securely
 2. Students log in with generated credentials
-3. Students complete their profile using PATCH `/api/v1/users/students/complete-registration/{id}`
+3. **Students MUST complete their profile** using PATCH `/api/v1/users/students/complete-registration/{id}`
 4. Students can then update their profile anytime using PATCH `/api/v1/users/students/profile/{id}`
+
+## Important: Profile Completion Requirement
+
+**Students cannot borrow items until they complete their profile.** The system validates that all required fields are filled before allowing a student to create a lent item record.
+
+### Required Fields for Borrowing:
+- ✓ Valid Email (not temporary)
+- ✓ Valid Phone Number (not temporary placeholder)
+- ✓ Student ID Number
+- ✓ Course
+- ✓ Section
+- ✓ Year
+- ✓ Complete Address (Street, City/Municipality, Province, Postal Code)
+- ✓ Front Student ID Picture
+- ✓ Back Student ID Picture
+
+If a student tries to borrow an item without completing their profile, they will receive an error message indicating which fields are missing.

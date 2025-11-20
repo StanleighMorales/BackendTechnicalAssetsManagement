@@ -379,5 +379,102 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return new string(Enumerable.Repeat(chars, 12)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        /// <summary>
+        /// Validates if a student has completed their profile with all required fields
+        /// </summary>
+        public async Task<(bool IsComplete, string ErrorMessage)> ValidateStudentProfileComplete(Guid userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            
+            if (user == null)
+            {
+                return (false, "User not found.");
+            }
+
+            if (user is not Student student)
+            {
+                // Non-students (Teachers, Staff, Admin) are considered complete by default
+                return (true, string.Empty);
+            }
+
+            var missingFields = new List<string>();
+
+            // Check email (not temporary)
+            if (string.IsNullOrWhiteSpace(student.Email) || student.Email.EndsWith("@temporary.com"))
+            {
+                missingFields.Add("Email");
+            }
+
+            // Check phone number (not temporary)
+            if (string.IsNullOrWhiteSpace(student.PhoneNumber) || student.PhoneNumber == "0000000000")
+            {
+                missingFields.Add("Phone Number");
+            }
+
+            // Check student ID
+            if (string.IsNullOrWhiteSpace(student.StudentIdNumber))
+            {
+                missingFields.Add("Student ID Number");
+            }
+
+            // Check course
+            if (string.IsNullOrWhiteSpace(student.Course))
+            {
+                missingFields.Add("Course");
+            }
+
+            // Check section
+            if (string.IsNullOrWhiteSpace(student.Section))
+            {
+                missingFields.Add("Section");
+            }
+
+            // Check year
+            if (string.IsNullOrWhiteSpace(student.Year))
+            {
+                missingFields.Add("Year");
+            }
+
+            // Check address fields
+            if (string.IsNullOrWhiteSpace(student.Street))
+            {
+                missingFields.Add("Street");
+            }
+
+            if (string.IsNullOrWhiteSpace(student.CityMunicipality))
+            {
+                missingFields.Add("City/Municipality");
+            }
+
+            if (string.IsNullOrWhiteSpace(student.Province))
+            {
+                missingFields.Add("Province");
+            }
+
+            if (string.IsNullOrWhiteSpace(student.PostalCode))
+            {
+                missingFields.Add("Postal Code");
+            }
+
+            // Check ID pictures
+            if (student.FrontStudentIdPicture == null || student.FrontStudentIdPicture.Length == 0)
+            {
+                missingFields.Add("Front Student ID Picture");
+            }
+
+            if (student.BackStudentIdPicture == null || student.BackStudentIdPicture.Length == 0)
+            {
+                missingFields.Add("Back Student ID Picture");
+            }
+
+            if (missingFields.Any())
+            {
+                var errorMessage = $"Profile incomplete. Please complete the following fields: {string.Join(", ", missingFields)}";
+                return (false, errorMessage);
+            }
+
+            return (true, string.Empty);
+        }
     }
 }

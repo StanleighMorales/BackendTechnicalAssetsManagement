@@ -173,3 +173,20 @@ Content-Type: image/jpeg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
+
+### Borrow Item (Create Lent Item)
+### NOTE: Students MUST complete their profile before borrowing items
+### Required fields: Email, Phone, StudentID, Course, Section, Year, Address, ID Pictures
+POST {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+  "userId": "user-guid-here",
+  "itemId": "item-guid-here",
+  "teacherId": "teacher-guid-here",
+  "status": "Pending",
+  "remark": "Need for class project"
+}
+
+###

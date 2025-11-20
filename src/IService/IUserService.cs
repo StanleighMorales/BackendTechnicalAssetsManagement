@@ -15,5 +15,6 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId);
         Task<ImportStudentsResponseDto> ImportStudentsFromExcelAsync(IFormFile file);
         Task<bool> CompleteStudentRegistrationAsync(Guid userId, CompleteStudentRegistrationDto dto);
+        Task<(bool IsComplete, string ErrorMessage)> ValidateStudentProfileComplete(Guid userId);
     }
 }

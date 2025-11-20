@@ -19,15 +19,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IUserRepository _userRepository;
         private readonly IItemRepository _itemRepository;
         private readonly IArchiveLentItemsService _archiveLentItemsService;
+        private readonly IUserService _userService;
         private readonly IMapper _mapper;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService)
         {
             _repository = repository;
             _mapper = mapper;
             _userRepository = userRepository;
             _itemRepository = itemRepository;
             _archiveLentItemsService = archiveLentItemsService;
+            _userService = userService;
         }
 
         // Create
@@ -88,6 +90,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
             if (dto.UserId.HasValue)
             {
+                // Validate that the user has completed their profile before allowing them to borrow
+                var (isComplete, errorMessage) = await _userService.ValidateStudentProfileComplete(dto.UserId.Value);
+                if (!isComplete)
+                {
+                    throw new InvalidOperationException($"Cannot borrow item. {errorMessage}");
+                }
+
                 // You need a method in your user repository to get a user by ID.
                 var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
                 if (user != null)
