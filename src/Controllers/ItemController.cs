@@ -91,36 +91,55 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
         [HttpPost("import")]
-        public async Task<IActionResult> ImportItemsFromExcel(IFormFile file)
+        public async Task<ActionResult<ApiResponse<ImportItemsResponseDto>>> ImportItemsFromExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
-                return BadRequest(ApiResponse<object>.FailResponse("No file uploaded."));
+                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("No file uploaded."));
             }
 
             // Validate file extension - only accept .xlsx files
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (fileExtension != ".xlsx")
             {
-                return BadRequest(ApiResponse<object>.FailResponse("Only .xlsx files are allowed for import."));
+                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Only .xlsx files are allowed for import."));
             }
 
             // Validate MIME type as additional security
             var allowedMimeTypes = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
             if (!allowedMimeTypes.Contains(file.ContentType))
             {
-                return BadRequest(ApiResponse<object>.FailResponse("Invalid file type. Only Excel (.xlsx) files are allowed."));
+                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Invalid file type. Only Excel (.xlsx) files are allowed."));
             }
 
             try
             {
-                await _itemService.ImportItemsFromExcelAsync(file);
-                return Ok(ApiResponse<object>.SuccessResponse(null, "Items imported successfully."));
+                var result = await _itemService.ImportItemsFromExcelAsync(file);
+                
+                // Check if no items were imported
+                if (result.SuccessCount == 0)
+                {
+                    var message = result.FailureCount > 0 
+                        ? $"Import failed. No items were imported. {result.FailureCount} row(s) had errors."
+                        : "Import failed. No valid items found in the file.";
+                    
+                    // Return the result data even on failure so frontend can show details
+                    return BadRequest(new ApiResponse<ImportItemsResponseDto>
+                    {
+                        Success = false,
+                        Message = message,
+                        Data = result,
+                        Errors = result.Errors
+                    });
+                }
+                
+                var successMessage = $"Import completed. Success: {result.SuccessCount}, Failed: {result.FailureCount}";
+                return Ok(ApiResponse<ImportItemsResponseDto>.SuccessResponse(result, successMessage));
             }
             catch (Exception ex)
             {
                 // Log the exception (ex) here with a logging framework if you have one.
-                return StatusCode(500, ApiResponse<object>.FailResponse($"An error occurred during the import process: {ex.Message}"));
+                return StatusCode(500, ApiResponse<ImportItemsResponseDto>.FailResponse($"An error occurred during the import process: {ex.Message}"));
             }
         }
 

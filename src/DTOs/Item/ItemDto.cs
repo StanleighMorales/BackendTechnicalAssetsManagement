@@ -21,3 +21,15 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
         public DateTime UpdatedAt { get; set; }
     }
 }
+
+    /// <summary>
+    /// Response DTO for bulk item import containing import results
+    /// </summary>
+    public class ImportItemsResponseDto
+    {
+        public int TotalProcessed { get; set; }
+        public int SuccessCount { get; set; }
+        public int FailureCount { get; set; }
+        public List<string> Errors { get; set; } = new();
+        public List<string> SkippedDuplicates { get; set; } = new();
+    }

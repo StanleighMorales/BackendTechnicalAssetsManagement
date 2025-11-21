@@ -214,11 +214,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// Status column should contain "Available" or "Unavailable" (defaults to Available if not specified)
         /// </summary>
         /// <param name="file">Excel file (.xlsx format only)</param>
-        public async Task ImportItemsFromExcelAsync(IFormFile file)
+        public async Task<ImportItemsResponseDto> ImportItemsFromExcelAsync(IFormFile file)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            var response = new ImportItemsResponseDto();
             var itemsToCreate = new List<Item>();
+            int rowNumber = 1; // Start at 1 for header row
 
             using (var stream = new MemoryStream())
             {
@@ -238,6 +240,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (result.Tables.Count > 0)
                     {
                         var dataTable = result.Tables[0];
+                        response.TotalProcessed = dataTable.Rows.Count;
 
                         // Create a flexible column mapping to handle different header formats
                         var columnMapping = new Dictionary<string, string>();
@@ -272,6 +275,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                         foreach (DataRow row in dataTable.Rows)
                         {
+                            rowNumber++;
                             try
                             {
                                 // --- Data Reading and Validation ---
@@ -280,7 +284,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 // Basic validation: Skip row if essential data like SerialNumber is missing
                                 if (string.IsNullOrWhiteSpace(serialNumber))
                                 {
-                                    // Optional: Log a warning that a row was skipped
+                                    response.FailureCount++;
+                                    response.Errors.Add($"Row {rowNumber}: Missing SerialNumber");
                                     continue;
                                 }
 
@@ -294,7 +299,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 var existingItem = await _itemRepository.GetBySerialNumberAsync(serialNumber);
                                 if (existingItem != null)
                                 {
-                                    // TODO: Log that a duplicate was found and skipped.
+                                    response.FailureCount++;
+                                    response.SkippedDuplicates.Add($"Row {rowNumber}: Item with SerialNumber '{serialNumber}' already exists");
                                     continue; 
                                 }
 
@@ -353,11 +359,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     UpdatedAt = DateTime.Now
                                 };
                                 itemsToCreate.Add(item);
+                                response.SuccessCount++;
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
-                                // Optional: Log an error for the specific row that failed
-                                // and continue processing the rest of the file.
+                                response.FailureCount++;
+                                response.Errors.Add($"Row {rowNumber}: {ex.Message}");
                                 continue;
                             }
                         }
@@ -372,6 +379,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 await _itemRepository.AddRangeAsync(itemsToCreate);
                 await _itemRepository.SaveChangesAsync();
             }
+
+            return response;
         }
 
         /// <summary>

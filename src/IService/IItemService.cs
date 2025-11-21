@@ -18,7 +18,8 @@ namespace BackendTechnicalAssetsManagement.src.IService
         /// Imports items from an Excel (.xlsx) file with automatic GUID and barcode generation.
         /// </summary>
         /// <param name="file">Excel file (.xlsx format only)</param>
-        Task ImportItemsFromExcelAsync(IFormFile file);
+        /// <returns>Import results with success/failure counts and error details</returns>
+        Task<ImportItemsResponseDto> ImportItemsFromExcelAsync(IFormFile file);
 
     }
 }

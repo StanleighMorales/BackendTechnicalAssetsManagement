@@ -302,6 +302,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     continue;
                                 }
 
+                                // Check if student with same name already exists
+                                var allUsers = await _userRepository.GetAllAsync();
+                                var existingStudentByName = allUsers.OfType<Student>().FirstOrDefault(s =>
+                                    s.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
+                                    s.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
+                                    (string.IsNullOrWhiteSpace(middleName) && string.IsNullOrWhiteSpace(s.MiddleName) ||
+                                     !string.IsNullOrWhiteSpace(middleName) && s.MiddleName != null && s.MiddleName.Equals(middleName, StringComparison.OrdinalIgnoreCase)));
+
+                                if (existingStudentByName != null)
+                                {
+                                    response.FailureCount++;
+                                    response.Errors.Add($"Row {rowNumber}: Student with name '{firstName} {middleName} {lastName}' already exists in the database");
+                                    continue;
+                                }
+
                                 // Generate username
                                 var username = GenerateUsername(firstName, lastName, middleName);
                                 
