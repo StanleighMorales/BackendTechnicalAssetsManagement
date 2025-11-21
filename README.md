@@ -15,7 +15,7 @@ The API will be available at: **http://localhost:5278**
 
 ## ✨ Features
 
-- **Item Management**: Track technical assets with serial numbers, barcodes, and images
+- **Item Management**: Track technical assets with serial numbers (auto-uppercase), barcodes, and images
 - **Lending System**: Manage item borrowing and returns with barcode scanning
 - **User Management**: Support for multiple user roles (Admin, Staff, Teacher, Student)
 - **Stock Tracking**: Real-time inventory levels grouped by item name
@@ -196,8 +196,9 @@ Stock counts update automatically when items are borrowed or returned.
 Import multiple items from Excel files with support for:
 - Item details (name, type, make, model)
 - Images (file paths or URLs)
-- Status and condition
+- Condition tracking
 - Automatic barcode generation
+- All imported items automatically set to "Available" status
 
 See [IMPORT_GUIDE.md](IMPORT_GUIDE.md) for Excel format and instructions.
 

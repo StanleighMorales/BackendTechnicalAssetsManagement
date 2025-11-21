@@ -41,6 +41,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new ArgumentException("SerialNumber cannot be empty.");
             }
 
+            // Convert serial number to uppercase
+            createItemDto.SerialNumber = createItemDto.SerialNumber.ToUpperInvariant();
+
             // Check if it already has the prefix (assuming case-insensitivity might be safer)
             if (!createItemDto.SerialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
             {
@@ -67,6 +70,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. MANUALLY SET the auto-generated values on the ENTITY
             newItem.Barcode = barcodeText;
             newItem.BarcodeImage = barcodeImageBytes;
+            newItem.Status = ItemStatus.Available; // Always set to Available for new items
 
             if (createItemDto.Image != null)
             {
@@ -119,7 +123,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (updateItemDto.SerialNumber != null && existingItem.SerialNumber != updateItemDto.SerialNumber)
             {
                 // 1. Update the serial number
-                string newSerialNumber = updateItemDto.SerialNumber;
+                string newSerialNumber = updateItemDto.SerialNumber.ToUpperInvariant();
 
                 // Standardization check
                 if (!newSerialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
@@ -208,10 +212,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
         /// <summary>
         /// Imports items from an Excel (.xlsx) file. Each item will be assigned a new GUID and barcode.
-        /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition, Status, Image
+        /// Expected Excel columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition, Image
         /// The barcode will be generated with format: "ITEM-SN-{SerialNumber}"
         /// Image column can contain file paths or URLs to load images from
-        /// Status column should contain "Available" or "Unavailable" (defaults to Available if not specified)
+        /// All imported items are automatically assigned Status = Available
         /// </summary>
         /// <param name="file">Excel file (.xlsx format only)</param>
         public async Task<ImportItemsResponseDto> ImportItemsFromExcelAsync(IFormFile file)
@@ -265,8 +269,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 columnMapping["Category"] = column.ColumnName;
                             else if (columnName.StartsWith("Condition", StringComparison.OrdinalIgnoreCase))
                                 columnMapping["Condition"] = column.ColumnName;
-                            else if (columnName.StartsWith("Status", StringComparison.OrdinalIgnoreCase))
-                                columnMapping["Status"] = column.ColumnName;
+                            // Status column is ignored - all imported items default to Available
                             else if (columnName.StartsWith("Image", StringComparison.OrdinalIgnoreCase) || 
                                      columnName.StartsWith("ImagePath", StringComparison.OrdinalIgnoreCase) ||
                                      columnName.StartsWith("ImageUrl", StringComparison.OrdinalIgnoreCase))
@@ -279,7 +282,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                             try
                             {
                                 // --- Data Reading and Validation ---
-                                var serialNumber = GetColumnValue(row, columnMapping, "SerialNumber");
+                                var serialNumber = GetColumnValue(row, columnMapping, "SerialNumber")?.Trim();
 
                                 // Basic validation: Skip row if essential data like SerialNumber is missing
                                 if (string.IsNullOrWhiteSpace(serialNumber))
@@ -288,6 +291,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     response.Errors.Add($"Row {rowNumber}: Missing SerialNumber");
                                     continue;
                                 }
+
+                                // Convert serial number to uppercase
+                                serialNumber = serialNumber.ToUpperInvariant();
 
                                 // Add the "SN-" prefix, similar to your CreateItemAsync logic
                                 if (!serialNumber.StartsWith("SN-", StringComparison.OrdinalIgnoreCase))
@@ -332,20 +338,29 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     }
                                 }
 
+                                // Read and normalize all field values (trim whitespace, handle case-insensitivity)
+                                var itemName = GetColumnValue(row, columnMapping, "ItemName")?.Trim() ?? string.Empty;
+                                var itemType = GetColumnValue(row, columnMapping, "ItemType")?.Trim() ?? string.Empty;
+                                var itemModel = GetColumnValue(row, columnMapping, "ItemModel")?.Trim();
+                                var itemMake = GetColumnValue(row, columnMapping, "ItemMake")?.Trim() ?? string.Empty;
+                                var description = GetColumnValue(row, columnMapping, "Description")?.Trim();
+                                var categoryValue = GetColumnValue(row, columnMapping, "Category")?.Trim();
+                                var conditionValue = GetColumnValue(row, columnMapping, "Condition")?.Trim();
+
                                 var item = new Item
                                 {
                                     Id = newItemId, // Use generated GUID
                                     SerialNumber = serialNumber,
-                                    ItemName = GetColumnValue(row, columnMapping, "ItemName") ?? string.Empty,
-                                    ItemType = GetColumnValue(row, columnMapping, "ItemType") ?? string.Empty,
-                                    ItemModel = GetColumnValue(row, columnMapping, "ItemModel"),
-                                    ItemMake = GetColumnValue(row, columnMapping, "ItemMake") ?? string.Empty,
-                                    Description = GetColumnValue(row, columnMapping, "Description"),
+                                    ItemName = itemName,
+                                    ItemType = itemType,
+                                    ItemModel = itemModel,
+                                    ItemMake = itemMake,
+                                    Description = description,
 
-                                    // Enum Parsing with validation
-                                    Category = Enum.TryParse<ItemCategory>(GetColumnValue(row, columnMapping, "Category"), true, out var category) ? category : default,
-                                    Condition = Enum.TryParse<ItemCondition>(GetColumnValue(row, columnMapping, "Condition"), true, out var condition) ? condition : default,
-                                    Status = Enum.TryParse<ItemStatus>(GetColumnValue(row, columnMapping, "Status"), true, out var status) ? status : ItemStatus.Available,
+                                    // Enum Parsing with case-insensitive validation
+                                    Category = Enum.TryParse<ItemCategory>(categoryValue, true, out var category) ? category : default,
+                                    Condition = Enum.TryParse<ItemCondition>(conditionValue, true, out var condition) ? condition : default,
+                                    Status = ItemStatus.Available, // All imported items default to Available
 
                                     // Set image information
                                     Image = imageBytes,
@@ -385,16 +400,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         /// <summary>
         /// Helper method to safely get column values from DataRow using flexible column mapping
+        /// Returns trimmed values with null/whitespace handling
         /// </summary>
         /// <param name="row">The DataRow to read from</param>
         /// <param name="columnMapping">Dictionary mapping logical column names to actual column names</param>
         /// <param name="logicalColumnName">The logical column name to retrieve</param>
-        /// <returns>The column value as string, or null if not found</returns>
+        /// <returns>The column value as string (trimmed), or null if not found or empty</returns>
         private static string? GetColumnValue(DataRow row, Dictionary<string, string> columnMapping, string logicalColumnName)
         {
             if (columnMapping.TryGetValue(logicalColumnName, out var actualColumnName))
             {
-                return row[actualColumnName]?.ToString();
+                var value = row[actualColumnName]?.ToString()?.Trim();
+                return string.IsNullOrWhiteSpace(value) ? null : value;
             }
             return null;
         }
