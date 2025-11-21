@@ -230,35 +230,36 @@ builder.Services.AddAuthServices(builder.Configuration);
 #region CORS Configuration
 /// <summary>
 /// Configure Cross-Origin Resource Sharing (CORS) policies for frontend applications
-/// Supports both production origins (from config) and development localhost origins
+/// Unified policy supports production origins, localhost, and mobile emulators (10.0.2.2)
 /// </summary>
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
-if (allowedOrigins != null)
+builder.Services.AddCors(options =>
 {
-    builder.Services.AddCors(options =>
+    // Unified policy for all frontends (React, Flutter, mobile)
+    options.AddPolicy("AllowFrontends", policy =>
     {
-        // Policy for production React/web applications
-        options.AddPolicy("AllowReactApp", policy =>
+        // Allow configured production origins if they exist
+        if (allowedOrigins != null && allowedOrigins.Length > 0)
         {
-            policy.WithOrigins(allowedOrigins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials(); // Required for JWT cookies/auth headers
-        });
+            policy.WithOrigins(allowedOrigins);
+        }
         
-        // Policy for Flutter development (allows any localhost/127.0.0.1 origin)
-        options.AddPolicy("AllowFlutterDev", policy =>
+        // Allow localhost, 127.0.0.1, and Android emulator (10.0.2.2)
+        policy.SetIsOriginAllowed(origin =>
         {
-            policy.SetIsOriginAllowed(origin =>
-                    new Uri(origin).Host == "localhost" || 
-                    new Uri(origin).Host == "127.0.0.1")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
+            var uri = new Uri(origin);
+            return uri.Host == "localhost" ||
+                   uri.Host == "127.0.0.1" ||
+                   origin.StartsWith("http://10.0.2.2") ||
+                   origin.StartsWith("https://10.0.2.2") ||
+                   (allowedOrigins != null && allowedOrigins.Contains(origin));
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials(); // Required for JWT cookies/auth headers
     });
-}
+});
 #endregion
 
 #region Application Pipeline Configuration
@@ -309,10 +310,10 @@ app.UseMiddleware<GlobalExceptionHandler>();
 
 #region CORS Middleware
 /// <summary>
-/// Apply CORS policies to allow frontend applications to access the API
+/// Apply CORS policy to allow all frontend applications to access the API
+/// Single policy handles React, Flutter, mobile emulators, and production origins
 /// </summary>
-app.UseCors("AllowReactApp");    // For production web applications
-app.UseCors("AllowFlutterDev");  // For Flutter development
+app.UseCors("AllowFrontends");
 #endregion
 
 #region Static Files & Authentication
