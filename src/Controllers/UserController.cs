@@ -256,4 +256,29 @@ public class UserController : ControllerBase
             return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
         }
     }
+
+    /// <summary>
+    /// Retrieves a student's details by their student ID number.
+    /// Access is restricted to users with 'Admin' or 'Staff' roles.
+    /// </summary>
+    [HttpGet("students/by-id-number/{studentIdNumber}")]
+    [Authorize(Policy = "AdminOrStaff")]
+    public async Task<ActionResult<ApiResponse<object>>> GetStudentByIdNumber(string studentIdNumber)
+    {
+        try
+        {
+            var student = await _userService.GetStudentByIdNumberAsync(studentIdNumber);
+            
+            if (student == null)
+            {
+                return NotFound(ApiResponse<object>.FailResponse("Student not found."));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(student, "Student retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
+        }
+    }
 }

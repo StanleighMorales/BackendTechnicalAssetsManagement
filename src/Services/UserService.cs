@@ -491,5 +491,59 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             return (true, string.Empty);
         }
+
+        /// <summary>
+        /// Retrieves a student by their student ID number
+        /// </summary>
+        public async Task<object?> GetStudentByIdNumberAsync(string studentIdNumber)
+        {
+            if (string.IsNullOrWhiteSpace(studentIdNumber))
+            {
+                return null;
+            }
+
+            var users = await _userRepository.GetAllAsync();
+            var student = users.OfType<Student>()
+                .FirstOrDefault(s => s.StudentIdNumber == studentIdNumber);
+
+            if (student == null)
+            {
+                return null;
+            }
+
+            // Convert front and back ID pictures to base64 strings if they exist
+            string? frontIdPictureBase64 = null;
+            string? backIdPictureBase64 = null;
+
+            if (student.FrontStudentIdPicture != null && student.FrontStudentIdPicture.Length > 0)
+            {
+                frontIdPictureBase64 = $"data:image/jpeg;base64,{Convert.ToBase64String(student.FrontStudentIdPicture)}";
+            }
+
+            if (student.BackStudentIdPicture != null && student.BackStudentIdPicture.Length > 0)
+            {
+                backIdPictureBase64 = $"data:image/jpeg;base64,{Convert.ToBase64String(student.BackStudentIdPicture)}";
+            }
+
+            return new
+            {
+                Id = student.Id,
+                FirstName = student.FirstName,
+                MiddleName = student.MiddleName,
+                LastName = student.LastName,
+                StudentIdNumber = student.StudentIdNumber,
+                Course = student.Course,
+                Section = student.Section,
+                Year = student.Year,
+                Street = student.Street,
+                Province = student.Province,
+                PostalCode = student.PostalCode,
+                CityMunicipality = student.CityMunicipality,
+                Email = student.Email,
+                PhoneNumber = student.PhoneNumber,
+                FrontIdPicture = frontIdPictureBase64,
+                BackIdPicture = backIdPictureBase64
+            };
+        }
     }
 }

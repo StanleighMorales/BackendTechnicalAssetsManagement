@@ -20,6 +20,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
                     src.BarcodeImage != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
+                    null))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.User != null && src.User.GetType() == typeof(Student) && ((Student)src.User).FrontStudentIdPicture != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(((Student)src.User).FrontStudentIdPicture)}" :
                     null));
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>()

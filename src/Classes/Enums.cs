@@ -9,9 +9,9 @@
 
         public enum UserRole { SuperAdmin, Admin, Staff, Teacher, Student }
 
-        public enum  LentItemsStatus { Pending, Reserved, Canceled, Borrowed, Returned }
+        public enum  LentItemsStatus { Pending, Reserved, Approved, Canceled, Borrowed, Returned }
 
-        public enum ItemStatus { Available, Reserved, Unavailable }
+        public enum ItemStatus { Available, Borrowed, Reserved, Unavailable }
 
     }
 }

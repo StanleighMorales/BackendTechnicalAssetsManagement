@@ -113,6 +113,35 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(successResponse);
         }
 
+        // GET: api/v1/lentitems/barcode/{barcode}
+        [HttpGet("barcode/{barcode}")]
+        [Authorize(Policy = "AdminOrStaff")]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByBarcode(string barcode)
+        {
+            const string prefix = "LENT-";
+
+            // Validate that the barcode starts with the expected prefix and follows the correct format
+            if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+            }
+
+            // Additional validation for the complete format: LENT-YYYYMMDD-XXX
+            if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
+            {
+                return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+            }
+
+            var item = await _service.GetByBarcodeAsync(barcode);
+            if (item == null)
+            {
+                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Lent item not found.");
+                return NotFound(errorResponse);
+            }
+            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Lent item retrieved successfully.");
+            return Ok(successResponse);
+        }
+
         // PATCH: api/v1/lentitems/{id}
         [HttpPatch("{id}")]
         [Authorize(Policy = "AdminOrStaff")]

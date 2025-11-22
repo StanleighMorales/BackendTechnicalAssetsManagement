@@ -13,6 +13,7 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Read
             Task<IEnumerable<LentItemsDto>> GetAllAsync();
             Task<LentItemsDto?> GetByIdAsync(Guid id);
+            Task<LentItemsDto?> GetByBarcodeAsync(string barcode);
             Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime);
 
             /// <summary>

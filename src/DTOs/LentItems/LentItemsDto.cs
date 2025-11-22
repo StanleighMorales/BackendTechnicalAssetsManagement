@@ -14,6 +14,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
 
         public string BorrowerFullName { get; set; } = string.Empty;
         public string BorrowerRole { get; set; } = string.Empty;
+        public string? StudentIdNumber { get; set; }
         public string? TeacherFullName { get; set; }
 
         public string Room { get; set; } = string.Empty;
@@ -38,6 +39,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
 
         public string? Barcode { get; set; }
         public string? BarcodeImage { get; set; }
+        
+        public string? FrontStudentIdPicture { get; set; }
     }
 
 }

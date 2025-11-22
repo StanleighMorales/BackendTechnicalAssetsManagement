@@ -42,6 +42,41 @@ Accept: application/json
 
 ###
 
+#### Get Lent Item by Barcode
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/barcode/LENT-20251101-003
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+#### Test with invalid barcode format for GET
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/barcode/INVALID-BARCODE
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+#### Test with non-existent barcode for GET
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/barcode/LENT-20251101-999
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+#### Get Student by ID Number
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/users/students/by-id-number/STU001
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
+#### Test with non-existent student ID
+GET {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/users/students/by-id-number/NONEXISTENT
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+
+###
+
 #### Scan LentItem Barcode to Update Status
 PATCH {{BackendTechnicalAssetsManagement_HostAddress}}/api/v1/lentItems/scan/LENT-20251101-003
 Authorization: Bearer {your-jwt-token}

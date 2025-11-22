@@ -254,6 +254,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return _mapper.Map<LentItemsDto?>(item);
         }
 
+        public async Task<LentItemsDto?> GetByBarcodeAsync(string barcode)
+        {
+            var item = await _repository.GetByBarcodeAsync(barcode);
+            return _mapper.Map<LentItemsDto?>(item);
+        }
+
         public async Task<IEnumerable<LentItemsDto>> GetByDateTimeAsync(DateTime dateTime)
         {
             var items = await _repository.GetByDateTime(dateTime);
