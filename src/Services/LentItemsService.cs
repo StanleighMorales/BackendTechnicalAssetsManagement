@@ -101,6 +101,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
                 if (user != null)
                 {
+                    // Check borrowing limit for Teachers and Students
+                    if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
+                    {
+                        var allLentItems = await _repository.GetAllAsync();
+                        var activeBorrowedCount = allLentItems.Count(li => 
+                            li.UserId == dto.UserId.Value && 
+                            (li.Status == "Pending" || li.Status == "Borrowed"));
+                        
+                        if (activeBorrowedCount >= 3)
+                        {
+                            throw new InvalidOperationException($"Borrowing limit reached. {user.UserRole}s can only have a maximum of 3 active borrowed items.");
+                        }
+                    }
+
                     lentItem.BorrowerFullName = $"{user.FirstName} {user.LastName}";
                     lentItem.BorrowerRole = user.UserRole.ToString();
 
@@ -173,6 +187,38 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (dto.BorrowerRole != null && dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase))
             {
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
+            }
+
+            // Check borrowing limit for guest Teachers and Students based on StudentIdNumber
+            if (dto.BorrowerRole != null && 
+                (dto.BorrowerRole.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || 
+                 dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase)))
+            {
+                var allLentItems = await _repository.GetAllAsync();
+                
+                // For guests, we track by StudentIdNumber (for students) or by full name (for teachers)
+                int activeBorrowedCount;
+                if (dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(dto.StudentIdNumber))
+                {
+                    activeBorrowedCount = allLentItems.Count(li => 
+                        li.StudentIdNumber == dto.StudentIdNumber && 
+                        (li.Status == "Pending" || li.Status == "Borrowed"));
+                }
+                else
+                {
+                    // For guest teachers, track by full name
+                    var guestFullName = $"{dto.BorrowerFirstName} {dto.BorrowerLastName}";
+                    activeBorrowedCount = allLentItems.Count(li => 
+                        li.BorrowerFullName == guestFullName && 
+                        li.BorrowerRole == dto.BorrowerRole &&
+                        li.UserId == null && // Ensure it's a guest record
+                        (li.Status == "Pending" || li.Status == "Borrowed"));
+                }
+                
+                if (activeBorrowedCount >= 3)
+                {
+                    throw new InvalidOperationException($"Borrowing limit reached. {dto.BorrowerRole}s can only have a maximum of 3 active borrowed items.");
+                }
             }
 
             // Update the corresponding item status based on lent item status

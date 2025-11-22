@@ -94,9 +94,9 @@ builder.Services.AddSingleton<IAuthorizationHandler, ViewProfileHandler>();
 // Define authorization policies
 builder.Services.AddAuthorization(options =>
 {
-    // Policy for operations requiring Admin or Staff roles
+    // Policy for operations requiring Admin, SuperAdmin, or Staff roles
     options.AddPolicy("AdminOrStaff", policy =>
-        policy.RequireRole("Admin", "Staff"));
+        policy.RequireRole("Admin", "SuperAdmin", "Staff"));
 });
 #endregion
 #region API Documentation (Swagger/OpenAPI)
