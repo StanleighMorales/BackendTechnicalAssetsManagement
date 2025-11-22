@@ -31,18 +31,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var allUsers = await _userRepository.GetAllAsync();
             var allCategories = Enum.GetValues(typeof(ItemCategory)).Cast<ItemCategory>();
 
-            // Calculate stock information
+            // Calculate stock information grouped by ItemType
             var itemStocks = allItems
-                .GroupBy(i => new { i.ItemName, i.ItemType })
+                .GroupBy(i => i.ItemType)
                 .Select(g => new ItemStockDto
                 {
-                    ItemName = g.Key.ItemName,
-                    ItemType = g.Key.ItemType,
+                    ItemType = g.Key,
                     TotalCount = g.Count(),
                     AvailableCount = g.Count(i => i.Status == ItemStatus.Available),
                     BorrowedCount = g.Count(i => i.Status == ItemStatus.Unavailable)
                 })
-                .OrderBy(s => s.ItemName)
+                .OrderBy(s => s.ItemType)
                 .ToList();
 
             return new SummaryDto

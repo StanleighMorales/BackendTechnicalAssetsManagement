@@ -30,7 +30,7 @@
         public int? TotalItemsCategories { get; set; }
 
         /// <summary>
-        /// Stock information for all items grouped by name.
+        /// Stock information for all items grouped by type.
         /// </summary>
         public List<ItemStockDto>? ItemStocks { get; set; }
     }
@@ -153,16 +153,10 @@
     }
 
     /// <summary>
-    /// Represents stock information for a specific item grouped by name.
+    /// Represents stock information for a specific item grouped by type.
     /// </summary>
     public class ItemStockDto
     {
-        /// <summary>
-        /// The name of the item.
-        /// </summary>
-        /// <example>HDMI Cable</example>
-        public string ItemName { get; set; } = string.Empty;
-
         /// <summary>
         /// The type of the item.
         /// </summary>
@@ -170,7 +164,7 @@
         public string ItemType { get; set; } = string.Empty;
 
         /// <summary>
-        /// The total count of this item (all statuses).
+        /// The total count of this item type (all statuses).
         /// </summary>
         /// <example>10</example>
         public int TotalCount { get; set; }
@@ -194,18 +188,18 @@
     public class ItemStockSummary
     {
         /// <summary>
-        /// List of stock information grouped by item name.
+        /// List of stock information grouped by item type.
         /// </summary>
         public List<ItemStockDto> ItemStocks { get; set; } = new List<ItemStockDto>();
 
         /// <summary>
-        /// Total number of unique item names in the system.
+        /// Total number of unique item types in the system.
         /// </summary>
         /// <example>25</example>
         public int TotalUniqueItems { get; set; }
 
         /// <summary>
-        /// Total count of all items across all names.
+        /// Total count of all items across all types.
         /// </summary>
         /// <example>150</example>
         public int TotalItemsCount { get; set; }
