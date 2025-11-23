@@ -338,9 +338,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     var item = await _itemRepository.GetByIdAsync(entity.ItemId);
                     if (item != null)
                     {
-                        // Check if item condition is broken when trying to borrow or set to pending
+                        // Check if item condition is broken when trying to borrow, approve, or set to pending
                         if ((newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) || 
-                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)) &&
+                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
+                             newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase)) &&
                             (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair))
                         {
                             throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
@@ -348,10 +349,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                         // Check if trying to set an active status on an item that's already unavailable
                         if ((newStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) || 
-                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)) && 
+                             newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
+                             newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase)) && 
                             item.Status == ItemStatus.Unavailable && 
                             !oldStatus.Equals("Borrowed", StringComparison.OrdinalIgnoreCase) &&
-                            !oldStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                            !oldStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) &&
+                            !oldStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                         {
                             throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
                         }
@@ -362,6 +365,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                             item.Status = ItemStatus.Unavailable;
                             item.UpdatedAt = DateTime.Now;
                             entity.LentAt = DateTime.Now;
+                        }
+                        else if (newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Unavailable;
+                            item.UpdatedAt = DateTime.Now;
+                            entity.LentAt = null;
                         }
                         else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         {
@@ -376,6 +385,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                             entity.ReturnedAt = DateTime.Now;
                         }
                         else if (newStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
+                        {
+                            item.Status = ItemStatus.Available;
+                            item.UpdatedAt = DateTime.Now;
+                            entity.LentAt = null;
+                        }
+                        else if (newStatus.Equals("Denied", StringComparison.OrdinalIgnoreCase))
                         {
                             item.Status = ItemStatus.Available;
                             item.UpdatedAt = DateTime.Now;
@@ -431,8 +446,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var item = await _itemRepository.GetByIdAsync(entity.ItemId);
             if (item != null)
             {
-                // Check if item condition is broken when trying to borrow or set to pending
-                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending) &&
+                // Check if item condition is broken when trying to borrow, approve, or set to pending
+                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending || dto.LentItemsStatus == LentItemsStatus.Approved) &&
                     (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair))
                 {
                     throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
@@ -440,10 +455,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                 // Check if trying to set an active status on an item that's already unavailable
                 // (unless it's already in an active status by this same lent item)
-                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending) && 
+                if ((dto.LentItemsStatus == LentItemsStatus.Borrowed || dto.LentItemsStatus == LentItemsStatus.Pending || dto.LentItemsStatus == LentItemsStatus.Approved) && 
                     item.Status == ItemStatus.Unavailable && 
                     entity.Status != LentItemsStatus.Borrowed.ToString() &&
-                    entity.Status != LentItemsStatus.Pending.ToString())
+                    entity.Status != LentItemsStatus.Pending.ToString() &&
+                    entity.Status != LentItemsStatus.Approved.ToString())
                 {
                     throw new InvalidOperationException($"Item '{item.ItemName}' is already unavailable and cannot be lent.");
                 }
@@ -462,6 +478,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
                 }
+                // For Approved, keep item as Unavailable (approved but not yet picked up)
+                else if (dto.LentItemsStatus == LentItemsStatus.Approved)
+                {
+                    item.Status = ItemStatus.Unavailable;
+                    item.UpdatedAt = DateTime.Now;
+                    await _itemRepository.UpdateAsync(item);
+                }
                 // For Pending, set item to Unavailable (reserved)
                 else if (dto.LentItemsStatus == LentItemsStatus.Pending)
                 {
@@ -471,6 +494,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
                 // For Canceled, set item back to Available
                 else if (dto.LentItemsStatus == LentItemsStatus.Canceled)
+                {
+                    item.Status = ItemStatus.Available;
+                    item.UpdatedAt = DateTime.Now;
+                    await _itemRepository.UpdateAsync(item);
+                }
+                // For Denied, set item back to Available
+                else if (dto.LentItemsStatus == LentItemsStatus.Denied)
                 {
                     item.Status = ItemStatus.Available;
                     item.UpdatedAt = DateTime.Now;
@@ -491,9 +521,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 // Set the LentAt time to the current server UTC time
                 entity.LentAt = scanTimestamp;
             }
-            else if (dto.LentItemsStatus == LentItemsStatus.Pending || dto.LentItemsStatus == LentItemsStatus.Canceled)
+            else if (dto.LentItemsStatus == LentItemsStatus.Pending || dto.LentItemsStatus == LentItemsStatus.Approved || dto.LentItemsStatus == LentItemsStatus.Canceled || dto.LentItemsStatus == LentItemsStatus.Denied)
             {
-                // Clear LentAt when status changes to Pending or Canceled
+                // Clear LentAt when status changes to Pending, Approved, Canceled, or Denied
                 entity.LentAt = null;
             }
 
