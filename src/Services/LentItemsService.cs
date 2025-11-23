@@ -121,6 +121,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     if (user is Student student)
                     {
                         lentItem.StudentIdNumber = student.StudentIdNumber;
+                        lentItem.FrontStudentIdPicture = student.FrontStudentIdPicture;
                     }
                 }
                 else

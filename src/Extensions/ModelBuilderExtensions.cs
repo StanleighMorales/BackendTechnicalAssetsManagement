@@ -17,7 +17,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             byte[]? mockImageBytes = File.Exists(imagePath) ? File.ReadAllBytes(imagePath) : null;
 
             // ===============================
-            // SECTION 1 — PREPARE ALL USERS
+            // SECTION 1 ï¿½ PREPARE ALL USERS
             // ===============================
 
             // --- Base Users (Admins) ---
@@ -72,7 +72,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             }
 
             // ===============================
-            // SECTION 2 — COMMIT USERS TO DATABASE
+            // SECTION 2 ï¿½ COMMIT USERS TO DATABASE
             // ===============================
             modelBuilder.Entity<User>().HasData(users);
             modelBuilder.Entity<Staff>().HasData(staff);
@@ -80,7 +80,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             modelBuilder.Entity<Student>().HasData(students);
 
             // ===============================
-            // SECTION 3 — SEED ITEMS
+            // SECTION 3 ï¿½ SEED ITEMS
             // ===============================
             var item1Id = Guid.NewGuid();
             var item2Id = Guid.NewGuid();
@@ -253,7 +253,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             );
 
             // ===============================
-            // SECTION 4 — SEED LENT ITEMS (Referencing the users created above)
+            // SECTION 4 ï¿½ SEED LENT ITEMS (Referencing the users created above)
             // ===============================
             var lentDate1 = now.AddDays(-5);
             var lentDate2 = now.AddDays(-10);

@@ -36,6 +36,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? Barcode { get; set; }
         public byte[]? BarcodeImage { get; set; }
 
+        public byte[]? FrontStudentIdPicture { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

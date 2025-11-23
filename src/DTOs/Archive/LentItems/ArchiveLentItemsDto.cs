@@ -39,5 +39,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Archive.LentItems
 
         public string? Barcode { get; set; }
         public string? BarcodeImage { get; set; }
+
+        public string? FrontStudentIdPicture { get; set; }
     }
 }

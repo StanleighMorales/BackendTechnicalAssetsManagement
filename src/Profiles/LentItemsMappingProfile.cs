@@ -21,10 +21,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                     src.BarcodeImage != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
                     null))
-                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
-                    src.User != null && src.User.GetType() == typeof(Student) && ((Student)src.User).FrontStudentIdPicture != null ?
-                    $"data:image/png;base64,{Convert.ToBase64String(((Student)src.User).FrontStudentIdPicture)}" :
-                    null));
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom<FrontStudentIdPictureResolver>());
             // DTO -> Entity (for create)
             CreateMap<CreateLentItemDto, LentItems>()
                 .ForMember(dest => dest.BarcodeImage, opt => opt.Ignore())
@@ -42,6 +39,18 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<CreateLentItemsForGuestDto, LentItems>();
+        }
+    }
+
+    public class FrontStudentIdPictureResolver : IValueResolver<LentItems, LentItemsDto, string?>
+    {
+        public string? Resolve(LentItems source, LentItemsDto destination, string? destMember, ResolutionContext context)
+        {
+            if (source.FrontStudentIdPicture != null)
+            {
+                return $"data:image/png;base64,{Convert.ToBase64String(source.FrontStudentIdPicture)}";
+            }
+            return null;
         }
     }
 }

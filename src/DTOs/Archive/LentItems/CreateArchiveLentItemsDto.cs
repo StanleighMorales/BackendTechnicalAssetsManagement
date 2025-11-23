@@ -33,5 +33,7 @@
         public string? Barcode { get; set; }
         public byte[]? BarcodeImage { get; set; }
 
+        public byte[]? FrontStudentIdPicture { get; set; }
+
     }
 }

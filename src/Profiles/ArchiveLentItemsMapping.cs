@@ -47,6 +47,10 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
                     src.BarcodeImage != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
+                    null))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
+                    src.FrontStudentIdPicture != null ?
+                    $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" :
                     null));
 
             // Map for Response after Restoration (Active Entity -> Archive DTO)
@@ -56,10 +60,23 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BarcodeImage, opt => opt.MapFrom(src =>
                     src.BarcodeImage != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.BarcodeImage)}" :
-                    null));
+                    null))
+                .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom<ArchiveFrontStudentIdPictureResolver>());
 
             // Map for converting a retrieved Archive DTO into a Create DTO (for internal/update use)
             CreateMap<ArchiveLentItems, CreateArchiveLentItemsDto>();
+        }
+    }
+
+    public class ArchiveFrontStudentIdPictureResolver : IValueResolver<LentItems, ArchiveLentItemsDto, string?>
+    {
+        public string? Resolve(LentItems source, ArchiveLentItemsDto destination, string? destMember, ResolutionContext context)
+        {
+            if (source.FrontStudentIdPicture != null)
+            {
+                return $"data:image/png;base64,{Convert.ToBase64String(source.FrontStudentIdPicture)}";
+            }
+            return null;
         }
     }
 }
