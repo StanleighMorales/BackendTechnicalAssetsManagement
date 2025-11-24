@@ -109,7 +109,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
                     Description = "10-foot HDMI cable for display connections.", 
                     Category = ItemCategory.Electronics, 
                     Condition = ItemCondition.Good, 
-                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Status = ItemStatus.Borrowed, // Currently borrowed
                     Image = mockImageBytes,
                     ImageMimeType = "image/png",
                     Barcode = barcode1,
@@ -128,7 +128,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
                     Description = "Wireless microphone for presentations.", 
                     Category = ItemCategory.MediaEquipment, 
                     Condition = ItemCondition.Good, 
-                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Status = ItemStatus.Borrowed, // Currently borrowed
                     Image = mockImageBytes,
                     ImageMimeType = "image/png",
                     Barcode = BarcodeGenerator.GenerateItemBarcode("SN-MIC-002"),
@@ -166,7 +166,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
                     Description = "Ergonomic wireless mouse.", 
                     Category = ItemCategory.Electronics, 
                     Condition = ItemCondition.Good, 
-                    Status = ItemStatus.Unavailable, // Currently borrowed
+                    Status = ItemStatus.Borrowed, // Currently borrowed
                     Image = mockImageBytes,
                     ImageMimeType = "image/png",
                     Barcode = BarcodeGenerator.GenerateItemBarcode("SN-MOUSE-004"),

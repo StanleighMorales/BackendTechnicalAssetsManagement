@@ -187,7 +187,7 @@ The system automatically tracks inventory levels for items with the same name:
 **Example**: If you have 10 "HDMI Cable" items with unique serial numbers:
 - Total: 10
 - Available: 7 (Status = Available)
-- Borrowed: 3 (Status = Unavailable)
+- Borrowed: 3 (Status = Borrowed)
 
 Stock counts update automatically when items are borrowed or returned.
 

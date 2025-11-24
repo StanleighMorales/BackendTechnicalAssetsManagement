@@ -176,7 +176,7 @@
         public int AvailableCount { get; set; }
 
         /// <summary>
-        /// The count of unavailable items (currently borrowed).
+        /// The count of borrowed items (currently borrowed).
         /// </summary>
         /// <example>3</example>
         public int BorrowedCount { get; set; }

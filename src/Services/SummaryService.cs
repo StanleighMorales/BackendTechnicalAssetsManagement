@@ -39,7 +39,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     ItemType = g.Key,
                     TotalCount = g.Count(),
                     AvailableCount = g.Count(i => i.Status == ItemStatus.Available),
-                    BorrowedCount = g.Count(i => i.Status == ItemStatus.Unavailable)
+                    BorrowedCount = g.Count(i => i.Status == ItemStatus.Borrowed)
                 })
                 .OrderBy(s => s.ItemType)
                 .ToList();
