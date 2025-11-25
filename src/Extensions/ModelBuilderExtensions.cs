@@ -14,7 +14,17 @@ namespace BackendTechnicalAssetsManagement.src.Data
             
             // Load mock image for items and users
             string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "mockImage.png");
-            byte[]? mockImageBytes = File.Exists(imagePath) ? File.ReadAllBytes(imagePath) : null;
+            byte[]? mockImageBytes = null;
+            
+            if (File.Exists(imagePath))
+            {
+                mockImageBytes = File.ReadAllBytes(imagePath);
+                Console.WriteLine($"✓ Loaded mock image: {mockImageBytes.Length} bytes");
+            }
+            else
+            {
+                Console.WriteLine($"⚠ Warning: Mock image not found at {imagePath}");
+            }
 
             // ===============================
             // SECTION 1 � PREPARE ALL USERS
@@ -32,44 +42,39 @@ namespace BackendTechnicalAssetsManagement.src.Data
                     Email = "superadmin@example.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword),
                     UserRole = UserRole.SuperAdmin,
+                    PhoneNumber = "09171234567",
                     Status = "Offline"
-                }
+                },
+                new User { Id = Guid.NewGuid(), FirstName = "Maria", LastName = "Santos", Username = "msantos", Email = "maria.santos@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Admin, PhoneNumber = "09181234567", Status = "Offline" },
+                new User { Id = Guid.NewGuid(), FirstName = "Juan", LastName = "Dela Cruz", Username = "jdelacruz", Email = "juan.delacruz@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Admin, PhoneNumber = "09191234567", Status = "Offline" },
+                new User { Id = Guid.NewGuid(), FirstName = "Ana", LastName = "Reyes", Username = "areyes", Email = "ana.reyes@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Admin, PhoneNumber = "09201234567", Status = "Offline" }
             };
-            for (int i = 1; i <= 5; i++)
-            {
-                users.Add(new User { Id = Guid.NewGuid(), FirstName = $"Admin{i}", LastName = "User", Username = $"admin{i}", Email = $"admin{i}@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Admin, Status = "Offline" });
-            }
 
             // --- Staff ---
-            var staff = new List<Staff>();
-            for (int i = 1; i <= 5; i++)
+            var staff = new List<Staff>
             {
-                staff.Add(new Staff { Id = Guid.NewGuid(), FirstName = $"Staff{i}", LastName = "Doe", Username = $"staff{i}", Email = $"staff{i}@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Staff, Position = "Lab Technician", PhoneNumber = $"0998{i}76543", Status = "Offline" });
-            }
+                new Staff { Id = Guid.NewGuid(), FirstName = "Carlos", LastName = "Mendoza", Username = "cmendoza", Email = "carlos.mendoza@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Staff, Position = "Lab Technician", PhoneNumber = "09981234567", Status = "Offline" },
+                new Staff { Id = Guid.NewGuid(), FirstName = "Rosa", LastName = "Garcia", Username = "rgarcia", Email = "rosa.garcia@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Staff, Position = "Equipment Manager", PhoneNumber = "09982234567", Status = "Offline" },
+                new Staff { Id = Guid.NewGuid(), FirstName = "Miguel", LastName = "Torres", Username = "mtorres", Email = "miguel.torres@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Staff, Position = "IT Support", PhoneNumber = "09983234567", Status = "Offline" }
+            };
 
             // --- Teachers (including the specific ones we need for LentItems) ---
-            var teachers = new List<Teacher>();
-            var teacher1 = new Teacher { Id = Guid.NewGuid(), FirstName = "Alice", LastName = "Williams", Username = "alicewilliams", Email = "alice.williams@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Information Technology", PhoneNumber = $"0917123456", Status = "Offline" };
-            var teacher2 = new Teacher { Id = Guid.NewGuid(), FirstName = "Bob", LastName = "Brown", Username = "bobbrown", Email = "bob.brown@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Information Technology", PhoneNumber = $"0917223456", Status = "Offline" };
-            teachers.Add(teacher1);
-            teachers.Add(teacher2);
-            for (int i = 3; i <= 5; i++) // Add a few more generic teachers
-            {
-                teachers.Add(new Teacher { Id = Guid.NewGuid(), FirstName = $"Teacher{i}", LastName = "Smith", Username = $"teacher{i}", Email = $"teacher{i}@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Information Technology", PhoneNumber = $"0917{i}23456", Status = "Offline" });
-            }
+            var teacher1 = new Teacher { Id = Guid.NewGuid(), FirstName = "Alice", LastName = "Williams", Username = "awilliams", Email = "alice.williams@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Information Technology", PhoneNumber = "09171234567", Status = "Offline" };
+            var teacher2 = new Teacher { Id = Guid.NewGuid(), FirstName = "Roberto", LastName = "Cruz", Username = "rcruz", Email = "roberto.cruz@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Computer Science", PhoneNumber = "09172234567", Status = "Offline" };
+            var teacher3 = new Teacher { Id = Guid.NewGuid(), FirstName = "Elena", LastName = "Fernandez", Username = "efernandez", Email = "elena.fernandez@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Information Technology", PhoneNumber = "09173234567", Status = "Offline" };
+            var teacher4 = new Teacher { Id = Guid.NewGuid(), FirstName = "David", LastName = "Ramos", Username = "dramos", Email = "david.ramos@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Teacher, Department = "Multimedia Arts", PhoneNumber = "09174234567", Status = "Offline" };
+            
+            var teachers = new List<Teacher> { teacher1, teacher2, teacher3, teacher4 };
 
             // --- Students (including the specific ones we need for LentItems) ---
-            var students = new List<Student>();
-            var student1 = new Student { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Username = "johndoe", Email = "john.doe@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "S2021-001", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = $"0912134567", Status = "Offline", ProfilePicture = mockImageBytes };
-            var student2 = new Student { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Smith", Username = "janesmith", Email = "jane.smith@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "S2021-002", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = $"0912234567", Status = "Offline", ProfilePicture = mockImageBytes };
-            var student3 = new Student { Id = Guid.NewGuid(), FirstName = "Peter", LastName = "Jones", Username = "peterjones", Email = "peter.jones@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "S2021-003", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = $"0912334567", Status = "Offline", ProfilePicture = mockImageBytes };
-            students.Add(student1);
-            students.Add(student2);
-            students.Add(student3);
-            for (int i = 4; i <= 5; i++) // Add a few more generic students
-            {
-                students.Add(new Student { Id = Guid.NewGuid(), FirstName = $"Student{i}", LastName = "Jones", Username = $"student{i}", Email = $"student{i}@example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = $"2023-000{i}", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = $"0912{i}34567", Status = "Offline", ProfilePicture = mockImageBytes });
-            }
+            var student1 = new Student { Id = Guid.NewGuid(), FirstName = "John", LastName = "Doe", Username = "jdoe", Email = "john.doe@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2023-0001", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = "09121234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "123 Main St", CityMunicipality = "Manila", Province = "Metro Manila", PostalCode = "1000" };
+            var student2 = new Student { Id = Guid.NewGuid(), FirstName = "Jane", LastName = "Smith", Username = "jsmith", Email = "jane.smith@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2023-0002", Course = "Information Technology", Year = "2", Section = "B", PhoneNumber = "09122234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "456 Oak Ave", CityMunicipality = "Quezon City", Province = "Metro Manila", PostalCode = "1100" };
+            var student3 = new Student { Id = Guid.NewGuid(), FirstName = "Peter", LastName = "Jones", Username = "pjones", Email = "peter.jones@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2023-0003", Course = "Computer Science", Year = "3", Section = "A", PhoneNumber = "09123234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "789 Pine Rd", CityMunicipality = "Makati", Province = "Metro Manila", PostalCode = "1200" };
+            var student4 = new Student { Id = Guid.NewGuid(), FirstName = "Maria", LastName = "Lopez", Username = "mlopez", Email = "maria.lopez@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2023-0004", Course = "Multimedia Arts", Year = "1", Section = "C", PhoneNumber = "09124234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "321 Elm St", CityMunicipality = "Pasig", Province = "Metro Manila", PostalCode = "1600" };
+            var student5 = new Student { Id = Guid.NewGuid(), FirstName = "Carlos", LastName = "Rivera", Username = "crivera", Email = "carlos.rivera@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2023-0005", Course = "Information Technology", Year = "4", Section = "A", PhoneNumber = "09125234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "654 Maple Dr", CityMunicipality = "Taguig", Province = "Metro Manila", PostalCode = "1630" };
+            var student6 = new Student { Id = Guid.NewGuid(), FirstName = "Sofia", LastName = "Gonzales", Username = "sgonzales", Email = "sofia.gonzales@student.example.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword(defaultPassword), UserRole = UserRole.Student, StudentIdNumber = "2024-0001", Course = "Computer Science", Year = "1", Section = "A", PhoneNumber = "09126234567", Status = "Offline", ProfilePicture = mockImageBytes, FrontStudentIdPicture = mockImageBytes, Street = "987 Cedar Ln", CityMunicipality = "Mandaluyong", Province = "Metro Manila", PostalCode = "1550" };
+            
+            var students = new List<Student> { student1, student2, student3, student4, student5, student6 };
 
             // ===============================
             // SECTION 2 � COMMIT USERS TO DATABASE
