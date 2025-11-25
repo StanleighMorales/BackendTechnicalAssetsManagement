@@ -21,8 +21,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveLentItemsService _archiveLentItemsService;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly IBarcodeGeneratorService _barcodeGenerator;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, IBarcodeGeneratorService barcodeGenerator)
         {
             _repository = repository;
             _mapper = mapper;
@@ -30,6 +31,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _itemRepository = itemRepository;
             _archiveLentItemsService = archiveLentItemsService;
             _userService = userService;
+            _barcodeGenerator = barcodeGenerator;
         }
 
         // Create
@@ -74,7 +76,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     // Validate reservation time slot availability
                     if (dto.ReservedFor.HasValue)
                     {
-                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor);
+                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor, allLentItems);
                         if (!isAvailable)
                         {
                             throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
@@ -173,8 +175,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 }
             }
             // Generate the new barcode before saving
-            string barcodeText = await BarcodeGenerator.GenerateLentItemBarcode(_repository.GetDbContext());
-            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+            string barcodeText = await _barcodeGenerator.GenerateLentItemBarcodeAsync();
+            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
 
             // Set the barcode information
             lentItem.Barcode = barcodeText;
@@ -288,7 +290,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     // Validate reservation time slot availability
                     if (dto.ReservedFor.HasValue)
                     {
-                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor);
+                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor, allLentItems);
                         if (!isAvailable)
                         {
                             throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
@@ -318,8 +320,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             // 4. Generate the new barcode before saving
-            string barcodeText = await BarcodeGenerator.GenerateLentItemBarcode(_repository.GetDbContext());
-            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+            string barcodeText = await _barcodeGenerator.GenerateLentItemBarcodeAsync();
+            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
 
             // Set the barcode information
             lentItem.Barcode = barcodeText;
@@ -706,14 +708,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         // Validation: Check if item is already reserved for the requested time slot
-        private async Task<bool> IsItemAvailableForReservation(Guid itemId, DateTime? reservedFor, Guid? excludeLentItemId = null)
+        private async Task<bool> IsItemAvailableForReservation(Guid itemId, DateTime? reservedFor, IEnumerable<LentItems>? allLentItems = null, Guid? excludeLentItemId = null)
         {
             if (!reservedFor.HasValue)
             {
                 return true; // No specific time requested, skip validation
             }
 
-            var allLentItems = await _repository.GetAllAsync();
+            // OPTIMIZATION: Reuse allLentItems if provided, otherwise fetch
+            if (allLentItems == null)
+            {
+                allLentItems = await _repository.GetAllAsync();
+            }
             
             // Define a time window (e.g., 2 hours before and after)
             var bufferHours = 2;

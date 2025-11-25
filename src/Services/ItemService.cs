@@ -19,13 +19,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly IBarcodeGeneratorService _barcodeGenerator;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, IBarcodeGeneratorService barcodeGenerator)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
             _archiveItemsService = archiveItemsService;
+            _barcodeGenerator = barcodeGenerator;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -59,10 +61,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new DuplicateSerialNumberException($"An item with serial number '{createItemDto.SerialNumber}' already exists.");
             }
 
-            string barcodeText = BarcodeGenerator.GenerateItemBarcode(createItemDto.SerialNumber);
+            string barcodeText = _barcodeGenerator.GenerateItemBarcode(createItemDto.SerialNumber);
 
             // 2. Generate the Barcode IMAGE bytes
-            byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+            byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
 
             // 3. Map the DTO (Input) to the new Item (Entity)
             var newItem = _mapper.Map<Item>(createItemDto); 
@@ -145,11 +147,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 // Since we checked for null above, we know existingItem.SerialNumber will be non-null here.
 
                 // 2. Generate the Barcode TEXT value
-                string barcodeText = BarcodeGenerator.GenerateItemBarcode(existingItem.SerialNumber);
+                string barcodeText = _barcodeGenerator.GenerateItemBarcode(existingItem.SerialNumber);
 
                 // 3. Update Barcode and BarcodeImage
                 existingItem.Barcode = barcodeText;
-                existingItem.BarcodeImage = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+                existingItem.BarcodeImage = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
             }
             // ELSE: If updateItemDto.SerialNumber is null, the existing SerialNumber, Barcode, and BarcodeImage are preserved.
 
@@ -314,10 +316,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 var newItemId = Guid.NewGuid();
 
                                 // Generate barcode text using the same structure as normal item creation
-                                string barcodeText = BarcodeGenerator.GenerateItemBarcode(serialNumber);
+                                string barcodeText = _barcodeGenerator.GenerateItemBarcode(serialNumber);
 
                                 // Generate barcode image bytes
-                                byte[]? barcodeImageBytes = BarcodeImageUtil.GenerateBarcodeImageBytes(barcodeText);
+                                byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
 
                                 // Handle image import (if image path/url is provided)
                                 byte[]? imageBytes = null;

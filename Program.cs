@@ -176,6 +176,7 @@ builder.Services.AddScoped<IArchiveLentItemsService, ArchiveLentItemsService>();
 builder.Services.AddScoped<IArchiveUserService, ArchiveUserService>();
 builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
+builder.Services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
 
 // Utility Services (Singleton: single instance for application lifetime)
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
