@@ -36,6 +36,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
         public async Task<LentItemsDto> AddAsync(CreateLentItemDto dto)
         {
             var lentItem = _mapper.Map<LentItems>(dto);
+            
+            // OPTIMIZATION: Fetch all lent items once and reuse for multiple checks
+            // This reduces database calls from 2 to 1
+            IEnumerable<LentItems>? allLentItems = null;
+
             if (dto.ItemId != Guid.Empty)
             {
                 var item = await _itemRepository.GetByIdAsync(dto.ItemId);
@@ -53,9 +58,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
                     }
 
+                    // OPTIMIZATION: Fetch all lent items once for reuse
+                    allLentItems = await _repository.GetAllAsync();
+
                     // Check if there's already an active lent item for this item
-                    var existingLentItems = await _repository.GetAllAsync();
-                    var activeLentItem = existingLentItems.FirstOrDefault(li => 
+                    var activeLentItem = allLentItems.FirstOrDefault(li => 
                         li.ItemId == dto.ItemId && 
                         (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
                     
@@ -116,7 +123,12 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     // Check borrowing limit for Teachers and Students
                     if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
                     {
-                        var allLentItems = await _repository.GetAllAsync();
+                        // OPTIMIZATION: Reuse allLentItems if already fetched, otherwise fetch now
+                        if (allLentItems == null)
+                        {
+                            allLentItems = await _repository.GetAllAsync();
+                        }
+
                         var activeBorrowedCount = allLentItems.Count(li => 
                             li.UserId == dto.UserId.Value && 
                             (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
@@ -202,12 +214,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 lentItem.StudentIdNumber = dto.StudentIdNumber;
             }
 
+            // OPTIMIZATION: Fetch all lent items once and reuse for multiple checks
+            // This reduces database calls from 2 to 1
+            IEnumerable<LentItems>? allLentItems = null;
+
             // Check borrowing limit for guest Teachers and Students based on StudentIdNumber
             if (dto.BorrowerRole != null && 
                 (dto.BorrowerRole.Equals("Teacher", StringComparison.OrdinalIgnoreCase) || 
                  dto.BorrowerRole.Equals("Student", StringComparison.OrdinalIgnoreCase)))
             {
-                var allLentItems = await _repository.GetAllAsync();
+                allLentItems = await _repository.GetAllAsync();
                 
                 // For guests, we track by StudentIdNumber (for students) or by full name (for teachers)
                 int activeBorrowedCount;
@@ -252,9 +268,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
                     }
 
+                    // OPTIMIZATION: Reuse allLentItems if already fetched, otherwise fetch now
+                    // This avoids a second database call when borrowing limit was already checked
+                    if (allLentItems == null)
+                    {
+                        allLentItems = await _repository.GetAllAsync();
+                    }
+
                     // Check if there's already an active lent item for this item
-                    var existingLentItems = await _repository.GetAllAsync();
-                    var activeLentItem = existingLentItems.FirstOrDefault(li => 
+                    var activeLentItem = allLentItems.FirstOrDefault(li => 
                         li.ItemId == dto.ItemId && 
                         (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"));
                     

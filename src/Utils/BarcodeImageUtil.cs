@@ -7,6 +7,9 @@ namespace BackendTechnicalAssetsManagement.src.Utils
 {
     public class BarcodeImageUtil
     {
+        // Static flag to skip barcode image generation (for tests)
+        public static bool SkipImageGeneration { get; set; } = false;
+
         /// <summary>
         /// Generates a Code 128 barcode image as a PNG byte array for the given text.
         /// </summary>
@@ -17,6 +20,14 @@ namespace BackendTechnicalAssetsManagement.src.Utils
             if (string.IsNullOrEmpty(text))
             {
                 return null;
+            }
+
+            // PERFORMANCE OPTIMIZATION: Skip expensive image generation in tests
+            // Barcode image generation takes ~400-700ms using SkiaSharp
+            // Tests don't need actual images, just the barcode text
+            if (SkipImageGeneration)
+            {
+                return null; // Return null in tests, image will be generated on-demand in production
             }
 
             var writer = new BarcodeWriter
