@@ -42,6 +42,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
                 .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
                 .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode))
+                .ForMember(dest => dest.GeneratedPassword, opt => opt.MapFrom(src => src.GeneratedPassword))
                 .ForMember(dest => dest.ProfilePicture, opt => opt.MapFrom(src =>
                     src.ProfilePicture != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(src.ProfilePicture)}" : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
@@ -76,6 +77,7 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.CityMunicipality, opt => opt.MapFrom(src => src.CityMunicipality))
                 .ForMember(dest => dest.Province, opt => opt.MapFrom(src => src.Province))
                 .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.PostalCode))
+                .ForMember(dest => dest.GeneratedPassword, opt => opt.MapFrom(src => src.GeneratedPassword))
                 .ForMember(dest => dest.LentItemsHistory, opt => opt.MapFrom(src => src.LentItems));
 
             CreateMap<Teacher, GetTeacherProfileDto>()

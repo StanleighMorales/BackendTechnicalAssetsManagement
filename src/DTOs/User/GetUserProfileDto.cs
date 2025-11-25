@@ -53,6 +53,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string Province { get; set; } = string.Empty;
         public string PostalCode { get; set; } = string.Empty;
 
+        public string? GeneratedPassword { get; set; }
+
         public ICollection<LentItemsDto> LentItemsHistory { get; set; } = new List<LentItemsDto>();
     }
 

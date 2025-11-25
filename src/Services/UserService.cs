@@ -338,6 +338,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 // Generate random password
                                 var generatedPassword = GenerateRandomPassword();
 
+                                // Generate temporary student ID (format: TEMP-YYYY-XXXXX)
+                                var temporaryStudentId = await GenerateTemporaryStudentId();
+
                                 // Create new student with minimal required fields
                                 var newStudent = new Student
                                 {
@@ -350,7 +353,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     PasswordHash = _passwordHashingService.HashPassword(generatedPassword),
                                     UserRole = UserRole.Student,
                                     Status = "Offline",
-                                    PhoneNumber = "0000000000" // Temporary phone, to be updated by student
+                                    PhoneNumber = "0000000000", // Temporary phone, to be updated by student
+                                    StudentIdNumber = temporaryStudentId, // Temporary ID, to be replaced with real ID
+                                    GeneratedPassword = generatedPassword // Store the generated password
                                 };
 
                                 await _userRepository.AddAsync(newStudent);
@@ -361,7 +366,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 {
                                     FullName = $"{firstName} {middleName} {lastName}".Replace("  ", " ").Trim(),
                                     Username = username,
-                                    GeneratedPassword = generatedPassword
+                                    GeneratedPassword = generatedPassword,
+                                    TemporaryStudentId = temporaryStudentId
                                 });
                             }
                             catch (Exception ex)
@@ -393,6 +399,26 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var random = new Random();
             return new string(Enumerable.Repeat(chars, 12)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private async Task<string> GenerateTemporaryStudentId()
+        {
+            var year = DateTime.Now.Year;
+            var allStudents = await _userRepository.GetAllAsync();
+            var existingTempIds = allStudents.OfType<Student>()
+                .Where(s => s.StudentIdNumber != null && s.StudentIdNumber.StartsWith($"TEMP-{year}-"))
+                .Select(s => s.StudentIdNumber)
+                .ToList();
+
+            int counter = 1;
+            string tempId;
+            do
+            {
+                tempId = $"TEMP-{year}-{counter:D5}"; // Format: TEMP-2025-00001
+                counter++;
+            } while (existingTempIds.Contains(tempId));
+
+            return tempId;
         }
 
         /// <summary>
@@ -542,7 +568,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 Email = student.Email,
                 PhoneNumber = student.PhoneNumber,
                 FrontIdPicture = frontIdPictureBase64,
-                BackIdPicture = backIdPictureBase64
+                BackIdPicture = backIdPictureBase64,
+                GeneratedPassword = student.GeneratedPassword
             };
         }
     }

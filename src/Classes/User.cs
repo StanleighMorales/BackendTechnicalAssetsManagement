@@ -46,6 +46,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public byte[]? FrontStudentIdPicture { get; set; }
         public byte[]? BackStudentIdPicture { get; set; }
 
+        public string? GeneratedPassword { get; set; }
+
     }
     public class Staff : User
     {

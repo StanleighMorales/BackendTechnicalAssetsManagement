@@ -31,5 +31,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
         public string FullName { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string GeneratedPassword { get; set; } = string.Empty;
+        public string TemporaryStudentId { get; set; } = string.Empty;
     }
 }

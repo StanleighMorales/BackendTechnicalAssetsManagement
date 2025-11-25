@@ -2,6 +2,7 @@
 // Microsoft.EntityFrameworkCore is the core library for EF Core functionality.
 // BackendTechnicalAssetsManagement.src.Classes is where your entity classes (models) are defined.
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendTechnicalAssetsManagement.src.Data
@@ -53,13 +54,8 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // from the base DbContext class is applied before your custom configurations.
             base.OnModelCreating(modelBuilder);
             
-            // Seed data commented out - ModelBuilderExtensions file is missing
-            // modelBuilder.Seed();
-
-            // This is a custom extension method that encapsulates all the data seeding logic.
-            // Calling .Seed() here executes the code from your ModelBuilderExtensions class,
-            // keeping this OnModelCreating method clean and organized.
-            //modelBuilder.Seed();
+            // Seed the database with initial data
+            modelBuilder.Seed();
 
             // --- ENUM TO STRING CONVERSIONS ---
             // By default, EF Core stores enums in the database as integers (0, 1, 2, etc.).

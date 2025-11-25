@@ -60,6 +60,8 @@
             public string Province { get; set; } = string.Empty;
             [Required]
             public string PostalCode { get; set; } = string.Empty;
+
+            public string? GeneratedPassword { get; set; }
         }
 
 
