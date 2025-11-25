@@ -643,17 +643,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             try
             {
-                // If the lent item was not returned, make sure the item status is set back to Available
-                // when archiving the lent item record
-                if (lentItemsToArchive.Status != LentItemsStatus.Returned.ToString())
+                // Update item status based on whether the lent item was returned
+                var item = await _itemRepository.GetByIdAsync(lentItemsToArchive.ItemId);
+                if (item != null)
                 {
-                    var item = await _itemRepository.GetByIdAsync(lentItemsToArchive.ItemId);
-                    if (item != null)
+                    // If returned, set back to Available; otherwise set to Archived
+                    if (lentItemsToArchive.Status == LentItemsStatus.Returned.ToString())
                     {
                         item.Status = ItemStatus.Available;
-                        item.UpdatedAt = DateTime.Now;
-                        await _itemRepository.UpdateAsync(item);
                     }
+                    else
+                    {
+                        item.Status = ItemStatus.Archived;
+                    }
+                    item.UpdatedAt = DateTime.Now;
+                    await _itemRepository.UpdateAsync(item);
                 }
 
                 var archiveDto = _mapper.Map<CreateArchiveLentItemsDto>(lentItemsToArchive);

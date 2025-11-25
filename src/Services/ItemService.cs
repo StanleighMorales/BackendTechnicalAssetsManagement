@@ -188,8 +188,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 //// We REMOVE the call to DeleteImage. It's not needed.
                 //// The image bytes will be deleted from the database when the row is deleted.
 
-                // Set item status to Unavailable before archiving
-                itemToDelete.Status = ItemStatus.Unavailable;
+                // Set item status to Archived before archiving
+                itemToDelete.Status = ItemStatus.Archived;
                 itemToDelete.UpdatedAt = DateTime.Now;
 
                 var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
