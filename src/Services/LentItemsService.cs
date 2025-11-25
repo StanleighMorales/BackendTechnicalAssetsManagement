@@ -64,6 +64,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
                     }
 
+                    // Validate reservation time slot availability
+                    if (dto.ReservedFor.HasValue)
+                    {
+                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor);
+                        if (!isAvailable)
+                        {
+                            throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
+                        }
+                    }
+
                     lentItem.ItemName = item.ItemName;
                     
                     // Set item status based on lent item status
@@ -74,18 +84,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         lentItem.LentAt = DateTime.Now;
                         await _itemRepository.UpdateAsync(item);
                     }
-                    else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
+                    else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
+                             dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true ||
+                             dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Reserved;
                         item.UpdatedAt = DateTime.Now;
-                        // Don't set LentAt for Pending status
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                    else if (dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.Now;
-                        // Don't set LentAt for Approved status
+                        // Don't set LentAt for Reserved/Pending/Approved status
                         await _itemRepository.UpdateAsync(item);
                     }
                 }
@@ -258,6 +263,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         throw new InvalidOperationException($"Item '{item.ItemName}' already has an active lent record (Status: {activeLentItem.Status}).");
                     }
 
+                    // Validate reservation time slot availability
+                    if (dto.ReservedFor.HasValue)
+                    {
+                        var isAvailable = await IsItemAvailableForReservation(dto.ItemId, dto.ReservedFor);
+                        if (!isAvailable)
+                        {
+                            throw new InvalidOperationException($"Item '{item.ItemName}' is already reserved for a conflicting time slot around {dto.ReservedFor.Value:yyyy-MM-dd HH:mm}.");
+                        }
+                    }
+
                     lentItem.ItemName = item.ItemName;
                     
                     // Set item status based on lent item status
@@ -268,18 +283,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                         lentItem.LentAt = DateTime.Now;
                         await _itemRepository.UpdateAsync(item);
                     }
-                    else if (dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
+                    else if (dto.Status?.Equals("Reserved", StringComparison.OrdinalIgnoreCase) == true ||
+                             dto.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true ||
+                             dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         item.Status = ItemStatus.Reserved;
                         item.UpdatedAt = DateTime.Now;
-                        // Don't set LentAt for Pending status
-                        await _itemRepository.UpdateAsync(item);
-                    }
-                    else if (dto.Status?.Equals("Approved", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        item.Status = ItemStatus.Reserved;
-                        item.UpdatedAt = DateTime.Now;
-                        // Don't set LentAt for Approved status
+                        // Don't set LentAt for Reserved/Pending/Approved status
                         await _itemRepository.UpdateAsync(item);
                     }
                 }
@@ -667,6 +677,76 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 return (false, $"Archive operation failed: {ex.Message}");
             }
+        }
+
+        // Validation: Check if item is already reserved for the requested time slot
+        private async Task<bool> IsItemAvailableForReservation(Guid itemId, DateTime? reservedFor, Guid? excludeLentItemId = null)
+        {
+            if (!reservedFor.HasValue)
+            {
+                return true; // No specific time requested, skip validation
+            }
+
+            var allLentItems = await _repository.GetAllAsync();
+            
+            // Define a time window (e.g., 2 hours before and after)
+            var bufferHours = 2;
+            var startWindow = reservedFor.Value.AddHours(-bufferHours);
+            var endWindow = reservedFor.Value.AddHours(bufferHours);
+
+            // Check for conflicting reservations
+            var conflictingReservation = allLentItems.FirstOrDefault(li =>
+                li.ItemId == itemId &&
+                li.Id != excludeLentItemId && // Exclude current item when updating
+                li.ReservedFor.HasValue &&
+                li.ReservedFor.Value >= startWindow &&
+                li.ReservedFor.Value <= endWindow &&
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Reserved" || li.Status == "Borrowed"));
+
+            return conflictingReservation == null;
+        }
+
+        // Auto-expiry: Cancel expired reservations that weren't picked up
+        public async Task<int> CancelExpiredReservationsAsync()
+        {
+            var now = DateTime.Now;
+            var allLentItems = await _repository.GetAllAsync();
+            
+            // Find reservations that are expired (ReservedFor time has passed + grace period)
+            var graceHours = 1; // 1 hour grace period after ReservedFor time
+            var expiredReservations = allLentItems.Where(li =>
+                li.ReservedFor.HasValue &&
+                li.ReservedFor.Value.AddHours(graceHours) < now &&
+                (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Reserved") &&
+                !li.LentAt.HasValue // Not yet picked up
+            ).ToList();
+
+            int canceledCount = 0;
+            foreach (var reservation in expiredReservations)
+            {
+                // Update status to Canceled
+                reservation.Status = "Canceled";
+                reservation.UpdatedAt = DateTime.Now;
+
+                // Set item back to Available
+                var item = await _itemRepository.GetByIdAsync(reservation.ItemId);
+                if (item != null)
+                {
+                    item.Status = ItemStatus.Available;
+                    item.UpdatedAt = DateTime.Now;
+                    await _itemRepository.UpdateAsync(item);
+                }
+
+                await _repository.UpdateAsync(reservation);
+                canceledCount++;
+            }
+
+            if (canceledCount > 0)
+            {
+                await _repository.SaveChangesAsync();
+            }
+
+            return canceledCount;
         }
     }
 }

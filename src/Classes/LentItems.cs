@@ -25,6 +25,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string Room { get; set; } = string.Empty;
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
+        public DateTime? ReservedFor { get; set; }  // When the user plans to use the item
         public DateTime? LentAt { get; set; }
         public DateTime? ReturnedAt { get; set; }
 

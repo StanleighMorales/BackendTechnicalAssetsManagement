@@ -37,6 +37,9 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 
             Task<(bool Success, string ErrorMessage)> ArchiveLentItems(Guid id);
 
+            // Auto-expiry
+            Task<int> CancelExpiredReservationsAsync();
+
             // Persistence
             Task<bool> SaveChangesAsync();
 

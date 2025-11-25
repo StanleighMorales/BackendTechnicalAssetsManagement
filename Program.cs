@@ -188,6 +188,9 @@ builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerServic
 /// </summary>
 // Cleanup expired refresh tokens periodically
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
+
+// Cancel expired reservations periodically
+builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 #endregion
 
 #region Database Configuration

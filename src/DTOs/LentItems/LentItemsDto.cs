@@ -21,6 +21,12 @@ namespace BackendTechnicalAssetsManagement.src.DTOs
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
         [JsonIgnore]
+        public DateTime? ReservedFor { get; set; }
+        
+        [JsonPropertyName("reservedFor")]
+        public string? ReservedForFormatted => ReservedFor?.ToString("yyyy-MM-dd HH:mm");
+
+        [JsonIgnore]
         public DateTime? LentAt { get; set; }
         
         [JsonPropertyName("lentAt")]

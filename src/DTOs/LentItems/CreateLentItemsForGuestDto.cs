@@ -24,6 +24,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         [Required]
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
+        public DateTime? ReservedFor { get; set; }
+
         public string Remarks { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
 
