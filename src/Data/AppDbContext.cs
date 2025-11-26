@@ -26,6 +26,37 @@ namespace BackendTechnicalAssetsManagement.src.Data
             // handles the setup with the provided options.
         }
 
+        public override int SaveChanges()
+        {
+            SetTimestamps();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SetTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void SetTimestamps()
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            foreach (var entry in entries)
+            {
+                if (entry.Entity.GetType().GetProperty("UpdatedAt") != null)
+                {
+                    entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
+                }
+
+                if (entry.State == EntityState.Added && entry.Entity.GetType().GetProperty("CreatedAt") != null)
+                {
+                    entry.Property("CreatedAt").CurrentValue = DateTime.UtcNow;
+                }
+            }
+        }
+
         // --- DbSet Properties ---
         // Each DbSet<T> property maps to a table in the database.
         // EF Core uses these properties to perform Create, Read, Update, and Delete (CRUD) operations.

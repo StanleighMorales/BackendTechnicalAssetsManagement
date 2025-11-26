@@ -223,6 +223,7 @@ if (builder.Environment.IsDevelopment())
 else
 {
     // Production → Railway Postgres
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
