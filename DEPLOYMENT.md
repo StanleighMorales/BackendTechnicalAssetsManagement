@@ -28,13 +28,13 @@ Once the project is created, go to the **Variables** tab and add the following:
 
 | Variable | Description | Example Value |
 | :--- | :--- | :--- |
-| `DefaultConnection` | SQL Server Connection String | `Server=tcp:your-server.database.windows.net...` |
-| `JWT_SECRET` | Secret key for JWT tokens | `YourSuperSecretKeyHere...` |
-| `JWT_ISSUER` | Token Issuer | `YourApp` |
-| `JWT_AUDIENCE` | Token Audience | `YourApp` |
+| `ConnectionStrings__DefaultConnection` | SQL Server Connection String | `Server=tcp:your-server.database.windows.net...` |
+| `AppSettings__Token` | Secret key for JWT tokens | `YourSuperSecretKeyHere...` |
 | `AllowedOrigins` | Frontend URLs (JSON array) | `["https://your-frontend.vercel.app"]` |
 
-> **Note:** For `AllowedOrigins`, Railway might require escaping quotes if entered in the raw editor, but usually, the UI handles it. If you have issues, try a simple comma-separated string and update `Program.cs` to parse it, or ensure the JSON format is correct.
+> **Note:**
+> *   **Suggested Variables**: Railway likely detected `ConnectionStrings__DefaultConnection` and `AppSettings__Token` from your code. You can simply click "Add" for these, but **you must replace the placeholder values** with your actual secrets.
+> *   **AllowedOrigins**: Railway might require escaping quotes if entered in the raw editor, but usually, the UI handles it. If you have issues, try a simple comma-separated string and update `Program.cs` to parse it, or ensure the JSON format is correct.
 
 ### 3. Configure Health Check
 Railway automatically detects the exposed port, but you should configure the health check path to ensure zero-downtime deployments.
