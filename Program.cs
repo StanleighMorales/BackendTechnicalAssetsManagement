@@ -399,7 +399,7 @@ app.MapGet("/", () => Results.Json(new
 /// </summary>
 
 // Add super admin if none exists (for production deployment)
-await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
+// await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
 
 app.Run();
 #endregion
