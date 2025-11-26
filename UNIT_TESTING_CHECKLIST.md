@@ -93,29 +93,35 @@ Comprehensive checklist of all components requiring unit testing. Use this to tr
 - [ ] UpdateStudentProfileAsync - Image size validation
 
 ### ItemService (`ItemService.cs`)
-- [ ] AddAsync - Valid item creation
-- [ ] AddAsync - Duplicate serial number handling
-- [ ] AddAsync - Invalid image upload handling
-- [ ] AddAsync - Barcode generation
-- [ ] GetAllAsync - Return all items
-- [ ] GetAllAsync - Empty list handling
-- [ ] GetByIdAsync - Valid ID retrieval
-- [ ] GetByIdAsync - Invalid ID handling
-- [ ] GetByBarcodeAsync - Valid barcode retrieval
-- [ ] GetByBarcodeAsync - Invalid barcode handling
-- [ ] UpdateAsync - Valid data updates
-- [ ] UpdateAsync - Non-existent item handling
-- [ ] UpdateAsync - Serial number conflict handling
-- [ ] UpdateAsync - Image validation
-- [ ] SoftDeleteAsync - Valid soft deletion
-- [ ] PermaDeleteAsync - Valid permanent deletion
-- [ ] GetItemStockSummaryAsync - Stock calculation
-- [ ] GetItemStockSummaryAsync - Empty inventory
-- [ ] ImportItemsFromExcelAsync - Valid Excel import
-- [ ] ImportItemsFromExcelAsync - Missing required columns
-- [ ] ImportItemsFromExcelAsync - Duplicate serial numbers
-- [ ] ImportItemsFromExcelAsync - Invalid image paths
-- [ ] ImportItemsFromExcelAsync - Error handling
+- [x] CreateItemAsync - Valid item creation
+- [x] CreateItemAsync - Duplicate serial number handling
+- [x] CreateItemAsync - Empty serial number handling
+- [x] CreateItemAsync - Serial number prefix handling
+- [x] CreateItemAsync - Barcode generation
+- [x] CreateItemAsync - Status set to Available
+- [x] GetAllItemsAsync - Return all items
+- [x] GetAllItemsAsync - Empty list handling
+- [x] GetItemByIdAsync - Valid ID retrieval
+- [x] GetItemByIdAsync - Invalid ID handling
+- [x] GetItemByBarcodeAsync - Valid barcode retrieval
+- [x] GetItemByBarcodeAsync - Invalid barcode handling
+- [x] GetItemBySerialNumberAsync - Valid serial number retrieval
+- [x] GetItemBySerialNumberAsync - Invalid serial number handling
+- [x] UpdateItemAsync - Valid data updates
+- [x] UpdateItemAsync - Non-existent item handling
+- [x] UpdateItemAsync - Serial number change with barcode regeneration
+- [x] UpdateItemAsync - Serial number conflict handling
+- [x] UpdateItemAsync - Without serial number change (no barcode regeneration)
+- [x] UpdateItemAsync - Timestamp update
+- [x] DeleteItemAsync - Valid archiving and deletion
+- [x] DeleteItemAsync - Non-existent item handling
+- [x] DeleteItemAsync - Archive failure handling
+- [x] DeleteItemAsync - Save changes failure handling
+- [ ] ImportItemsFromExcelAsync - Valid Excel import (requires actual Excel file format)
+- [ ] ImportItemsFromExcelAsync - Missing required columns (requires actual Excel file format)
+- [ ] ImportItemsFromExcelAsync - Duplicate serial numbers (requires actual Excel file format)
+- [ ] ImportItemsFromExcelAsync - Invalid image paths (requires actual Excel file format)
+- [ ] ImportItemsFromExcelAsync - Error handling (requires actual Excel file format)
 
 ### AuthService (`AuthService.cs`)
 - [ ] LoginAsync - Valid credentials
@@ -532,15 +538,14 @@ Comprehensive checklist of all components requiring unit testing. Use this to tr
 
 ## 📝 Current Status Summary
 
-### ✅ Completed (Estimated 35% coverage)
+### ✅ Completed (Estimated 40% coverage)
 - **LentItemsService**: 34/37 tests (92%)
 - **UserService**: 34/41 tests (83%)
+- **ItemService**: 24/29 tests (83%) - Excel import tests require actual Excel file format
 - **AuthService**: Partial coverage
-- **ItemService**: Partial coverage
 
 ### 🚧 In Progress
 - UserService Excel import tests
-- ItemService comprehensive tests
 - AuthService comprehensive tests
 
 ### ⏳ Not Started
@@ -556,8 +561,8 @@ Comprehensive checklist of all components requiring unit testing. Use this to tr
 ## 🎯 Priority Roadmap
 
 ### Phase 1: Complete Service Layer (Priority: HIGH)
-1. Complete UserService (7 tests remaining)
-2. Complete ItemService (23 tests)
+1. ~~Complete ItemService~~ ✅ (24/29 tests - 83% complete, Excel tests require actual file format)
+2. Complete UserService (7 tests remaining)
 3. Complete AuthService (22 tests)
 4. Complete Archive Services (30 tests)
 5. Complete SummaryService (5 tests)
@@ -601,8 +606,13 @@ Comprehensive checklist of all components requiring unit testing. Use this to tr
 
 ---
 
-**Last Updated**: November 25, 2025  
+**Last Updated**: November 26, 2025  
 **Total Test Scenarios**: 300+ identified  
-**Completed**: ~70 tests (35% complete)  
-**Remaining**: ~230 tests needed for full coverage  
+**Completed**: ~92 tests (40% complete)  
+**Remaining**: ~208 tests needed for full coverage  
 **Target**: 90%+ code coverage across all layers
+
+**Recent Updates**:
+- ✅ ItemService: 24 comprehensive tests implemented covering CRUD operations, barcode generation, serial number validation, and archiving
+- ✅ All ItemService tests passing successfully
+- 📝 Excel import tests noted as requiring actual Excel file format for proper testing

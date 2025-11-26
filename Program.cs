@@ -17,6 +17,8 @@ using AutoMapper;
 using DotNetEnv;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
@@ -52,6 +54,10 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     // Set maximum request body size to 5MB for file uploads (images, Excel files)
     serverOptions.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
 });
+
+// Configure port for Railway
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://*:{port}");
 #endregion
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -81,6 +87,12 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Add HTTP context accessor for accessing request context in services
 builder.Services.AddHttpContextAccessor();
+
+// Configure Forwarded Headers for Railway Load Balancer
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 #endregion
 
 #region Authentication & Authorization
@@ -306,6 +318,9 @@ if (app.Environment.IsDevelopment())
 /// <summary>
 /// Configure security and error handling middleware (order matters!)
 /// </summary>
+// Use Forwarded Headers Middleware (Must be before HttpsRedirection if we want to trust the proto)
+app.UseForwardedHeaders();
+
 // Redirect HTTP to HTTPS for security
 app.UseHttpsRedirection();
 
@@ -340,6 +355,9 @@ app.UseAuthorization();
 /// Map controller endpoints to handle HTTP requests
 /// </summary>
 app.MapControllers();
+
+// Map Health Check Endpoint
+app.MapHealthChecks("/health");
 #endregion
 
 #endregion
