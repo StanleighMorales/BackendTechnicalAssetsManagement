@@ -86,7 +86,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             base.OnModelCreating(modelBuilder);
             
             // Seed the database with initial data
-            modelBuilder.Seed();
+            // modelBuilder.Seed(); // Commented out - seed data handled by SuperAdminSeeder instead
 
             // --- ENUM TO STRING CONVERSIONS ---
             // By default, EF Core stores enums in the database as integers (0, 1, 2, etc.).
@@ -151,10 +151,20 @@ namespace BackendTechnicalAssetsManagement.src.Data
 
                 entity.HasIndex(e => e.SerialNumber).IsUnique();
             });
-            modelBuilder.Entity<Student>()
+            // Configure unique index for StudentIdNumber with database-specific filter syntax
+            var studentIndex = modelBuilder.Entity<Student>()
                .HasIndex(s => s.StudentIdNumber)
-               .IsUnique()
-               .HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
+               .IsUnique();
+            
+            // Apply database-specific filter syntax
+            if (Database.IsNpgsql())
+            {
+                studentIndex.HasFilter("(\"StudentIdNumber\" IS NOT NULL AND \"StudentIdNumber\" <> '')");
+            }
+            else if (Database.IsSqlServer())
+            {
+                studentIndex.HasFilter("([StudentIdNumber] IS NOT NULL AND [StudentIdNumber] <> '')");
+            }
 
             // TODO: This is a good place to add more advanced configurations in the future, such as:
             // - Defining complex relationships (many-to-many).

@@ -19,7 +19,20 @@ namespace BackendTechnicalAssetsManagement.src.Data
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            
+            // Detect if it's PostgreSQL or SQL Server based on connection string
+            if (connectionString?.Contains("Host=") == true || connectionString?.Contains("host=") == true)
+            {
+                // PostgreSQL connection string
+                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+                optionsBuilder.UseNpgsql(connectionString);
+            }
+            else
+            {
+                // SQL Server connection string
+                optionsBuilder.UseSqlServer(connectionString);
+            }
 
             return new AppDbContext(optionsBuilder.Options);
         }
