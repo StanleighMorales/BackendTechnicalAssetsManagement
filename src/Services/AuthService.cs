@@ -244,7 +244,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             {
                 // Revoke the token in the DB
                 tokenEntity.IsRevoked = true;
-                tokenEntity.RevokedAt = DateTime.Now;
+                tokenEntity.RevokedAt = DateTime.UtcNow;
 
                 if (tokenEntity.User != null)
                 {
@@ -365,7 +365,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
 
             // 2. Perform validity checks
-            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.Now)
+            if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
             {
                 throw new RefreshTokenException("Invalid or expired refresh token.");
             }
@@ -380,7 +380,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 3. Revoke the old refresh token (Security: Token Rotation)
             tokenEntity.IsRevoked = true;
-            tokenEntity.RevokedAt = DateTime.Now;
+            tokenEntity.RevokedAt = DateTime.UtcNow;
 
             // 4. Generate new tokens
             string newAccessToken = CreateAccessToken(user);
@@ -441,7 +441,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 ClearRefreshTokenCookie();
                 throw new RefreshTokenException("Refresh token is revoked. Please log in again.");
             }
-            if (tokenEntity.ExpiresAt < DateTime.Now)
+            if (tokenEntity.ExpiresAt < DateTime.UtcNow)
             {
                 // The long-lived RT has finally expired.
                 ClearRefreshTokenCookie(); // Clear the expired cookie
@@ -460,7 +460,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 4. Revoke the old refresh token (Security: Token Rotation)
             // This ensures a stolen token can only be used ONCE.
             tokenEntity.IsRevoked = true;
-            tokenEntity.RevokedAt = DateTime.Now;
+            tokenEntity.RevokedAt = DateTime.UtcNow;
 
             // 5. Generate NEW tokens (AT and RT)
             string newAccessToken = CreateAccessToken(user);
@@ -506,8 +506,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                //expires: DateTime.Now.AddSeconds(30), // <-- Set to 30 seconds for dev test
-                expires: DateTime.Now.AddMinutes(15), // Access Token expiry time
+                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
+                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
 
                 signingCredentials: creds
             );
@@ -521,8 +521,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                ExpiresAt = DateTime.Now.AddDays(7), // You might want to make this configurable
-                CreatedAt = DateTime.Now
+                ExpiresAt = DateTime.UtcNow.AddDays(7), // You might want to make this configurable
+                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -540,8 +540,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 //SameSite = SameSiteMode.None,
                 Secure = false,
                 SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
-                //Expires = DateTime.Now.AddSeconds(30), // <-- Set to 30 seconds for dev 
-                Expires = DateTime.Now.AddMinutes(15) // Access Token expiry time
+                //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
+                Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
 
             };
 
