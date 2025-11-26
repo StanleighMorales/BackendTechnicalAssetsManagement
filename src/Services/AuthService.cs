@@ -361,10 +361,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<MobileLoginResponseDto> RefreshTokenMobile(string refreshToken)
         {
-            // 1. Find the tokenEntity using the 'refreshToken' string passed in
-            var tokenEntity = await _context.RefreshTokens
-                .Include(rt => rt.User)
-                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+            // 1. Find the tokenEntity using the 'refreshToken' string passed in (using repository)
+            var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
 
             // 2. Perform validity checks
             if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.Now)
@@ -383,18 +381,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // 3. Revoke the old refresh token (Security: Token Rotation)
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.Now;
-            _context.Update(tokenEntity);
 
             // 4. Generate new tokens
             string newAccessToken = CreateAccessToken(user);
             var newRefreshTokenEntity = GenerateRefreshToken();
             newRefreshTokenEntity.UserId = user.Id;
 
-            // 5. Add the new refresh token to the database
-            await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+            // 5. Add the new refresh token to the database (using repository)
+            await _refreshTokenRepository.AddAsync(newRefreshTokenEntity);
 
             // 6. Save all changes (old token revoked, new token added)
-            await _context.SaveChangesAsync();
+            await _refreshTokenRepository.SaveChangesAsync();
 
             // --- END CORE LOGIC ---
 
@@ -426,10 +423,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new RefreshTokenException("Refresh token cookie is missing. Please log in again.");
             }
 
-            // 2. Find the token entity in the database
-            var tokenEntity = await _context.RefreshTokens
-                .Include(rt => rt.User)
-                .FirstOrDefaultAsync(rt => rt.Token == refreshTokenString);
+            // 2. Find the token entity in the database (using repository)
+            var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(refreshTokenString);
 
             // 3. Perform Validity Checks
             if (tokenEntity == null)
@@ -466,18 +461,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // This ensures a stolen token can only be used ONCE.
             tokenEntity.IsRevoked = true;
             tokenEntity.RevokedAt = DateTime.Now;
-            _context.Update(tokenEntity);
 
             // 5. Generate NEW tokens (AT and RT)
             string newAccessToken = CreateAccessToken(user);
             var newRefreshTokenEntity = GenerateRefreshToken(); // Generates a completely new RT string
             newRefreshTokenEntity.UserId = user.Id;
 
-            // 6. Add the new refresh token to the database
-            await _context.RefreshTokens.AddAsync(newRefreshTokenEntity);
+            // 6. Add the new refresh token to the database (using repository)
+            await _refreshTokenRepository.AddAsync(newRefreshTokenEntity);
 
             // 7. Save all changes (old token revoked, new token added)
-            await _context.SaveChangesAsync();
+            await _refreshTokenRepository.SaveChangesAsync();
 
             // 8. Set the NEW Access Token cookie AND the NEW Refresh Token cookie
             SetAccessTokenCookie(newAccessToken);

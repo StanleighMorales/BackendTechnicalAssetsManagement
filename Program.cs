@@ -209,20 +209,29 @@ builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 
 #region Database Configuration
 /// <summary>
-/// Configure Entity Framework DbContext with SQL Server provider
+/// Configure Entity Framework DbContext with environment-based provider selection
 /// </summary>
-builder.Services.AddDbContext<AppDbContext>(options =>
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Choose DB provider based on environment
+if (builder.Environment.IsDevelopment())
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    // Local development → SQL Server
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
+else
+{
+    // Production → Railway Postgres
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
 #endregion
 
 #region Health Checks
 /// <summary>
 /// Configure health checks for monitoring application and database status
 /// </summary>
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
 // Validate that connection string is configured
 if (string.IsNullOrEmpty(connectionString))
 {
@@ -230,8 +239,15 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 // Add health checks for database connectivity
-builder.Services.AddHealthChecks()
-    .AddSqlServer(connectionString, name: "Database");
+var healthChecks = builder.Services.AddHealthChecks();
+if (builder.Environment.IsDevelopment())
+{
+    healthChecks.AddSqlServer(connectionString, name: "SQL Server");
+}
+else
+{
+    // healthChecks.AddNpgSql(connectionString, name: "PostgreSQL");
+}
 #endregion
 
 #region Custom Extension Services
@@ -256,21 +272,24 @@ builder.Services.AddCors(options =>
     // Unified policy for all frontends (React, Flutter, mobile)
     options.AddPolicy("AllowFrontends", policy =>
     {
-        // Allow configured production origins if they exist
-        if (allowedOrigins != null && allowedOrigins.Length > 0)
-        {
-            policy.WithOrigins(allowedOrigins);
-        }
-        
-        // Allow localhost, 127.0.0.1, and Android emulator (10.0.2.2)
+        // Dynamic origin validation for development and production
         policy.SetIsOriginAllowed(origin =>
         {
             var uri = new Uri(origin);
-            return uri.Host == "localhost" ||
-                   uri.Host == "127.0.0.1" ||
-                   origin.StartsWith("http://10.0.2.2") ||
-                   origin.StartsWith("https://10.0.2.2") ||
-                   (allowedOrigins != null && allowedOrigins.Contains(origin));
+            
+            // Allow localhost and 127.0.0.1 on any port (development)
+            if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                return true;
+            
+            // Allow Android emulator (10.0.2.2)
+            if (origin.StartsWith("http://10.0.2.2") || origin.StartsWith("https://10.0.2.2"))
+                return true;
+            
+            // Allow configured production origins
+            if (allowedOrigins != null && allowedOrigins.Contains(origin))
+                return true;
+            
+            return false;
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -330,7 +349,7 @@ app.UseMiddleware<GlobalExceptionHandler>();
 
 #region CORS Middleware
 /// <summary>
-/// Apply CORS policy to allow all frontend applications to access the API
+/// Apply CORS policy BEFORE authentication to allow preflight requests
 /// Single policy handles React, Flutter, mobile emulators, and production origins
 /// </summary>
 app.UseCors("AllowFrontends");
