@@ -536,13 +536,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var accessTokenCookieOptions = new CookieOptions
             {
                 HttpOnly = !isDevelopment, // Keep HttpOnly logic based on environment
-                //Secure = true,             // Ensure this is true in production
-                //SameSite = SameSiteMode.None,
-                Secure = false,
-                SameSite = SameSiteMode.Lax, // <-- Set to Lax for dev test
-                //Expires = DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev 
+                Secure = true,             // Required for SameSite=None
+                SameSite = SameSiteMode.None, // Required for cross-domain cookies
                 Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
-
             };
 
             httpContext.Response.Cookies.Append("4CLC-XSRF-TOKEN", accessToken, accessTokenCookieOptions);
@@ -576,8 +572,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var refreshTokenCookieOptions = new CookieOptions
             {
                 HttpOnly = true,           // Critical: ALWAYS HttpOnly
-                Secure = !isDevelopment,   // Critical: Use Secure=true in Production (HTTPS)
-                SameSite = SameSiteMode.Lax, // Recommended for security
+                Secure = true,             // Required for SameSite=None
+                SameSite = SameSiteMode.None, // Required for cross-domain cookies
                 Expires = expiresAt        // Use the token's actual expiry time (e.g., 7 days)
             };
 
