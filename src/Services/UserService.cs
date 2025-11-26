@@ -120,54 +120,6 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return await _userRepository.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Completes student registration by updating remaining required fields
-        /// Does not update FirstName, MiddleName, LastName as they are set during initial registration
-        /// </summary>
-        public async Task<bool> CompleteStudentRegistrationAsync(Guid userId, CompleteStudentRegistrationDto dto)
-        {
-            var userToUpdate = await _userRepository.GetByIdAsync(userId);
-            if (userToUpdate is not Student studentToUpdate)
-            {
-                return false; // Not found or not a student
-            }
-
-            // Validate image uploads
-            try
-            {
-                if (dto.ProfilePicture != null) ImageConverterUtils.ValidateImage(dto.ProfilePicture);
-                ImageConverterUtils.ValidateImage(dto.FrontStudentIdPicture);
-                ImageConverterUtils.ValidateImage(dto.BackStudentIdPicture);
-            }
-            catch (ArgumentException)
-            {
-                throw;
-            }
-
-            // Update fields
-            studentToUpdate.Email = dto.Email;
-            studentToUpdate.PhoneNumber = dto.PhoneNumber;
-            studentToUpdate.StudentIdNumber = dto.StudentIdNumber;
-            studentToUpdate.Course = dto.Course;
-            studentToUpdate.Section = dto.Section;
-            studentToUpdate.Year = dto.Year;
-            studentToUpdate.Street = dto.Street;
-            studentToUpdate.CityMunicipality = dto.CityMunicipality;
-            studentToUpdate.Province = dto.Province;
-            studentToUpdate.PostalCode = dto.PostalCode;
-
-            // Handle image uploads
-            if (dto.ProfilePicture != null)
-            {
-                studentToUpdate.ProfilePicture = ImageConverterUtils.ConvertIFormFileToByteArray(dto.ProfilePicture);
-            }
-            studentToUpdate.FrontStudentIdPicture = ImageConverterUtils.ConvertIFormFileToByteArray(dto.FrontStudentIdPicture);
-            studentToUpdate.BackStudentIdPicture = ImageConverterUtils.ConvertIFormFileToByteArray(dto.BackStudentIdPicture);
-
-            await _userRepository.UpdateAsync(studentToUpdate);
-            return await _userRepository.SaveChangesAsync();
-        }
-
         public async Task<(bool Success, string ErrorMessage)> DeleteUserAsync(Guid id, Guid currentUserId)
         {
             

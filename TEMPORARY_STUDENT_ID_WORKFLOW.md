@@ -133,9 +133,9 @@ Authorization: Bearer {token}
 }
 ```
 
-### 3. Complete Student Registration (Update Profile)
+### 3. Update Student Profile
 ```http
-POST /api/v1/users/students/{userId}/complete-registration
+PATCH /api/v1/users/students/profile/{userId}
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 

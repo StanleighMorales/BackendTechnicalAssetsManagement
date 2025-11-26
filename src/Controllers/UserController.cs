@@ -220,44 +220,6 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Completes student registration by updating remaining required profile information.
-    /// This endpoint is used after initial registration to add email, phone, student ID, course details, address, and ID pictures.
-    /// Does not update FirstName, MiddleName, or LastName as they are already set during initial registration.
-    /// Students can only complete their own registration.
-    /// </summary>
-    [HttpPatch("students/complete-registration/{id}")]
-    [Authorize(Roles = "Student")]
-    public async Task<ActionResult<ApiResponse<object>>> CompleteStudentRegistration(Guid id, [FromForm] CompleteStudentRegistrationDto dto)
-    {
-        // Ensure student can only update their own profile
-        var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(currentUserIdString, out var currentUserId) || currentUserId != id)
-        {
-            return Forbid();
-        }
-
-        try
-        {
-            var success = await _userService.CompleteStudentRegistrationAsync(id, dto);
-
-            if (!success)
-            {
-                return NotFound(ApiResponse<object>.FailResponse("Student not found."));
-            }
-
-            return Ok(ApiResponse<object>.SuccessResponse(null, "Student registration completed successfully."));
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ApiResponse<object>.FailResponse(ex.Message));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
-        }
-    }
-
-    /// <summary>
     /// Retrieves a student's details by their student ID number.
     /// Access is restricted to users with 'Admin' or 'Staff' roles.
     /// </summary>

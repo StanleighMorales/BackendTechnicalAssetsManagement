@@ -110,8 +110,8 @@ file: students.xlsx
 
 1. Distribute usernames and passwords to students securely
 2. Students log in with generated credentials
-3. **Students MUST complete their profile** using PATCH `/api/v1/users/students/complete-registration/{id}`
-4. Students can then update their profile anytime using PATCH `/api/v1/users/students/profile/{id}`
+3. **Students MUST complete their profile** using PATCH `/api/v1/users/students/profile/{id}`
+4. Students can update their profile anytime using the same endpoint
 
 ## Important: Profile Completion Requirement
 
