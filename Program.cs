@@ -385,5 +385,9 @@ app.MapHealthChecks("/health");
 /// <summary>
 /// Start the application and begin listening for HTTP requests
 /// </summary>
+
+// Add super admin if none exists (for production deployment)
+await SuperAdminSeeder.AddSuperAdminIfNeeded(app.Services);
+
 app.Run();
 #endregion
