@@ -378,6 +378,17 @@ app.MapControllers();
 
 // Map Health Check Endpoint
 app.MapHealthChecks("/health");
+
+// Root endpoint for deployment verification
+app.MapGet("/", () => Results.Json(new
+{
+    service = "Backend Technical Assets Management API",
+    status = "running",
+    version = "v1",
+    documentation = app.Environment.IsDevelopment() ? "/swagger" : "Contact administrator",
+    health = "/health",
+    api = "/api/v1"
+}));
 #endregion
 
 #endregion
