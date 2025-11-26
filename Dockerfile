@@ -5,11 +5,11 @@ WORKDIR /source
 
 # Copy project file and restore as distinct layers
 COPY *.csproj .
-RUN dotnet restore
+RUN dotnet restore "BackendTechnicalAssetsManagement.csproj"
 
 # Copy source code and publish app
 COPY . .
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish "BackendTechnicalAssetsManagement.csproj" -c Release -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
