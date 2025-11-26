@@ -23,8 +23,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public ItemCondition Condition { get; set; }
         public ItemStatus Status { get; set; } = ItemStatus.Available;
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
 
 

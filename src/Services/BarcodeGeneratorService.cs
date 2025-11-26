@@ -41,7 +41,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// </summary>
         public async Task<string> GenerateLentItemBarcodeAsync(DateTime? date = null)
         {
-            var targetDate = date ?? DateTime.Now.Date;
+            var targetDate = date ?? DateTime.UtcNow.Date;
             var dateString = targetDate.ToString("yyyyMMdd");
             var barcodePrefix = $"{LentItemsFormPrefix}{dateString}-";
 

@@ -358,7 +358,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         private async Task<string> GenerateTemporaryStudentId()
         {
-            var year = DateTime.Now.Year;
+            var year = DateTime.UtcNow.Year;
             var allStudents = await _userRepository.GetAllAsync();
             var existingTempIds = allStudents.OfType<Student>()
                 .Where(s => s.StudentIdNumber != null && s.StudentIdNumber.StartsWith($"TEMP-{year}-"))

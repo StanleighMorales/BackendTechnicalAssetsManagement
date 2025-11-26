@@ -23,8 +23,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             var lentItemsArchive = _mapper.Map<ArchiveLentItems>(createLentItemsArchive);
 
-            lentItemsArchive.CreatedAt = DateTime.Now;
-            lentItemsArchive.UpdatedAt = DateTime.Now;
+            lentItemsArchive.CreatedAt = DateTime.UtcNow;
+            lentItemsArchive.UpdatedAt = DateTime.UtcNow;
 
             await _repository.CreateArchiveLentItemsAsync(lentItemsArchive);
 

@@ -172,7 +172,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // ... (Image logic is fine)
 
             // 4. Update the timestamp and save.
-            existingItem.UpdatedAt = DateTime.Now;
+            existingItem.UpdatedAt = DateTime.UtcNow;
 
             await _itemRepository.UpdateAsync(existingItem);
             return await _itemRepository.SaveChangesAsync();
@@ -192,7 +192,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                 // Set item status to Archived before archiving
                 itemToDelete.Status = ItemStatus.Archived;
-                itemToDelete.UpdatedAt = DateTime.Now;
+                itemToDelete.UpdatedAt = DateTime.UtcNow;
 
                 var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
                 await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
@@ -372,8 +372,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                     Barcode = barcodeText,
                                     BarcodeImage = barcodeImageBytes,
 
-                                    CreatedAt = DateTime.Now,
-                                    UpdatedAt = DateTime.Now
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow
                                 };
                                 itemsToCreate.Add(item);
                                 response.SuccessCount++;

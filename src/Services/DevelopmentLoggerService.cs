@@ -45,7 +45,7 @@
             _ = Task.Run(async () =>
             {
                 await Task.Delay(delayTime);
-                _logger.LogWarning($"[TOKEN WARNING] {tokenType} token will expire in {threshold.TotalSeconds} seconds (at approx. {DateTime.Now.Add(threshold):HH:mm:ss}).");
+                _logger.LogWarning($"[TOKEN WARNING] {tokenType} token will expire in {threshold.TotalSeconds} seconds (at approx. {DateTime.UtcNow.Add(threshold):HH:mm:ss}).");
             });
         }
 

@@ -24,8 +24,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             var itemArchive = _mapper.Map<ArchiveItems>(createItemArchive);
 
-            itemArchive.CreatedAt = DateTime.Now;
-            itemArchive.UpdatedAt = DateTime.Now;
+            itemArchive.CreatedAt = DateTime.UtcNow;
+            itemArchive.UpdatedAt = DateTime.UtcNow;
 
             await _archiveItemRepository.CreateItemArchiveAsync(itemArchive);
 
@@ -71,8 +71,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var restoredItem = _mapper.Map<Item>(archivedItem);
 
             // Set new timestamps and ensure status is Available when restored
-            restoredItem.CreatedAt = DateTime.Now;
-            restoredItem.UpdatedAt = DateTime.Now;
+            restoredItem.CreatedAt = DateTime.UtcNow;
+            restoredItem.UpdatedAt = DateTime.UtcNow;
             restoredItem.Status = ItemStatus.Available; // Restored items should be available
 
             // EF Core will now happily add this item with its specified Id
