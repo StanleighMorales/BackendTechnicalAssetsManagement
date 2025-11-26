@@ -19,13 +19,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IMapper _mapper;
         private readonly IArchiveUserService _archiveUserService;
         private readonly IPasswordHashingService _passwordHashingService;
+        private readonly IExcelReaderService _excelReaderService;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService)
+        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _archiveUserService = archiveUserService;
             _passwordHashingService = passwordHashingService;
+            _excelReaderService = excelReaderService;
         }
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
@@ -230,153 +232,106 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// </summary>
         public async Task<ImportStudentsResponseDto> ImportStudentsFromExcelAsync(IFormFile file)
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
             var response = new ImportStudentsResponseDto();
-            int rowNumber = 1; // Start at 1 for header row
 
-            using (var stream = new MemoryStream())
+            // Use the Excel reader service to extract student data
+            var (students, errorMessage) = await _excelReaderService.ReadStudentsFromExcelAsync(file);
+
+            if (errorMessage != null)
             {
-                await file.CopyToAsync(stream);
-                stream.Position = 0;
+                response.Errors.Add(errorMessage);
+                response.FailureCount = students.Count;
+                response.TotalProcessed = students.Count;
+                return response;
+            }
 
-                using (var reader = ExcelReaderFactory.CreateReader(stream))
+            response.TotalProcessed = students.Count;
+
+            // Process each student
+            foreach (var (firstName, lastName, middleName, rowNumber) in students)
+            {
+                try
                 {
-                    var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                    // Validate required fields
+                    if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
                     {
-                        ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
-                        {
-                            UseHeaderRow = true
-                        }
-                    });
-
-                    if (result.Tables.Count > 0)
-                    {
-                        var dataTable = result.Tables[0];
-                        response.TotalProcessed = dataTable.Rows.Count;
-
-                        // Create flexible column mapping
-                        var columnMapping = new Dictionary<string, int>();
-                        for (int i = 0; i < dataTable.Columns.Count; i++)
-                        {
-                            var columnName = dataTable.Columns[i].ColumnName.Trim();
-                            
-                            if (columnName.Equals("LastName", StringComparison.OrdinalIgnoreCase) || 
-                                columnName.Equals("Last Name", StringComparison.OrdinalIgnoreCase) ||
-                                columnName.Equals("Surname", StringComparison.OrdinalIgnoreCase))
-                                columnMapping["LastName"] = i;
-                            else if (columnName.Equals("FirstName", StringComparison.OrdinalIgnoreCase) || 
-                                     columnName.Equals("First Name", StringComparison.OrdinalIgnoreCase) ||
-                                     columnName.Equals("Given Name", StringComparison.OrdinalIgnoreCase))
-                                columnMapping["FirstName"] = i;
-                            else if (columnName.Equals("MiddleName", StringComparison.OrdinalIgnoreCase) || 
-                                     columnName.Equals("Middle Name", StringComparison.OrdinalIgnoreCase))
-                                columnMapping["MiddleName"] = i;
-                        }
-
-                        // Validate required columns exist
-                        if (!columnMapping.ContainsKey("LastName") || !columnMapping.ContainsKey("FirstName"))
-                        {
-                            response.Errors.Add("Excel file must contain 'LastName' and 'FirstName' columns.");
-                            response.FailureCount = dataTable.Rows.Count;
-                            return response;
-                        }
-
-                        // Process each row
-                        foreach (DataRow row in dataTable.Rows)
-                        {
-                            rowNumber++;
-                            try
-                            {
-                                var lastName = row[columnMapping["LastName"]]?.ToString()?.Trim();
-                                var firstName = row[columnMapping["FirstName"]]?.ToString()?.Trim();
-                                var middleName = columnMapping.ContainsKey("MiddleName") 
-                                    ? row[columnMapping["MiddleName"]]?.ToString()?.Trim() 
-                                    : null;
-
-                                // Validate required fields
-                                if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
-                                {
-                                    response.FailureCount++;
-                                    response.Errors.Add($"Row {rowNumber}: Missing required fields (FirstName or LastName)");
-                                    continue;
-                                }
-
-                                // Check if student with same name already exists
-                                var allUsers = await _userRepository.GetAllAsync();
-                                var existingStudentByName = allUsers.OfType<Student>().FirstOrDefault(s =>
-                                    s.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
-                                    s.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
-                                    (string.IsNullOrWhiteSpace(middleName) && string.IsNullOrWhiteSpace(s.MiddleName) ||
-                                     !string.IsNullOrWhiteSpace(middleName) && s.MiddleName != null && s.MiddleName.Equals(middleName, StringComparison.OrdinalIgnoreCase)));
-
-                                if (existingStudentByName != null)
-                                {
-                                    response.FailureCount++;
-                                    response.Errors.Add($"Row {rowNumber}: Student with name '{firstName} {middleName} {lastName}' already exists in the database");
-                                    continue;
-                                }
-
-                                // Generate username
-                                var username = GenerateUsername(firstName, lastName, middleName);
-                                
-                                // Ensure username is unique
-                                var existingUser = await _userRepository.GetByUsernameAsync(username);
-                                if (existingUser != null)
-                                {
-                                    int counter = 1;
-                                    string newUsername;
-                                    do
-                                    {
-                                        newUsername = $"{username}{counter}";
-                                        existingUser = await _userRepository.GetByUsernameAsync(newUsername);
-                                        counter++;
-                                    } while (existingUser != null);
-                                    username = newUsername;
-                                }
-
-                                // Generate random password
-                                var generatedPassword = GenerateRandomPassword();
-
-                                // Generate temporary student ID (format: TEMP-YYYY-XXXXX)
-                                var temporaryStudentId = await GenerateTemporaryStudentId();
-
-                                // Create new student with minimal required fields
-                                var newStudent = new Student
-                                {
-                                    Id = Guid.NewGuid(),
-                                    FirstName = firstName,
-                                    LastName = lastName,
-                                    MiddleName = middleName,
-                                    Username = username,
-                                    Email = $"{username}@temporary.com", // Temporary email, to be updated by student
-                                    PasswordHash = _passwordHashingService.HashPassword(generatedPassword),
-                                    UserRole = UserRole.Student,
-                                    Status = "Offline",
-                                    PhoneNumber = "0000000000", // Temporary phone, to be updated by student
-                                    StudentIdNumber = temporaryStudentId, // Temporary ID, to be replaced with real ID
-                                    GeneratedPassword = generatedPassword // Store the generated password
-                                };
-
-                                await _userRepository.AddAsync(newStudent);
-                                await _userRepository.SaveChangesAsync();
-
-                                response.SuccessCount++;
-                                response.RegisteredStudents.Add(new StudentRegistrationResult
-                                {
-                                    FullName = $"{firstName} {middleName} {lastName}".Replace("  ", " ").Trim(),
-                                    Username = username,
-                                    GeneratedPassword = generatedPassword,
-                                    TemporaryStudentId = temporaryStudentId
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                response.FailureCount++;
-                                response.Errors.Add($"Row {rowNumber}: {ex.Message}");
-                            }
-                        }
+                        response.FailureCount++;
+                        response.Errors.Add($"Row {rowNumber}: Missing required fields (FirstName or LastName)");
+                        continue;
                     }
+
+                    // Check if student with same name already exists
+                    var allUsers = await _userRepository.GetAllAsync();
+                    var existingStudentByName = allUsers.OfType<Student>().FirstOrDefault(s =>
+                        s.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
+                        s.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase) &&
+                        (string.IsNullOrWhiteSpace(middleName) && string.IsNullOrWhiteSpace(s.MiddleName) ||
+                         !string.IsNullOrWhiteSpace(middleName) && s.MiddleName != null && s.MiddleName.Equals(middleName, StringComparison.OrdinalIgnoreCase)));
+
+                    if (existingStudentByName != null)
+                    {
+                        response.FailureCount++;
+                        response.Errors.Add($"Row {rowNumber}: Student with name '{firstName} {middleName} {lastName}' already exists in the database");
+                        continue;
+                    }
+
+                    // Generate username
+                    var username = GenerateUsername(firstName, lastName, middleName);
+
+                    // Ensure username is unique
+                    var existingUser = await _userRepository.GetByUsernameAsync(username);
+                    if (existingUser != null)
+                    {
+                        int counter = 1;
+                        string newUsername;
+                        do
+                        {
+                            newUsername = $"{username}{counter}";
+                            existingUser = await _userRepository.GetByUsernameAsync(newUsername);
+                            counter++;
+                        } while (existingUser != null);
+                        username = newUsername;
+                    }
+
+                    // Generate random password
+                    var generatedPassword = GenerateRandomPassword();
+
+                    // Generate temporary student ID (format: TEMP-YYYY-XXXXX)
+                    var temporaryStudentId = await GenerateTemporaryStudentId();
+
+                    // Create new student with minimal required fields
+                    var newStudent = new Student
+                    {
+                        Id = Guid.NewGuid(),
+                        FirstName = firstName,
+                        LastName = lastName,
+                        MiddleName = middleName,
+                        Username = username,
+                        Email = $"{username}@temporary.com", // Temporary email, to be updated by student
+                        PasswordHash = _passwordHashingService.HashPassword(generatedPassword),
+                        UserRole = UserRole.Student,
+                        Status = "Offline",
+                        PhoneNumber = "0000000000", // Temporary phone, to be updated by student
+                        StudentIdNumber = temporaryStudentId, // Temporary ID, to be replaced with real ID
+                        GeneratedPassword = generatedPassword // Store the generated password
+                    };
+
+                    await _userRepository.AddAsync(newStudent);
+                    await _userRepository.SaveChangesAsync();
+
+                    response.SuccessCount++;
+                    response.RegisteredStudents.Add(new StudentRegistrationResult
+                    {
+                        FullName = $"{firstName} {middleName} {lastName}".Replace("  ", " ").Trim(),
+                        Username = username,
+                        GeneratedPassword = generatedPassword,
+                        TemporaryStudentId = temporaryStudentId
+                    });
+                }
+                catch (Exception ex)
+                {
+                    response.FailureCount++;
+                    response.Errors.Add($"Row {rowNumber}: {ex.Message}");
                 }
             }
 
