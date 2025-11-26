@@ -19,6 +19,38 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         /// <summary>
+        /// Send a notification when a new pending request is created
+        /// Notifies admin/staff about new requests in the Pending & Reservation tab
+        /// </summary>
+        public async Task SendNewPendingRequestNotificationAsync(Guid lentItemId, string itemName, string borrowerName, DateTime? reservedFor)
+        {
+            try
+            {
+                var notification = new
+                {
+                    Type = "new_pending_request",
+                    LentItemId = lentItemId,
+                    ItemName = itemName,
+                    BorrowerName = borrowerName,
+                    ReservedFor = reservedFor,
+                    Message = $"New request from {borrowerName} for '{itemName}'",
+                    Timestamp = DateTime.Now
+                };
+
+                // Send to all admin/staff members
+                await _hubContext.Clients.Group("admin_staff")
+                    .SendAsync("ReceiveNewPendingRequest", notification);
+
+                _logger.LogInformation("New pending request notification sent for LentItem {LentItemId} by {BorrowerName}", 
+                    lentItemId, borrowerName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send new pending request notification for LentItem {LentItemId}", lentItemId);
+            }
+        }
+
+        /// <summary>
         /// Send a notification when a lent item status changes from Pending to Approved
         /// </summary>
         public async Task SendApprovalNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName)

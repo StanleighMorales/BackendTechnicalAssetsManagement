@@ -187,6 +187,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync(); // This saves the item with the barcode
 
+            // Send notification to admin/staff about new pending request
+            if (lentItem.Status == "Pending" || lentItem.Status == "Approved")
+            {
+                await _notificationService.SendNewPendingRequestNotificationAsync(
+                    lentItem.Id,
+                    lentItem.ItemName ?? "Unknown Item",
+                    lentItem.BorrowerFullName ?? "Unknown Borrower",
+                    lentItem.ReservedFor
+                );
+            }
+
             // 5. Map the fully created and updated entity to the DTO and return it
             return _mapper.Map<LentItemsDto>(lentItem);
         }
