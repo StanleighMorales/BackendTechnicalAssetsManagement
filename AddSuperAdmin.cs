@@ -24,37 +24,51 @@ public static class SuperAdminSeeder
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var passwordHasher = new PasswordHashingService();
 
-        // Check if super admin already exists
-        var existingSuperAdmin = await context.Users
-            .FirstOrDefaultAsync(u => u.UserRole == UserRole.SuperAdmin);
-
-        if (existingSuperAdmin == null)
+        try
         {
-            Console.WriteLine("No SuperAdmin found. Creating default SuperAdmin...");
+            // Ensure database is created and migrations are applied
+            Console.WriteLine("Checking database and applying migrations...");
+            await context.Database.MigrateAsync();
+            Console.WriteLine("✓ Database migrations applied successfully!");
 
-            var superAdmin = new User
+            // Check if super admin already exists
+            var existingSuperAdmin = await context.Users
+                .FirstOrDefaultAsync(u => u.UserRole == UserRole.SuperAdmin);
+
+            if (existingSuperAdmin == null)
             {
-                Id = Guid.NewGuid(),
-                Username = "admin",
-                Email = "admin@yourdomain.com",
-                FirstName = "System",
-                LastName = "Administrator",
-                PasswordHash = passwordHasher.HashPassword("@Pass123"),
-                UserRole = UserRole.SuperAdmin
-            };
+                Console.WriteLine("No SuperAdmin found. Creating default SuperAdmin...");
 
-            context.Users.Add(superAdmin);
-            await context.SaveChangesAsync();
+                var superAdmin = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Username = "admin",
+                    Email = "admin@yourdomain.com",
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    PasswordHash = passwordHasher.HashPassword("@Pass123"),
+                    UserRole = UserRole.SuperAdmin
+                };
 
-            Console.WriteLine("✓ SuperAdmin created successfully!");
-            Console.WriteLine($"  Username: {superAdmin.Username}");
-            Console.WriteLine($"  Email: {superAdmin.Email}");
-            Console.WriteLine("  Password: @Pass123");
-            Console.WriteLine("  ⚠️  IMPORTANT: Change this password immediately after first login!");
+                context.Users.Add(superAdmin);
+                await context.SaveChangesAsync();
+
+                Console.WriteLine("✓ SuperAdmin created successfully!");
+                Console.WriteLine($"  Username: {superAdmin.Username}");
+                Console.WriteLine($"  Email: {superAdmin.Email}");
+                Console.WriteLine("  Password: @Pass123");
+                Console.WriteLine("  ⚠️  IMPORTANT: Change this password immediately after first login!");
+            }
+            else
+            {
+                Console.WriteLine($"✓ SuperAdmin already exists: {existingSuperAdmin.Username}");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"SuperAdmin already exists: {existingSuperAdmin.Username}");
+            Console.WriteLine($"⚠️  Error during SuperAdmin seeding: {ex.Message}");
+            Console.WriteLine("The application will continue, but you may need to add a SuperAdmin manually.");
+            // Don't throw - let the app continue running
         }
     }
 }
