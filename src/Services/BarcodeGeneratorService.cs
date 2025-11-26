@@ -111,22 +111,34 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return null; // Return null in tests, image will be generated on-demand in production
             }
 
-            var writer = new BarcodeWriter
+            try
             {
-                Format = BarcodeFormat.CODE_128,
-                Options = new EncodingOptions
+                var writer = new BarcodeWriter
                 {
-                    Height = 150,
-                    Width = 300,
-                    Margin = 10
+                    Format = BarcodeFormat.CODE_128,
+                    Options = new EncodingOptions
+                    {
+                        Height = 150,
+                        Width = 300,
+                        Margin = 10
+                    }
+                };
+
+                var skBitmap = writer.Write(barcodeText);
+
+                using (var data = skBitmap.Encode(SKEncodedImageFormat.Png, 80))
+                {
+                    return data.ToArray();
                 }
-            };
-
-            var skBitmap = writer.Write(barcodeText);
-
-            using (var data = skBitmap.Encode(SKEncodedImageFormat.Png, 80))
+            }
+            catch (Exception ex)
             {
-                return data.ToArray();
+                // Log the error but don't fail the entire operation
+                Console.WriteLine($"[BarcodeGenerator] Warning: Failed to generate barcode image for '{barcodeText}': {ex.Message}");
+                Console.WriteLine($"[BarcodeGenerator] SkiaSharp may not be properly initialized. Check native dependencies.");
+                
+                // Return null - barcode text will still be saved, image can be generated later
+                return null;
             }
         }
 

@@ -18,8 +18,17 @@ WORKDIR /app
 # Copy published output from build stage
 COPY --from=build /app ./
 
-# Install curl (optional but recommended for Railway health checks)
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install dependencies for SkiaSharp and curl for health checks
+# SkiaSharp requires libfontconfig1 and other graphics libraries
+RUN apt-get update && apt-get install -y \
+    curl \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxcb1 \
+    libxext6 \
+    libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Railway uses PORT env var; ASP.NET must listen on it
 ENV ASPNETCORE_URLS=http://+:${PORT}

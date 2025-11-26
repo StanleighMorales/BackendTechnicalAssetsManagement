@@ -55,9 +55,12 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
 });
 
-// Configure port for Railway
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://*:{port}");
+// Configure port for Railway (only in production)
+if (!builder.Environment.IsDevelopment())
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
 #endregion
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -81,6 +84,14 @@ builder.Services.AddControllers()
         // Handle circular references in object graphs (important for EF navigation properties)
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
+// Configure form options for file uploads (Excel imports)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5 MB
+    options.ValueLengthLimit = 5 * 1024 * 1024; // 5 MB
+    options.MemoryBufferThreshold = 5 * 1024 * 1024; // 5 MB
+});
 
 // Enable API Explorer for Swagger/OpenAPI generation
 builder.Services.AddEndpointsApiExplorer();

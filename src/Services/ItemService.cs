@@ -318,8 +318,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                                 // Generate barcode text using the same structure as normal item creation
                                 string barcodeText = _barcodeGenerator.GenerateItemBarcode(serialNumber);
 
-                                // Generate barcode image bytes
-                                byte[]? barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
+                                // Generate barcode image bytes (may return null if SkiaSharp fails)
+                                byte[]? barcodeImageBytes = null;
+                                try
+                                {
+                                    barcodeImageBytes = _barcodeGenerator.GenerateBarcodeImage(barcodeText);
+                                }
+                                catch (Exception barcodeEx)
+                                {
+                                    Console.WriteLine($"[Import] Row {rowNumber}: Failed to generate barcode image: {barcodeEx.Message}");
+                                    // Continue without barcode image - text barcode will still be saved
+                                }
 
                                 // Handle image import (if image path/url is provided)
                                 byte[]? imageBytes = null;
