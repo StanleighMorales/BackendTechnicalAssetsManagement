@@ -201,6 +201,7 @@ builder.Services.AddScoped<ISummaryService, SummaryService>();
 builder.Services.AddScoped<IUserValidationService, UserValidationService>();
 builder.Services.AddScoped<IBarcodeGeneratorService, BarcodeGeneratorService>();
 builder.Services.AddScoped<IExcelReaderService, ExcelReaderService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Utility Services (Singleton: single instance for application lifetime)
 builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
@@ -268,6 +269,13 @@ else
 /// Includes JWT configuration, token validation, and authentication middleware setup
 /// </summary>
 builder.Services.AddAuthServices(builder.Configuration);
+#endregion
+
+#region SignalR Configuration
+/// <summary>
+/// Configure SignalR for real-time notifications
+/// </summary>
+builder.Services.AddSignalR();
 #endregion
 
 
@@ -390,6 +398,9 @@ app.MapControllers();
 // Map Health Check Endpoint
 app.MapHealthChecks("/health");
 
+// Map SignalR Hub
+app.MapHub<BackendTechnicalAssetsManagement.src.Hubs.NotificationHub>("/notificationHub");
+
 // Root endpoint for deployment verification
 app.MapGet("/", () => Results.Json(new
 {
@@ -398,7 +409,8 @@ app.MapGet("/", () => Results.Json(new
     version = "v1",
     documentation = app.Environment.IsDevelopment() ? "/swagger" : "Contact administrator",
     health = "/health",
-    api = "/api/v1"
+    api = "/api/v1",
+    signalr = "/notificationHub"
 }));
 #endregion
 

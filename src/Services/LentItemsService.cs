@@ -22,8 +22,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IBarcodeGeneratorService _barcodeGenerator;
+        private readonly INotificationService _notificationService;
 
-        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, IBarcodeGeneratorService barcodeGenerator)
+        public LentItemsService(ILentItemsRepository repository, IMapper mapper, IUserRepository userRepository, IItemRepository itemRepository, IArchiveLentItemsService archiveLentItemsService, IUserService userService, IBarcodeGeneratorService barcodeGenerator, INotificationService notificationService)
         {
             _repository = repository;
             _mapper = mapper;
@@ -32,6 +33,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _archiveLentItemsService = archiveLentItemsService;
             _userService = userService;
             _barcodeGenerator = barcodeGenerator;
+            _notificationService = notificationService;
         }
 
         // Create
@@ -419,6 +421,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                             item.Status = ItemStatus.Reserved;
                             item.UpdatedAt = DateTime.Now;
                             entity.LentAt = null;
+                            
+                            // Send approval notification when status changes from Pending to Approved
+                            if (oldStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                            {
+                                await _notificationService.SendApprovalNotificationAsync(
+                                    entity.Id, 
+                                    entity.UserId, 
+                                    entity.ItemName ?? item.ItemName, 
+                                    entity.BorrowerFullName ?? "Unknown"
+                                );
+                            }
                         }
                         else if (newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         {
@@ -447,6 +460,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
                         await _itemRepository.UpdateAsync(item);
                     }
+                    
+                    // Send general status change notification for all status changes
+                    await _notificationService.SendStatusChangeNotificationAsync(
+                        entity.Id,
+                        entity.UserId,
+                        entity.ItemName ?? "Unknown Item",
+                        oldStatus,
+                        newStatus
+                    );
                 }
             }
 
@@ -532,6 +554,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     item.Status = ItemStatus.Reserved;
                     item.UpdatedAt = DateTime.Now;
                     await _itemRepository.UpdateAsync(item);
+                    
+                    // Send approval notification when status changes from Pending to Approved
+                    if (entity.Status?.Equals("Pending", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        await _notificationService.SendApprovalNotificationAsync(
+                            entity.Id,
+                            entity.UserId,
+                            entity.ItemName ?? item.ItemName,
+                            entity.BorrowerFullName ?? "Unknown"
+                        );
+                    }
                 }
                 // For Pending, set item to Reserved
                 else if (dto.LentItemsStatus == LentItemsStatus.Pending)
