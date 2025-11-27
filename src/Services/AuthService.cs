@@ -91,8 +91,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         //    return _mapper.Map<UserDto>(newUser);
         //}
-        public async Task<UserDto> Register(RegisterUserDto request)
+        public async Task<UserDto> Register(RegisterUserDto request, Guid currentUserId)
         {
+            // Get the current user to check their role
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+            if (currentUser == null)
+            {
+                throw new UnauthorizedAccessException("Current user not found.");
+            }
+
+            // Validate role hierarchy
+            ValidateRoleHierarchy(currentUser.UserRole, request.Role);
+
             await _userValidationService.ValidateUniqueUserAsync(
                 request.Username,
                 request.Email,
@@ -151,6 +161,45 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _userRepository.SaveChangesAsync();
 
             return _mapper.Map<UserDto>(newUser);
+        }
+
+        /// <summary>
+        /// Validates that the current user has permission to create a user with the specified role.
+        /// Role Hierarchy:
+        /// - SuperAdmin: Can create all roles (SuperAdmin, Admin, Staff, Teacher, Student)
+        /// - Admin: Can create Admin, Staff, Teacher, Student (cannot create SuperAdmin)
+        /// - Staff: Can only create Teacher and Student (cannot create SuperAdmin, Admin, or Staff)
+        /// </summary>
+        private void ValidateRoleHierarchy(UserRole creatorRole, UserRole targetRole)
+        {
+            switch (creatorRole)
+            {
+                case UserRole.SuperAdmin:
+                    // SuperAdmin can create any role
+                    return;
+
+                case UserRole.Admin:
+                    // Admin cannot create SuperAdmin
+                    if (targetRole == UserRole.SuperAdmin)
+                    {
+                        throw new UnauthorizedAccessException("Admin users cannot create SuperAdmin accounts.");
+                    }
+                    // Admin can create Admin, Staff, Teacher, Student
+                    return;
+
+                case UserRole.Staff:
+                    // Staff can only create Teacher and Student
+                    if (targetRole == UserRole.SuperAdmin || targetRole == UserRole.Admin || targetRole == UserRole.Staff)
+                    {
+                        throw new UnauthorizedAccessException($"Staff users cannot create {targetRole} accounts. Staff can only create Teacher and Student users.");
+                    }
+                    return;
+
+                default:
+                    // Teacher and Student roles should not be able to create users at all
+                    // (This is already handled by the [Authorize] attribute, but adding for completeness)
+                    throw new UnauthorizedAccessException($"{creatorRole} users do not have permission to create user accounts.");
+            }
         }
 
         #region Login/Logout

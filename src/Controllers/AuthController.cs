@@ -58,6 +58,8 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         /// <summary>
         /// Registers a new user in the system.
+        /// Enforces role hierarchy: SuperAdmin can create all roles, Admin cannot create SuperAdmin,
+        /// Staff can only create Teacher and Student users.
         /// </summary>
         /// <param name="request">The user's registration details, including username and password.</param>
         /// <returns>An ApiResponse containing the newly created user's public data (without the password).</returns>
@@ -67,9 +69,16 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// and the global error handler middleware will return a 4xx or 500 error.
         /// </remarks>
         [HttpPost("register")]
+        [Authorize(Roles = "SuperAdmin,Admin,Staff")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Register(RegisterUserDto request)
         {
-            var newUser = await _authService.Register(request);
+            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(currentUserIdString, out var currentUserId))
+            {
+                return Unauthorized(ApiResponse<UserDto>.FailResponse("Invalid user token."));
+            }
+
+            var newUser = await _authService.Register(request, currentUserId);
             var successResponse = ApiResponse<UserDto>.SuccessResponse(newUser, "User Registered Successfully.");
 
             return StatusCode(201, successResponse);
