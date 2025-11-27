@@ -38,7 +38,7 @@
 		<PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
 		<PackageReference Include="SkiaSharp" Version="3.116.1" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
-		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.4.0" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.3" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
 	</ItemGroup>	
 
