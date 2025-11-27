@@ -36,7 +36,9 @@
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
 		<PackageReference Include="xunit.extensibility.core" Version="2.5.3" />
 		<PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
+		<PackageReference Include="SkiaSharp" Version="2.88.8" />
 		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+		<PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="7.3.0.2" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
 	</ItemGroup>	
 

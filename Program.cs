@@ -50,6 +50,7 @@ builder.Configuration.AddEnvironmentVariables();
 
 // Ensure barcode image generation is enabled in production
 BackendTechnicalAssetsManagement.src.Services.BarcodeGeneratorService.SkipImageGeneration = false;
+Console.WriteLine($"[Startup] Barcode image generation enabled: {!BackendTechnicalAssetsManagement.src.Services.BarcodeGeneratorService.SkipImageGeneration}");
 
 // Configure Kestrel server options
 builder.WebHost.ConfigureKestrel(serverOptions =>

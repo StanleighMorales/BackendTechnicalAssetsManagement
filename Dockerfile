@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y \
     libxcb1 \
     libxext6 \
     libxrender1 \
+    libharfbuzz0b \
+    libgdiplus \
     && rm -rf /var/lib/apt/lists/*
 
 # Railway uses PORT env var; ASP.NET must listen on it

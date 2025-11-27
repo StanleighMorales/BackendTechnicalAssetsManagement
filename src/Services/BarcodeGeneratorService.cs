@@ -134,7 +134,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
             catch (Exception ex)
             {
                 // Log the error but don't fail the entire operation
-                Console.WriteLine($"[BarcodeGenerator] Warning: Failed to generate barcode image for '{barcodeText}': {ex.Message}");
+                Console.WriteLine($"[BarcodeGenerator] ERROR: Failed to generate barcode image for '{barcodeText}'");
+                Console.WriteLine($"[BarcodeGenerator] Exception Type: {ex.GetType().Name}");
+                Console.WriteLine($"[BarcodeGenerator] Message: {ex.Message}");
+                Console.WriteLine($"[BarcodeGenerator] Stack Trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"[BarcodeGenerator] Inner Exception: {ex.InnerException.Message}");
+                }
                 Console.WriteLine($"[BarcodeGenerator] SkiaSharp may not be properly initialized. Check native dependencies.");
                 
                 // Return null - barcode text will still be saved, image can be generated later
