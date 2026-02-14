@@ -210,11 +210,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
-                throw new Exception("Invalid username or password.");
+                throw new InvalidCredentialsException("Invalid username or password.");
             }
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
-                throw new Exception("Invalid username or password.");
+                throw new InvalidCredentialsException("Invalid username or password.");
             }
 
             // Revoke any existing refresh tokens for security (using repository)
@@ -243,11 +243,11 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
-                throw new Exception("Invalid username or password.");
+                throw new InvalidCredentialsException("Invalid username or password.");
             }
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
-                throw new Exception("Invalid username or password.");
+                throw new InvalidCredentialsException("Invalid username or password.");
             }
 
             // Revoke any existing refresh tokens for security (using repository)
