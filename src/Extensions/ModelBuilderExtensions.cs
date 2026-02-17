@@ -22,9 +22,9 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             string defaultPassword = passwordHasher.HashPassword("@Pass123");
 
             // === USERS ===
-            
+
             // SuperAdmin
-            var superAdminId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var superAdminId = Guid.NewGuid(); ;
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = superAdminId,
@@ -37,7 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             });
 
             // Admins
-            var admin1Id = Guid.Parse("00000000-0000-0000-0000-000000000002");
+            var admin1Id = Guid.NewGuid();
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = admin1Id,
@@ -49,7 +49,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 UserRole = UserRole.Admin
             });
 
-            var admin2Id = Guid.Parse("00000000-0000-0000-0000-000000000003");
+            var admin2Id = Guid.NewGuid();
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = admin2Id,
@@ -61,7 +61,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 UserRole = UserRole.Admin
             });
 
-            var admin3Id = Guid.Parse("00000000-0000-0000-0000-000000000004");
+            var admin3Id = Guid.NewGuid();
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = admin3Id,
@@ -74,7 +74,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             });
 
             // Staff
-            var staff1Id = Guid.Parse("00000000-0000-0000-0000-000000000005");
+            var staff1Id = Guid.NewGuid();
             modelBuilder.Entity<Staff>().HasData(new Staff
             {
                 Id = staff1Id,
@@ -87,7 +87,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Position = "Lab Technician"
             });
 
-            var staff2Id = Guid.Parse("00000000-0000-0000-0000-000000000006");
+            var staff2Id = Guid.NewGuid();
             modelBuilder.Entity<Staff>().HasData(new Staff
             {
                 Id = staff2Id,
@@ -100,7 +100,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Position = "Equipment Manager"
             });
 
-            var staff3Id = Guid.Parse("00000000-0000-0000-0000-000000000007");
+            var staff3Id = Guid.NewGuid();
             modelBuilder.Entity<Staff>().HasData(new Staff
             {
                 Id = staff3Id,
@@ -114,7 +114,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             });
 
             // Teachers
-            var teacher1Id = Guid.Parse("00000000-0000-0000-0000-000000000008");
+            var teacher1Id = Guid.NewGuid();
             modelBuilder.Entity<Teacher>().HasData(new Teacher
             {
                 Id = teacher1Id,
@@ -127,7 +127,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Department = "Information Technology"
             });
 
-            var teacher2Id = Guid.Parse("00000000-0000-0000-0000-000000000009");
+            var teacher2Id = Guid.NewGuid();
             modelBuilder.Entity<Teacher>().HasData(new Teacher
             {
                 Id = teacher2Id,
@@ -140,7 +140,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Department = "Computer Science"
             });
 
-            var teacher3Id = Guid.Parse("00000000-0000-0000-0000-00000000000A");
+            var teacher3Id = Guid.NewGuid();
             modelBuilder.Entity<Teacher>().HasData(new Teacher
             {
                 Id = teacher3Id,
@@ -153,7 +153,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Department = "Information Technology"
             });
 
-            var teacher4Id = Guid.Parse("00000000-0000-0000-0000-00000000000B");
+            var teacher4Id = Guid.NewGuid();
             modelBuilder.Entity<Teacher>().HasData(new Teacher
             {
                 Id = teacher4Id,
@@ -167,7 +167,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             });
 
             // Students
-            var student1Id = Guid.Parse("00000000-0000-0000-0000-00000000000C");
+            var student1Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student1Id,
@@ -183,7 +183,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Section = "A"
             });
 
-            var student2Id = Guid.Parse("00000000-0000-0000-0000-00000000000D");
+            var student2Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student2Id,
@@ -199,7 +199,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Section = "B"
             });
 
-            var student3Id = Guid.Parse("00000000-0000-0000-0000-00000000000E");
+            var student3Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student3Id,
@@ -215,7 +215,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Section = "A"
             });
 
-            var student4Id = Guid.Parse("00000000-0000-0000-0000-00000000000F");
+            var student4Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student4Id,
@@ -231,7 +231,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Section = "C"
             });
 
-            var student5Id = Guid.Parse("00000000-0000-0000-0000-000000000010");
+            var student5Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student5Id,
@@ -247,7 +247,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                 Section = "A"
             });
 
-            var student6Id = Guid.Parse("00000000-0000-0000-0000-000000000011");
+            var student6Id = Guid.NewGuid();
             modelBuilder.Entity<Student>().HasData(new Student
             {
                 Id = student6Id,
@@ -264,14 +264,14 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
             });
 
             // === ITEMS ===
-            var item1Id = Guid.Parse("10000000-0000-0000-0000-000000000001");
-            var item2Id = Guid.Parse("10000000-0000-0000-0000-000000000002");
-            var item3Id = Guid.Parse("10000000-0000-0000-0000-000000000003");
-            var item4Id = Guid.Parse("10000000-0000-0000-0000-000000000004");
-            var item5Id = Guid.Parse("10000000-0000-0000-0000-000000000005");
-            var item6Id = Guid.Parse("10000000-0000-0000-0000-000000000006");
-            var item7Id = Guid.Parse("10000000-0000-0000-0000-000000000007");
-            var item8Id = Guid.Parse("10000000-0000-0000-0000-000000000008");
+            var item1Id = Guid.NewGuid();
+            var item2Id = Guid.NewGuid();
+            var item3Id = Guid.NewGuid();
+            var item4Id = Guid.NewGuid();
+            var item5Id = Guid.NewGuid();
+            var item6Id = Guid.NewGuid();
+            var item7Id = Guid.NewGuid();
+            var item8Id = Guid.NewGuid();
 
             modelBuilder.Entity<Item>().HasData(
                 new Item
