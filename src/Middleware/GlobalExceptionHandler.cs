@@ -62,6 +62,12 @@ namespace BackendTechnicalAssetsManagement.src.Middleware
                         response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
                         apiResponse = ApiResponse<object>.FailResponse(ex.Message);
                         break;
+                    
+                    // Handle invalid credentials for a 401 Unauthorized 
+                    case InvalidCredentialsException:
+                        response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
+                        apiResponse = ApiResponse<object>.FailResponse(ex.Message);
+                        break;
 
                     // Default case for all other unexpected errors
                     default:
