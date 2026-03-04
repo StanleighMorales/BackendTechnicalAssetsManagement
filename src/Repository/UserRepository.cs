@@ -106,7 +106,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 return null;
             }
 
-            return await _context.Users.OfType<Staff>().FirstOrDefaultAsync(s => s.PhoneNumber == phoneNumber);
+            return await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)

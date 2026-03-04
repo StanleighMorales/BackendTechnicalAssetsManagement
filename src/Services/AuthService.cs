@@ -138,9 +138,18 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // This uses the correct map (RegisterStudentDto to Student) but doesn't cause the cast error.
             _mapper.Map(request, newUser); // <--- THIS REPLACES THE PROBLEM LINES
 
-            if (!string.IsNullOrEmpty(newUser.PhoneNumber) && newUser.PhoneNumber.Length == 10)
+            if (!string.IsNullOrEmpty(newUser.PhoneNumber))
             {
-                newUser.PhoneNumber = "0" + newUser.PhoneNumber;
+                if (!newUser.PhoneNumber.StartsWith("09"))
+                {
+                    throw new ArgumentException("Invalid number. Phone number must start with 09.");
+                }
+                
+                var existingUserWithPhone = await _userRepository.GetByPhoneNumberAsync(newUser.PhoneNumber);
+                if (existingUserWithPhone != null)
+                {
+                    throw new ArgumentException("Phone number is already used.");
+                }
             }
 
             if (string.IsNullOrWhiteSpace(request.Password) ||

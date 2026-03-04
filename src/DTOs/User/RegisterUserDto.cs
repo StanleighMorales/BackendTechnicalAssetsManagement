@@ -19,7 +19,7 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         [MaxLength(254, ErrorMessage = "The email address cannot exceed 254 characters.")]
         public string Email { get; set; } = string.Empty;
         [Required]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits.")]
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "Phone number must be exactly 11 digits.")]
         public string? PhoneNumber { get; set; }
         [Required]
         [JsonConverter(typeof(JsonStringEnumConverter))]
