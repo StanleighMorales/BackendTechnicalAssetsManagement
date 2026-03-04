@@ -54,7 +54,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/item/5
         [HttpGet("{id}")]
-        [Authorize(Policy = "AdminOrStaffOrStudentOrTeacher")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemById(Guid id)
         {
             var item = await _itemService.GetItemByIdAsync(id);
