@@ -66,18 +66,18 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
             return Ok(successResponse);
         }
-        [HttpGet("by-barcode/{barcode}")]
-        public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemByBarcode(string barcodeText)
-        {
-            var item = await _itemService.GetItemByBarcodeAsync(barcodeText);
-            if (item == null)
-            {
-                var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
-            return Ok(successResponse);
-        }
+        // [HttpGet("by-barcode/{barcode}")]
+        // public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemByBarcode(string barcodeText)
+        // {
+        //     var item = await _itemService.GetItemByBarcodeAsync(barcodeText);
+        //     if (item == null)
+        //     {
+        //         var errorResponse = ApiResponse<ItemDto>.FailResponse("Item not found.");
+        //         return NotFound(errorResponse);
+        //     }
+        //     var successResponse = ApiResponse<ItemDto>.SuccessResponse(item, "Item retrieved successfully.");
+        //     return Ok(successResponse);
+        // }
 
         [HttpGet("by-serial/{serialNumber}")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemBySerialNumber(string serialNumber)

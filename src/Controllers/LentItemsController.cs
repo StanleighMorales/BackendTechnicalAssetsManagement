@@ -114,33 +114,33 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // GET: api/v1/lentitems/barcode/{barcode}
-        [HttpGet("barcode/{barcode}")]
-        [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByBarcode(string barcode)
-        {
-            const string prefix = "LENT-";
+        // [HttpGet("barcode/{barcode}")]
+        // [Authorize(Policy = "AdminOrStaff")]
+        // public async Task<ActionResult<ApiResponse<LentItemsDto>>> GetByBarcode(string barcode)
+        // {
+        //     const string prefix = "LENT-";
 
-            // Validate that the barcode starts with the expected prefix and follows the correct format
-            if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
-            }
+        //     // Validate that the barcode starts with the expected prefix and follows the correct format
+        //     if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+        //     }
 
-            // Additional validation for the complete format: LENT-YYYYMMDD-XXX
-            if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
-            {
-                return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
-            }
+        //     // Additional validation for the complete format: LENT-YYYYMMDD-XXX
+        //     if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
+        //     {
+        //         return BadRequest(ApiResponse<LentItemsDto>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+        //     }
 
-            var item = await _service.GetByBarcodeAsync(barcode);
-            if (item == null)
-            {
-                var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Lent item not found.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Lent item retrieved successfully.");
-            return Ok(successResponse);
-        }
+        //     var item = await _service.GetByBarcodeAsync(barcode);
+        //     if (item == null)
+        //     {
+        //         var errorResponse = ApiResponse<LentItemsDto>.FailResponse("Lent item not found.");
+        //         return NotFound(errorResponse);
+        //     }
+        //     var successResponse = ApiResponse<LentItemsDto>.SuccessResponse(item, "Lent item retrieved successfully.");
+        //     return Ok(successResponse);
+        // }
 
         // PATCH: api/v1/lentitems/{id}
         [HttpPatch("{id}")]
@@ -162,36 +162,37 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item updated successfully.");
             return Ok(successResponse); 
         }
-        [HttpPatch("scan/{barcode}")]
-        [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string barcode, [FromBody] ScanLentItemDto dto)
-        {
-            const string prefix = "LENT-";
 
-            // Validate that the barcode starts with the expected prefix and follows the correct format
-            if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
-            }
+        // [HttpPatch("scan/{barcode}")]
+        // [Authorize(Policy = "AdminOrStaff")]
+        // public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(string barcode, [FromBody] ScanLentItemDto dto)
+        // {
+        //     const string prefix = "LENT-";
 
-            // Additional validation for the complete format: LENT-YYYYMMDD-XXX
-            if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
-            {
-                return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
-            }
+        //     // Validate that the barcode starts with the expected prefix and follows the correct format
+        //     if (!barcode.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        //     {
+        //         return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+        //     }
 
-            // Find the lent item by barcode
-            var success = await _service.UpdateStatusByBarcodeAsync(barcode, dto);
+        //     // Additional validation for the complete format: LENT-YYYYMMDD-XXX
+        //     if (barcode.Length != 17 || !System.Text.RegularExpressions.Regex.IsMatch(barcode, @"^LENT-\d{8}-\d{3}$"))
+        //     {
+        //         return BadRequest(ApiResponse<object>.FailResponse("Invalid barcode format. Expected format: LENT-YYYYMMDD-XXX"));
+        //     }
 
-            if (!success)
-            {
-                var errorResponse = ApiResponse<object>.FailResponse("Lent item not found or update failed.");
-                return NotFound(errorResponse);
-            }
+        //     // Find the lent item by barcode
+        //     var success = await _service.UpdateStatusByBarcodeAsync(barcode, dto);
 
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Status updated successfully.");
-            return Ok(successResponse);
-        }
+        //     if (!success)
+        //     {
+        //         var errorResponse = ApiResponse<object>.FailResponse("Lent item not found or update failed.");
+        //         return NotFound(errorResponse);
+        //     }
+
+        //     var successResponse = ApiResponse<object>.SuccessResponse(null, "Status updated successfully.");
+        //     return Ok(successResponse);
+        // }
 
         [HttpPatch("hide/{lent-item-id}")]
         [Authorize]
@@ -213,19 +214,20 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             return Ok(ApiResponse<object>.SuccessResponse(null, "Item hidden from history."));
         }
-        [HttpPatch("return/item/{itemBarcode}")]
-        [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<object>>> ReturnItemByItemBarcode(string itemBarcode)
-        {
-            var success = await _service.ReturnItemByItemBarcodeAsync(itemBarcode);
-            if (!success)
-            {
-                var errorResponse = ApiResponse<object>.FailResponse("Return failed. Item not found, not currently lent, or already returned.");
-                return NotFound(errorResponse);
-            }
-            var successResponse = ApiResponse<object>.SuccessResponse(null, "Item returned successfully.");
-            return Ok(successResponse);
-        }
+
+        // [HttpPatch("return/item/{itemBarcode}")]
+        // [Authorize(Policy = "AdminOrStaff")]
+        // public async Task<ActionResult<ApiResponse<object>>> ReturnItemByItemBarcode(string itemBarcode)
+        // {
+        //     var success = await _service.ReturnItemByItemBarcodeAsync(itemBarcode);
+        //     if (!success)
+        //     {
+        //         var errorResponse = ApiResponse<object>.FailResponse("Return failed. Item not found, not currently lent, or already returned.");
+        //         return NotFound(errorResponse);
+        //     }
+        //     var successResponse = ApiResponse<object>.SuccessResponse(null, "Item returned successfully.");
+        //     return Ok(successResponse);
+        // }
 
         [HttpDelete("archive/{id}")]
         [Authorize(Policy = "AdminOrStaff")]
