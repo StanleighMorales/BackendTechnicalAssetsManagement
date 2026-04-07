@@ -48,6 +48,8 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public string? GeneratedPassword { get; set; }
 
+        public string? RfidUid { get; set; }  // RFID UID of the student's ID card
+
     }
     public class Staff : User
     {

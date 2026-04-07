@@ -50,6 +50,23 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .FirstOrDefaultAsync(i => i.Barcode == barcode);
         }
 
+        public async Task<Item?> GetByRfidUidAsync(string rfidUid)
+        {
+            return await _context.Items
+                .FirstOrDefaultAsync(i => i.RfidUid == rfidUid);
+        }
+
+        public async Task<Item?> RegisterRfidAsync(Guid itemId, string rfidUid)
+        {
+            var item = await _context.Items.FindAsync(itemId);
+            if (item == null) return null;
+
+            item.RfidUid = rfidUid;
+            item.UpdatedAt = DateTime.UtcNow;
+            _context.Items.Update(item);
+            return item;
+        }
+
         public async Task<bool> SaveChangesAsync()
         {
             // SaveChangesAsync returns the number of state entries written to the database.

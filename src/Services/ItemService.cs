@@ -20,14 +20,16 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IArchiveItemsService _archiveItemsService;
         private readonly IWebHostEnvironment _hostEnvironment;
         private readonly IBarcodeGeneratorService _barcodeGenerator;
+        private readonly ILentItemsRepository _lentItemsRepository;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, IBarcodeGeneratorService barcodeGenerator)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, IBarcodeGeneratorService barcodeGenerator, ILentItemsRepository lentItemsRepository)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
             _hostEnvironment = hostEnvironment;
             _archiveItemsService = archiveItemsService;
             _barcodeGenerator = barcodeGenerator;
+            _lentItemsRepository = lentItemsRepository;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -176,6 +178,92 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             await _itemRepository.UpdateAsync(existingItem);
             return await _itemRepository.SaveChangesAsync();
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> PatchItemStatusAsync(string barcode, ItemStatus status)
+        {
+            if (status != ItemStatus.Available && status != ItemStatus.Borrowed)
+                return (false, "Only 'Available' or 'Borrowed' statuses are allowed via NFC scanner.");
+
+            var item = await _itemRepository.GetByBarcodeAsync(barcode);
+            if (item == null)
+                return (false, "Item not found.");
+
+            var lentItem = await _lentItemsRepository.GetActiveByItemIdAsync(item.Id);
+            if (lentItem == null)
+                return (false, "No active lent record found for this item.");
+
+            lentItem.Status = status == ItemStatus.Borrowed
+                ? LentItemsStatus.Borrowed.ToString()
+                : LentItemsStatus.Returned.ToString();
+
+            if (status == ItemStatus.Borrowed)
+                lentItem.LentAt = DateTime.Now;
+            else
+                lentItem.ReturnedAt = DateTime.Now;
+
+            await _lentItemsRepository.UpdateAsync(lentItem);
+            var saved = await _lentItemsRepository.SaveChangesAsync();
+            return saved ? (true, string.Empty) : (false, "Failed to save status change.");
+        }
+
+        public async Task<(bool Success, string ErrorMessage, ItemStatus? NewStatus)> ScanRfidAsync(string rfidUid)
+        {
+            var item = await _itemRepository.GetByRfidUidAsync(rfidUid);
+            if (item == null)
+                return (false, "No item linked to this RFID tag.", null);
+
+            var lentItem = await _lentItemsRepository.GetActiveByItemIdAsync(item.Id);
+            if (lentItem == null)
+                return (false, "No active lent record found for this item.", null);
+
+            // Toggle: if currently Borrowed → Returned, otherwise → Borrowed
+            bool isBorrowed = lentItem.Status?.Equals(LentItemsStatus.Borrowed.ToString(), StringComparison.OrdinalIgnoreCase) == true;
+            lentItem.Status = isBorrowed
+                ? LentItemsStatus.Returned.ToString()
+                : LentItemsStatus.Borrowed.ToString();
+
+            if (isBorrowed)
+                lentItem.ReturnedAt = DateTime.Now;
+            else
+                lentItem.LentAt = DateTime.Now;
+
+            await _lentItemsRepository.UpdateAsync(lentItem);
+            var saved = await _lentItemsRepository.SaveChangesAsync();
+
+            // Derive the corresponding ItemStatus for the response
+            var newItemStatus = isBorrowed ? ItemStatus.Available : ItemStatus.Borrowed;
+            return saved
+                ? (true, string.Empty, newItemStatus)
+                : (false, "Failed to save status change.", null);
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToItemAsync(Guid itemId, string rfidUid)
+        {
+            // Check if this RFID UID is already assigned to another item
+            var existing = await _itemRepository.GetByRfidUidAsync(rfidUid);
+            if (existing != null && existing.Id != itemId)
+                return (false, $"RFID UID '{rfidUid}' is already registered to another item.");
+
+            var item = await _itemRepository.RegisterRfidAsync(itemId, rfidUid);
+            if (item == null)
+                return (false, "Item not found.");
+
+            var saved = await _itemRepository.SaveChangesAsync();
+            return saved ? (true, string.Empty) : (false, "Failed to save RFID registration.");
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> UpdateItemLocationAsync(Guid itemId, string location)
+        {
+            var item = await _itemRepository.GetByIdAsync(itemId);
+            if (item == null)
+                return (false, "Item not found.");
+
+            item.Location = location;
+            item.UpdatedAt = DateTime.UtcNow;
+            await _itemRepository.UpdateAsync(item);
+            var saved = await _itemRepository.SaveChangesAsync();
+            return saved ? (true, string.Empty) : (false, "Failed to save location.");
         }
 
         public async Task<(bool Success, string ErrorMessage)> DeleteItemAsync(Guid id) // Basically archive
@@ -486,6 +574,13 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 ".svg" => "image/svg+xml",
                 _ => "image/jpeg" // Default fallback
             };
+        }
+
+        public async Task<ItemDto?> GetItemByRfidUidAsync(string rfidUid)
+        {
+            var item = await _itemRepository.GetByRfidUidAsync(rfidUid);
+            if (item == null) return null;
+            return _mapper.Map<ItemDto>(item);
         }
 
     }

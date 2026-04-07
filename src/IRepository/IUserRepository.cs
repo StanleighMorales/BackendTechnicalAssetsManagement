@@ -22,5 +22,7 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         Task DeleteAsync(Guid id);
 
         Task<bool> SaveChangesAsync();
+        Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid);
+        Task<Student?> GetStudentByRfidUidAsync(string rfidUid);
     }
 }

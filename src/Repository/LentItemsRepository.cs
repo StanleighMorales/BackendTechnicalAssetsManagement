@@ -122,5 +122,18 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .Include(li => li.Item)
                 .FirstOrDefaultAsync(li => li.Barcode == barcode);
         }
+
+        public async Task<LentItems?> GetActiveByItemIdAsync(Guid itemId)
+        {
+            return await _context.LentItems
+                .Include(li => li.User)
+                .Include(li => li.Teacher)
+                .Include(li => li.Item)
+                .FirstOrDefaultAsync(li =>
+                    li.ItemId == itemId &&
+                    li.Status != "Returned" &&
+                    li.Status != "Canceled" &&
+                    li.Status != "Denied");
+        }
     }
 }

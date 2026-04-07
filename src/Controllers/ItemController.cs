@@ -5,7 +5,6 @@ using BackendTechnicalAssetsManagement.src.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechnicalAssetManagementApi.Dtos.Item;
-
 namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
@@ -166,6 +165,78 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
                 var errorResponse = ApiResponse<object>.FailResponse(ex.Message);
                 return BadRequest(errorResponse);
             }
+        }
+
+        // PATCH: /api/v1/items/status/{barcode}
+        // Intended for IoT NFC scanners - no auth required, only allows Available/Borrowed
+        [HttpPatch("status/{barcode}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<object>>> PatchItemStatus(string barcode, [FromBody] PatchItemStatusDto dto)
+        {
+            var (success, errorMessage) = await _itemService.PatchItemStatusAsync(barcode, dto.Status);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, $"Item status updated to '{dto.Status}'."));
+        }
+
+        // PATCH: /api/v1/items/rfid-scan/{rfidUid}
+        // Called by IoT NFC/RFID scanner - toggles status between Available and Borrowed
+        [HttpPatch("rfid-scan/{rfidUid}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<object>>> ScanRfid(string rfidUid)
+        {
+            var (success, errorMessage, newStatus) = await _itemService.ScanRfidAsync(rfidUid);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+                return errorMessage.Contains("No item") ? NotFound(errorResponse) : BadRequest(errorResponse);
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, $"Item status toggled to '{newStatus}'."));
+        }
+
+        // GET: /api/v1/items/rfid/{rfidUid}
+        // Called by ESP32 borrow scanner to resolve item by its RFID tag
+        [HttpGet("rfid/{rfidUid}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<ItemDto>>> GetByRfid(string rfidUid)
+        {
+            var item = await _itemService.GetItemByRfidUidAsync(rfidUid);
+            if (item == null)
+                return NotFound(ApiResponse<ItemDto>.FailResponse("No item registered to this RFID tag."));
+            return Ok(ApiResponse<ItemDto>.SuccessResponse(item, "Item found."));
+        }
+
+        // POST: /api/v1/items/{id}/register-rfid
+        // Called by ESP32 in registration mode - assigns a scanned RFID UID to the specified item
+        [HttpPost("{id}/register-rfid")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<object>>> RegisterRfid(Guid id, [FromBody] RegisterRfidDto dto)
+        {
+            var (success, errorMessage) = await _itemService.RegisterRfidToItemAsync(id, dto.RfidUid);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : Conflict(errorResponse);
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidUid}' registered to item successfully."));
+        }
+
+        // POST: /api/v1/items/{id}/update-location
+        // Called by ESP32 location tracker — updates the physical location of an item
+        [HttpPost("{id}/update-location")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateLocation(Guid id, [FromBody] UpdateLocationDto dto)
+        {
+            var (success, errorMessage) = await _itemService.UpdateItemLocationAsync(id, dto.Location);
+            if (!success)
+            {
+                var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+                return errorMessage.Contains("not found") ? NotFound(errorResponse) : BadRequest(errorResponse);
+            }
+            return Ok(ApiResponse<object>.SuccessResponse(null, $"Location updated to '{dto.Location}'."));
         }
 
         // DELETE: /api/item/5

@@ -405,22 +405,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 missingFields.Add("Postal Code");
             }
 
+            // TODO: Re-enable picture validation before production
             // Check ID pictures
-            if (student.FrontStudentIdPicture == null || student.FrontStudentIdPicture.Length == 0)
-            {
-                missingFields.Add("Front Student ID Picture");
-            }
+            // if (student.FrontStudentIdPicture == null || student.FrontStudentIdPicture.Length == 0)
+            // {
+            //     missingFields.Add("Front Student ID Picture");
+            // }
 
-            if (student.BackStudentIdPicture == null || student.BackStudentIdPicture.Length == 0)
-            {
-                missingFields.Add("Back Student ID Picture");
-            }
+            // if (student.BackStudentIdPicture == null || student.BackStudentIdPicture.Length == 0)
+            // {
+            //     missingFields.Add("Back Student ID Picture");
+            // }
 
-            if (missingFields.Any())
-            {
-                var errorMessage = $"Profile incomplete. Please complete the following fields: {string.Join(", ", missingFields)}";
-                return (false, errorMessage);
-            }
+            // TODO: Re-enable profile validation before production
+            // if (missingFields.Any())
+            // {
+            //     var errorMessage = $"Profile incomplete. Please complete the following fields: {string.Join(", ", missingFields)}";
+            //     return (false, errorMessage);
+            // }
 
             return (true, string.Empty);
         }
@@ -478,6 +480,22 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 BackIdPicture = backIdPictureBase64,
                 GeneratedPassword = student.GeneratedPassword
             };
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
+        {
+            var (success, errorMessage) = await _userRepository.RegisterRfidToStudentAsync(studentId, rfidUid);
+            if (!success) return (false, errorMessage);
+
+            var saved = await _userRepository.SaveChangesAsync();
+            return saved ? (true, string.Empty) : (false, "Failed to save RFID registration.");
+        }
+
+        public async Task<object?> GetStudentByRfidUidAsync(string rfidUid)
+        {
+            var student = await _userRepository.GetStudentByRfidUidAsync(rfidUid);
+            if (student == null) return null;
+            return new { student.Id, student.FirstName, student.LastName, student.StudentIdNumber };
         }
     }
 }

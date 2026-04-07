@@ -32,6 +32,16 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         /// <returns></returns>
         Task<Item?> GetByBarcodeAsync(string barcode);
 
+        /// <summary>
+        /// Gets an item by its RFID UID tag.
+        /// </summary>
+        Task<Item?> GetByRfidUidAsync(string rfidUid);
+
+        /// <summary>
+        /// Assigns an RFID UID to a specific item by its ID.
+        /// </summary>
+        Task<Item?> RegisterRfidAsync(Guid itemId, string rfidUid);
+
 
         /// <summary>
         /// Adds a new item to the database context. This does not save to the database yet.

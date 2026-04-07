@@ -243,4 +243,31 @@ public class UserController : ControllerBase
             return StatusCode(500, ApiResponse<object>.FailResponse($"Internal Server Error: {ex.Message}"));
         }
     }
+
+    // POST: /api/v1/users/students/{id}/register-rfid
+    // Called by ESP32 in student RFID registration mode — posts the RFID UID to the student
+    [HttpPost("students/{id}/register-rfid")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> RegisterStudentRfid(Guid id, [FromBody] RegisterStudentRfidDto dto)
+    {
+        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(id, dto.RfidUid);
+        if (!success)
+        {
+            var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
+            return errorMessage.Contains("not found") ? NotFound(errorResponse) : Conflict(errorResponse);
+        }
+        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidUid}' registered to student successfully."));
+    }
+
+    // GET: /api/v1/users/students/rfid/{rfidUid}
+    // Called by ESP32 borrow scanner to resolve student by their ID card RFID
+    [HttpGet("students/rfid/{rfidUid}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ApiResponse<object>>> GetStudentByRfid(string rfidUid)
+    {
+        var student = await _userService.GetStudentByRfidUidAsync(rfidUid);
+        if (student == null)
+            return NotFound(ApiResponse<object>.FailResponse("No student registered to this RFID."));
+        return Ok(ApiResponse<object>.SuccessResponse(student, "Student found."));
+    }
 }

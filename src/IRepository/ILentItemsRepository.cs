@@ -19,5 +19,6 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         
         AppDbContext GetDbContext();
         Task<LentItems?> GetByBarcodeAsync(string barcode);
+        Task<LentItems?> GetActiveByItemIdAsync(Guid itemId);
     }
 }

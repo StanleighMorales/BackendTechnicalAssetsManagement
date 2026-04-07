@@ -124,5 +124,29 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             _context.Users.Update(user);
             return Task.CompletedTask;
         }
+
+        public async Task<Student?> GetStudentByRfidUidAsync(string rfidUid)
+        {
+            return await _context.Students
+                .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
+        {
+            // Check if this RFID UID is already assigned to another student
+            var existing = await _context.Students
+                .FirstOrDefaultAsync(s => s.RfidUid == rfidUid);
+            if (existing != null && existing.Id != studentId)
+                return (false, $"RFID UID '{rfidUid}' is already registered to another student.");
+
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.Id == studentId);
+            if (student == null)
+                return (false, "Student not found.");
+
+            student.RfidUid = rfidUid;
+            _context.Students.Update(student);
+            return (true, string.Empty);
+        }
     }
 }

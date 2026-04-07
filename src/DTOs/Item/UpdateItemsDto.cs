@@ -6,6 +6,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.Item
     public class UpdateItemsDto
     {
         public string? SerialNumber { get; set; } 
+
+        public string? RfidUid { get; set; }
     
         public IFormFile? Image { get; set; } 
     

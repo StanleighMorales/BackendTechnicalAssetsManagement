@@ -4,10 +4,12 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
 namespace BackendTechnicalAssetsManagement.src.Classes
 {
     [Index(nameof(SerialNumber), IsUnique = true)]
+    [Index(nameof(RfidUid), IsUnique = true)]
     public class Item
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string? SerialNumber { get; set; }
+        public string? RfidUid { get; set; }
         public byte[]? Image { get; set; }
         public string? ImageMimeType { get; set; }
         public string? Barcode { get; set; }
@@ -25,6 +27,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string? Location { get; set; }
 
 
 

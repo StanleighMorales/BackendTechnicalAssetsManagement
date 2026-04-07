@@ -18,6 +18,8 @@ namespace TechnicalAssetManagementApi.Dtos.Item
 
         public string? ItemModel { get; set; }
 
+        public string? RfidUid { get; set; }
+
         [Required]
         public string ItemMake { get; set; } = string.Empty;
 

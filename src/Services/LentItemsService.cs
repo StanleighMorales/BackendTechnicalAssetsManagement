@@ -187,6 +187,28 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _repository.AddAsync(lentItem);
             await _repository.SaveChangesAsync(); // This saves the item with the barcode
 
+            // TODO: Remove auto-approve before production
+            // Auto-approve pending requests from RFID borrow
+            if (lentItem.Status == "Pending")
+            {
+                lentItem.Status = LentItemsStatus.Borrowed.ToString();
+                lentItem.LentAt = DateTime.Now;
+                await _repository.UpdateAsync(lentItem);
+
+                if (dto.ItemId != Guid.Empty)
+                {
+                    var item = await _itemRepository.GetByIdAsync(dto.ItemId);
+                    if (item != null)
+                    {
+                        item.Status = ItemStatus.Borrowed;
+                        item.UpdatedAt = DateTime.Now;
+                        await _itemRepository.UpdateAsync(item);
+                    }
+                }
+
+                await _repository.SaveChangesAsync();
+            }
+
             // Send notification to admin/staff about new pending request
             if (lentItem.Status == "Pending" || lentItem.Status == "Approved")
             {
