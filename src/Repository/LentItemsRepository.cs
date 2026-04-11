@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using Microsoft.EntityFrameworkCore;
 
