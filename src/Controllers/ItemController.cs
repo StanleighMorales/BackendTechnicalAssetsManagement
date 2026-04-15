@@ -70,6 +70,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // POST: /api/v1/items/import
         [HttpPost("import")]
+        [Consumes("multipart/form-data")]
         public async Task<ActionResult<ApiResponse<ImportItemsResponseDto>>> ImportItemsFromExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)

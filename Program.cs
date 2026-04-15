@@ -29,6 +29,7 @@ using BackendTechnicalAssetsManagement.src.Authorization;
 using BackendTechnicalAssetsManagement.src.BackgroundServices;
 using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.Extensions;
+using BackendTechnicalAssetsManagement.src.Filters;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
 using BackendTechnicalAssetsManagement.src.Middleware;
@@ -162,6 +163,16 @@ builder.Services.AddSwaggerGen(options =>
             new string[] { }
         }
     });
+
+    // Map IFormFile to file upload in Swagger
+    options.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+
+    // Add operation filter for file uploads
+    options.OperationFilter<FileUploadOperationFilter>();
 });
 #endregion
 
@@ -324,32 +335,31 @@ builder.Services.AddCors(options =>
 /// </summary>
 var app = builder.Build();
 
-#region Development Environment Configuration
+#region API Documentation Configuration
 /// <summary>
-/// Configure development-only features: Swagger UI and Scalar API documentation
+/// Configure API documentation: Swagger UI and Scalar
 /// </summary>
-if (app.Environment.IsDevelopment())
+// Configure Swagger (use default route)
+app.UseSwagger(options =>
 {
-    // Configure Swagger with custom route template
-    app.UseSwagger(options =>
-    {
-        options.RouteTemplate = "openapi/{documentName}.json";
-    });
+    options.RouteTemplate = "swagger/{documentName}/swagger.json";
+});
 
-    // Configure Swagger UI
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "v1");
-        options.RoutePrefix = "swagger"; // Available at /swagger
-    });
+// Configure Swagger UI
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Backend Technical Assets Management API v1");
+});
 
-    // Configure Scalar API documentation (modern alternative to Swagger UI)
-    app.MapScalarApiReference(options =>
-    {
-        options.Title = "Backend Technical Assets Management API";
-        options.Theme = ScalarTheme.DeepSpace; // Dark theme for better developer experience
-    });
-}
+// Configure Scalar API documentation
+app.MapScalarApiReference(options =>
+{
+    options
+        .WithTitle("Backend Technical Assets Management API")
+        .WithTheme(ScalarTheme.Purple)
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+        .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+});
 #endregion
 
 #region Security & Error Handling Middleware

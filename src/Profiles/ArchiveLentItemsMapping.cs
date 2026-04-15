@@ -44,6 +44,21 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // Map for Reading/Listing Archive DTOs
             CreateMap<ArchiveLentItems, ArchiveLentItemsDto>()
+                .ForMember(dest => dest.LentItemId, opt => opt.MapFrom(src => src.ItemId))
+                .ForMember(dest => dest.Item, opt => opt.MapFrom(src => src.Item != null ? 
+                    new ItemDto 
+                    { 
+                        Id = src.Item.Id,
+                        SerialNumber = src.Item.SerialNumber,
+                        ItemName = src.Item.ItemName,
+                        ItemType = src.Item.ItemType,
+                        ItemModel = src.Item.ItemModel,
+                        ItemMake = src.Item.ItemMake,
+                        Description = src.Item.Description,
+                        Category = src.Item.Category,
+                        Condition = src.Item.Condition,
+                        Status = src.Item.Status
+                    } : null))
                 .ForMember(dest => dest.FrontStudentIdPicture, opt => opt.MapFrom(src =>
                     src.FrontStudentIdPicture != null ?
                     $"data:image/png;base64,{Convert.ToBase64String(src.FrontStudentIdPicture)}" :

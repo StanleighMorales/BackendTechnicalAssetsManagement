@@ -190,6 +190,7 @@ public class UserController : ControllerBase
     /// </summary>
     [HttpPost("students/import")]
     [Authorize(Roles = "Admin,Staff")]
+    [Consumes("multipart/form-data")]
     public async Task<ActionResult<ApiResponse<ImportStudentsResponseDto>>> ImportStudents(IFormFile file)
     {
         try

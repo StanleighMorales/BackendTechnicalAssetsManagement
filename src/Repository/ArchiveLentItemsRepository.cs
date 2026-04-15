@@ -27,14 +27,12 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 return Enumerable.Empty<ArchiveLentItems>();
             }
             return await _context.ArchiveLentItems
-                .Include(a => a.Item)
                 .ToListAsync();
         }
 
         public async Task<ArchiveLentItems?> GetArchiveLentItemsByIdAsync(Guid id)
         {
             return await _context.ArchiveLentItems
-                .Include(a => a.Item)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

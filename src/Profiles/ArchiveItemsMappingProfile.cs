@@ -16,7 +16,8 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                     $"data:{src.ImageMimeType};base64,{Convert.ToBase64String(src.Image)}" :
                     null))
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<ItemCategory>(src.Category.ToString())))
-                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())));
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => Enum.Parse<ItemCondition>(src.Condition.ToString())))
+                .ForMember(dest => dest.ArchivedAt, opt => opt.MapFrom(src => src.CreatedAt));
 
             CreateMap<ArchiveItems, CreateArchiveItemsDto>();
             CreateMap<ArchiveItems, UpdateArchiveItemsDto>();
