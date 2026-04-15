@@ -69,20 +69,21 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // POST: /api/v1/items/import
+        /// <summary>
+        /// Imports items from an Excel (.xlsx, .xls) or CSV file.
+        /// Expected columns: SerialNumber, ItemName, ItemType, ItemModel, ItemMake, Description, Category, Condition, Image
+        /// Access is restricted to users with 'Admin' or 'Staff' roles.
+        /// </summary>
         [HttpPost("import")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<ApiResponse<ImportItemsResponseDto>>> ImportItemsFromExcel(IFormFile file)
         {
-            if (file == null || file.Length == 0)
-                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("No file uploaded."));
-
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (fileExtension != ".xlsx")
-                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Only .xlsx files are allowed for import."));
-
-            var allowedMimeTypes = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
-            if (!allowedMimeTypes.Contains(file.ContentType))
-                return BadRequest(ApiResponse<ImportItemsResponseDto>.FailResponse("Invalid file type. Only Excel (.xlsx) files are allowed."));
+            // Comprehensive file validation (extension, MIME type, magic bytes)
+            var (isValid, errorMessage) = await FileValidationUtils.ValidateImportFileAsync(file);
+            if (!isValid)
+            {
+                return StatusCode(415, ApiResponse<ImportItemsResponseDto>.FailResponse(errorMessage!));
+            }
 
             try
             {

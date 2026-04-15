@@ -183,8 +183,8 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Imports multiple students from an Excel (.xlsx) file with auto-generated usernames and passwords.
-    /// Excel file should contain columns: LastName, FirstName, MiddleName (optional)
+    /// Imports multiple students from an Excel (.xlsx, .xls) or CSV file with auto-generated usernames and passwords.
+    /// Excel/CSV file should contain columns: LastName, FirstName, MiddleName (optional)
     /// Returns detailed results including generated credentials for each student.
     /// Access is restricted to users with 'Admin' or 'Staff' roles.
     /// </summary>
@@ -195,16 +195,11 @@ public class UserController : ControllerBase
     {
         try
         {
-            if (file == null || file.Length == 0)
+            // Comprehensive file validation (extension, MIME type, magic bytes)
+            var (isValid, errorMessage) = await FileValidationUtils.ValidateImportFileAsync(file);
+            if (!isValid)
             {
-                return BadRequest(ApiResponse<ImportStudentsResponseDto>.FailResponse("No file uploaded."));
-            }
-
-            // Validate file extension
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (fileExtension != ".xlsx" && fileExtension != ".xls")
-            {
-                return BadRequest(ApiResponse<ImportStudentsResponseDto>.FailResponse("Only Excel files (.xlsx or .xls) are allowed."));
+                return StatusCode(415, ApiResponse<ImportStudentsResponseDto>.FailResponse(errorMessage!));
             }
 
             var result = await _userService.ImportStudentsFromExcelAsync(file);
