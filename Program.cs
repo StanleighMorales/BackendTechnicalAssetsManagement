@@ -231,23 +231,53 @@ builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 
 #region Database Configuration
 /// <summary>
-/// Configure Entity Framework DbContext with environment-based provider selection
+/// Configure Entity Framework DbContext with flexible provider selection
+/// Supports: SQL Server (local), PostgreSQL (local/Railway), Supabase
 /// </summary>
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
+string? connectionString = null;
 
-// Choose DB provider based on environment
-if (builder.Environment.IsDevelopment())
+// Select connection string based on provider
+switch (databaseProvider.ToLower())
 {
-    // Local development → SQL Server
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
-else
-{
-    // Production → Railway Postgres
-    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(connectionString));
+    case "sqlserver":
+        connectionString = builder.Configuration.GetConnectionString("SqlServer") 
+            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(connectionString));
+        break;
+
+    case "postgresql":
+        connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
+            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
+        break;
+
+    case "supabase":
+        connectionString = builder.Configuration.GetConnectionString("Supabase") 
+            ?? builder.Configuration.GetConnectionString("DefaultConnection");
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
+        break;
+
+    default:
+        // Fallback to environment-based selection (legacy behavior)
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(connectionString));
+        }
+        else
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(connectionString));
+        }
+        break;
 }
 #endregion
 
@@ -258,18 +288,22 @@ else
 // Validate that connection string is configured
 if (string.IsNullOrEmpty(connectionString))
 {
-    throw new InvalidOperationException("The database connection string 'DefaultConnection' was not found in the configuration.");
+    throw new InvalidOperationException($"The database connection string for provider '{databaseProvider}' was not found in the configuration.");
 }
 
-// Add health checks for database connectivity
+// Add health checks for database connectivity based on provider
 var healthChecks = builder.Services.AddHealthChecks();
-if (builder.Environment.IsDevelopment())
+switch (databaseProvider.ToLower())
 {
-    healthChecks.AddSqlServer(connectionString, name: "SQL Server");
-}
-else
-{
-    // healthChecks.AddNpgSql(connectionString, name: "PostgreSQL");
+    case "sqlserver":
+        healthChecks.AddSqlServer(connectionString, name: "SQL Server");
+        break;
+    case "postgresql":
+        healthChecks.AddNpgSql(connectionString, name: "PostgreSQL");
+        break;
+    case "supabase":
+        healthChecks.AddNpgSql(connectionString, name: "Supabase PostgreSQL");
+        break;
 }
 #endregion
 
