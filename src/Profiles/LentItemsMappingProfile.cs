@@ -28,6 +28,15 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
 
             // DTO -> Entity (for update)
             CreateMap<UpdateLentItemDto, LentItems>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.ItemId, opt => opt.Ignore())
+                .ForMember(dest => dest.ItemName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerFullName, opt => opt.Ignore())
+                .ForMember(dest => dest.BorrowerRole, opt => opt.Ignore())
+                .ForMember(dest => dest.StudentIdNumber, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ReturnedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.LentAt, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<ScanLentItemDto , LentItems>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
