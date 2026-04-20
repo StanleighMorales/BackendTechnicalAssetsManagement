@@ -1,270 +1,126 @@
 # Backend Technical Assets Management
 
-A comprehensive ASP.NET Core Web API for managing technical assets, lending operations, and user management.
+A comprehensive, high-performance ASP.NET Core 8 Web API designed for managing technical assets, streamlining lending operations, scaling user management, and providing real-time data integrations.
 
 ## 🚀 Quick Start
 
-**Already set up?** Just run:
+**Already set up?** Use the `Makefile` commands to get started:
 ```bash
 make dev    # Development mode with hot reload
 ```
 
-**First time here?** Jump to [First Time Setup](#-first-time-setup) below.
+**First time here?** Jump to the [First Time Setup](#-first-time-setup) section below.
 
 The API will be available at: **http://localhost:5278**
+Documentation will be accessible at: **http://localhost:5278/swagger**
 
 ## ✨ Features
 
-- **Item Management**: Track technical assets with serial numbers (auto-uppercase), barcodes, and images
-- **Lending System**: Manage item borrowing and returns with barcode scanning
-- **User Management**: Support for multiple user roles (Admin, Staff, Teacher, Student)
-- **Stock Tracking**: Real-time inventory levels grouped by item name
-- **Excel Import**: Bulk import items from Excel files
-- **Archive System**: Soft delete for users and items
-- **Authentication**: JWT-based authentication with role-based access control
+- **Advanced Item Management**: Track technical assets via serial numbers, automatic barcode generation, and the newly integrated RFID validation system. Supports status tracking, conditions, and images.
+- **Lending & Returns**: Robust checkout and return workflows. Implemented robust timezone support and tracking metrics for long-term and short-term borrows.
+- **Real-Time Notifications (SignalR)**: Seamless push notifications for user actions, lending state changes, and system alerts via WebSockets.
+- **Real-Time Stock Tracking**: Provides real-time dynamic inventory levels, aggregated by item types or tags, taking borrows/returns into account instantaneously.
+- **Excel Bulk Import**: Smooth ingestion of large inventory data from Excel files (`.xlsx`), with condition tracking and auto-generation functionalities.
+- **Rich User Management Array**: Supports comprehensive Role-Based Access Control (RBAC) (SuperAdmin, Admin, Staff, Guest, Student). Features soft-delete and structured user archiving.
+- **Activity Logging & Audits**: Continuous traceability for all core actions via a dedicated activity logging pipeline.
+- **Cloud-Ready Data Models**: Optimized for PostgreSQL (Supabase) via Entity Framework Core with seamless schema migrations.
 
 ## 🛠️ Technology Stack
 
-- **Framework**: ASP.NET Core 8.0
-- **Database**: SQL Server with Entity Framework Core
-- **Authentication**: JWT Bearer tokens
-- **Testing**: xUnit with Moq
-- **Documentation**: Swagger/OpenAPI
-
-## 📋 Prerequisites
-
-- .NET 8 SDK - [Download here](https://dotnet.microsoft.com/download/dotnet/8.0)
-- SQL Server or SQL Server LocalDB
-- Make (see installation below)
-- (Optional) Visual Studio 2022, VS Code, or Rider
+- **Framework**: .NET 8.0 / ASP.NET Core Web API
+- **Database**: PostgreSQL (leveraging **Supabase**) via Entity Framework Core (Npgsql)
+- **Authentication/Security**: JWT Bearer Tokens, Custom Authorization Handlers
+- **Real-time Engine**: SignalR WebSockets
+- **Object Mapping**: AutoMapper
+- **API Documentation**: Swagger/OpenAPI UI & Scalar API Reference
+- **Testing Engine**: xUnit, Moq, and integration tests suite
 
 ## 🎯 First Time Setup
 
-### 1. Install Make
+### 1. Prerequisites
 
-**Windows** (PowerShell as Administrator):
-```powershell
-winget install GnuWin32.Make
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Make Utility properly installed (`winget install GnuWin32.Make` for Windows, `brew install make` for macOS)
+- A **Supabase** Project or local PostgreSQL instance.
+
+### 2. Configuration & Secrets
+
+Duplicate the local environment template and point to your PostgreSQL / Supabase server:
+1. Rename `.env.example` to `.env` if not present.
+2. Provide your connection string:
+```env
+# .env Configuration Example
+ASPNETCORE_ENVIRONMENT=Development
+ConnectionStrings__DefaultConnection="Host=your_supabase_host;Database=postgres;Username=postgres;Password=your_password"
+ConnectionStrings__Supabase="Host=your_supabase_host;Database=postgres;Username=postgres;Password=your_password"
+Jwt__Key=YourSuperSecretKeyThatIsAtLeast32Bytes!
+Jwt__Issuer=TechnicalAssetsAPI
 ```
-Then **restart your terminal**.
+Ensure your `appsettings.json` and `appsettings.Development.json` values are mirrored or properly substituted with your `.env` secrets.
 
-**Linux**:
+### 3. Setup and Run
+Use Make to automate setup pipelines if available, or manually run Dotnet CLI commands.
 ```bash
-sudo apt-get install build-essential  # Ubuntu/Debian
+# Using Dotnet CLI (recommended if Makefile is unconfigured)
+dotnet restore
+dotnet ef database update
+dotnet watch run --launch-profile http
 ```
+*(Optionally, use local `make restore`, `make migrate`, and `make dev`)*
 
-**macOS**:
-```bash
-brew install make
-```
+### 4. Verify & Initialize
 
-### 2. Clone and Navigate
-```bash
-git clone <your-repo-url>
-cd BackendTechnicalAssetsManagement
-```
+Open **http://localhost:5278/swagger** — you should be presented with the Scalar/Swagger visual API documentation. To seed your initial administrator:
+Use the `/api/v1/auth/register` endpoint to create your first `Admin` or `SuperAdmin` role locally.
 
-### 3. Configure Database
+## 📊 API & System Architecture
 
-Update `appsettings.json` if needed:
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=TechnicalAssetsDB;Trusted_Connection=true;MultipleActiveResultSets=true"
-}
-```
+The core directories are modeled to strictly adhere to dependency injection and separation of concerns (`src/` folder):
 
-### 4. Setup and Run
-```bash
-make restore    # Restore packages
-make migrate    # Setup database
-make dev        # Run with hot reload
-```
+- **Controllers** (`src/Controllers`): Inbound HTTP routing and endpoint mapping.
+- **Services** (`src/Services`): Core Business logic. Translates external DTOs into rich domain rules.
+- **Repositories** (`src/Repository`): Abstraction over EF Core contexts for fetching, updating, tracking PostgreSQL states.
+- **Hubs** (`src/Hubs`): SignalR Hub endpoints (`/notificationHub`).
+- **DTOs** (`src/DTOs`): Immutable data transfer shapes for inputs/outputs.
+- **BackgroundServices** (`src/BackgroundServices`): Hosted workloads, like the `RefreshTokenCleanupService` or Reservation expiration managers.
 
-### 5. Verify
-Open **http://localhost:5278/swagger** - you should see the API documentation.
+### Important Route Prefixes:
+- `GET /api/v1/summary` - Aggregated live stock, active lent items, and data reports.
+- `POST /api/v1/items/bulk-import` - Multi-part file upload form for XLSX mass ingestion.
+- `GET /api/v1/items`, `api/v1/lentItems`, `api/v1/users` - Standard decoupled resource management logic.
 
-### 6. Create First User
+## 🔐 Authentication & Setup
 
-Use Swagger or the `.http` file:
+The API uses **JWT Token authorization**. Place the retrieved token into your client headers:
 ```http
-POST http://localhost:5278/api/v1/auth/register
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "YourSecurePassword123!",
-  "email": "admin@example.com",
-  "firstName": "Admin",
-  "lastName": "User",
-  "userRole": "Admin"
-}
+Authorization: Bearer <your_retrieved_jwt_token>
 ```
+To enable Cross-Origin Resource Sharing (CORS), the system specifies an unrestricted policy in development (including mobile app emulator ranges like `10.0.2.2`).
 
-## 🏃 Common Commands
+## 📚 Advanced Documentation
 
-```bash
-# Development
-make dev         # Run with hot reload (recommended for development)
-make run         # Run normally
-make build       # Build project
+For deeper dives into complex logic flows, database structure, and deployment strategies, see our dedicated docs:
 
-# Database
-make migrate     # Apply database migrations
-make migration NAME=YourMigrationName  # Create new migration
-make db-drop     # Drop database
-make db-update   # Update to latest migration
-
-# Testing
-make test        # Run all tests
-make test-watch  # Run tests in watch mode
-make test-coverage  # Run with coverage
-
-# Maintenance
-make clean       # Clean build artifacts
-make restore     # Restore NuGet packages
-make help        # Show all available commands
-```
-
-### Manual Commands (without Make)
-
-```bash
-# Run
-dotnet run --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj --launch-profile http
-
-# Run with hot reload
-dotnet watch run --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj --launch-profile http
-
-# Build
-dotnet build BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
-
-# Test
-dotnet test BackendTechnicalAssetsManagementTest/BackendTechnicalAssetsManagementTest.csproj
-
-# Migrations
-dotnet ef migrations add MigrationName --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
-dotnet ef database update --project BackendTechnicalAssetsManagement/BackendTechnicalAssetsManagement.csproj
-```
-
-## 📊 API Endpoints
-
-### Summary
-- `GET /api/v1/summary` - Complete system summary with stock information
-
-### Items
-- `GET /api/v1/items` - Get all items
-- `POST /api/v1/items` - Create new item
-- `GET /api/v1/items/{id}` - Get item by ID
-- `PUT /api/v1/items/{id}` - Update item
-- `DELETE /api/v1/items/{id}` - Delete item
-
-### Lent Items
-- `GET /api/v1/lentItems` - Get all lent items
-- `POST /api/v1/lentItems` - Create lending transaction
-- `PATCH /api/v1/lentItems/return/item/{barcode}` - Return item by barcode
-- `GET /api/v1/lentItems/date/{date}` - Get lent items by date
-
-### Users
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login
-- `GET /api/v1/users` - Get all users
-- `GET /api/v1/users/{id}` - Get user by ID
-- `PUT /api/v1/users/{id}` - Update user
-- `DELETE /api/v1/users/{id}` - Archive user
-
-See full documentation at `/swagger` when running the application.
-
-## 🔐 Authentication
-
-The API uses JWT Bearer tokens. Include the token in requests:
-```
-Authorization: Bearer {your-jwt-token}
-```
-
-## 📦 Stock Tracking
-
-The system automatically tracks inventory levels for items with the same name:
-
-**Example**: If you have 10 "HDMI Cable" items with unique serial numbers:
-- Total: 10
-- Available: 7 (Status = Available)
-- Borrowed: 3 (Status = Borrowed)
-
-Stock counts update automatically when items are borrowed or returned.
-
-## 📥 Excel Import
-
-Import multiple items from Excel files with support for:
-- Item details (name, type, make, model)
-- Images (file paths or URLs)
-- Condition tracking
-- Automatic barcode generation
-- All imported items automatically set to "Available" status
-
-See [IMPORT_GUIDE.md](IMPORT_GUIDE.md) for Excel format and instructions.
+- **[RFID System Improvements](docs/RFID_System_Improvements.md)** - Details on bridging hardware scanners to the backend platform.
+- **[Deployment & Azure Migrations](docs/Azure_Architecture_Overview.md)** - In-depth cloud infrastructure, scaling via Azure, or Railway.
+- **[Testing Strategies](docs/TestChecklist.md)** - Details on running xUnit mocks effectively.
+- **[Supabase Guidelines](docs/Supabase_Migration_Checklist.md)** - PostreSQL schema checklists.
 
 ## 🧪 Testing
 
-Run all tests:
+Run standard unit and integration pipelines directly:
 ```bash
+dotnet test
+# Or using Make
 make test
 ```
 
-See [TESTING_SETUP_GUIDE.md](TESTING_SETUP_GUIDE.md) for detailed testing information.
-
-## 🎯 Project Structure
-
-```
-BackendTechnicalAssetsManagement/
-├── Makefile                 # Command shortcuts
-├── src/
-│   ├── Classes/            # Domain models
-│   ├── Controllers/        # API endpoints
-│   ├── Services/           # Business logic
-│   ├── Repository/         # Data access
-│   ├── DTOs/              # Data transfer objects
-│   └── Utils/             # Utilities and helpers
-├── Migrations/            # EF Core migrations
-└── Test/                  # Unit tests
-```
-
-## 🔧 Troubleshooting
-
-### Port Already in Use
-Stop any running instances or check Task Manager for `BackendTechnicalAssetsManagement.exe`
-
-### Build Errors
-```bash
-make clean
-make restore
-make build
-```
-
-### Database Issues
-```bash
-make db-drop
-make migrate
-```
-
-### Migration Failed
-Verify SQL Server is running and check connection string in `appsettings.json`
-
-## 📚 Additional Documentation
-
-- **[IMPORT_GUIDE.md](IMPORT_GUIDE.md)** - Excel import functionality
-- **[TESTING_SETUP_GUIDE.md](TESTING_SETUP_GUIDE.md)** - Testing guide
-- **[INSTALL_MAKE.md](INSTALL_MAKE.md)** - Detailed Make installation
-
 ## 🤝 Contributing
 
-1. Create a feature branch
-2. Make your changes
-3. Run tests: `make test`
-4. Submit a pull request
-
-## 📝 License
-
-[Your License Here]
+1. Create a feature branch based on your modifications.
+2. Run formatters and ensure `dotnet test` completes comprehensively.
+3. Keep dependency injection explicitly registered in `Program.cs` under its proper scope mapping.
+4. Submit your Pull Request.
 
 ---
-
-**Made with ❤️ for efficient asset management**
+**Made with ❤️ for efficient technical assets management.**
