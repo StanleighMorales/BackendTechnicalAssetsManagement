@@ -85,6 +85,20 @@ public class UserController : ControllerBase
     {
         try
         {
+            // Get current user ID from token
+            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(currentUserIdString, out var currentUserId))
+            {
+                return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
+            }
+
+            // Check if user is trying to update their own profile or is an Admin
+            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+            if (currentUserRole != "Admin" && currentUserId != id)
+            {
+                return Forbid(); // Students can only update their own profile
+            }
+
             var success = await _userService.UpdateStudentProfileAsync(id, studentDto);
 
             if (!success)
