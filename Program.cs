@@ -126,6 +126,10 @@ builder.Services.AddAuthorization(options =>
     // Policy for operations requiring Admin, SuperAdmin, or Staff roles
     options.AddPolicy("AdminOrStaff", policy =>
         policy.RequireRole("Admin", "SuperAdmin", "Staff"));
+    
+    // Policy for all authenticated users (read access)
+    options.AddPolicy("AllUsers", policy =>
+        policy.RequireRole("Admin", "SuperAdmin", "Staff", "Teacher", "Student"));
 });
 #endregion
 #region API Documentation (Swagger/OpenAPI)
