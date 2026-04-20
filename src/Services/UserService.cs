@@ -21,8 +21,10 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IPasswordHashingService _passwordHashingService;
         private readonly IExcelReaderService _excelReaderService;
         private readonly ISupabaseStorageService _storageService;
+        private readonly IItemRepository _itemRepository;
+        private readonly ILentItemsRepository _lentItemsRepository;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService, ISupabaseStorageService storageService)
+        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService, ISupabaseStorageService storageService, IItemRepository itemRepository, ILentItemsRepository lentItemsRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -30,6 +32,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _passwordHashingService = passwordHashingService;
             _excelReaderService = excelReaderService;
             _storageService = storageService;
+            _itemRepository = itemRepository;
+            _lentItemsRepository = lentItemsRepository;
         }
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
@@ -43,22 +47,36 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 2. Explicitly check the runtime type and map to the specific DTO.
             // This circumvents the occasional failure of AutoMapper's runtime polymorphism.
+            BaseProfileDto profile;
             if (user is Student student)
             {
-                return _mapper.Map<GetStudentProfileDto>(student);
+                profile = _mapper.Map<GetStudentProfileDto>(student);
+                
+                // 3. Populate ItemSummary array for students only
+                var summary = await GetUserItemSummaryAsync(userId);
+                ((GetStudentProfileDto)profile).ItemSummary = new List<ItemStatusCountDto>
+                {
+                    new ItemStatusCountDto { Status = "Reserved", Count = summary.ReservedCount },
+                    new ItemStatusCountDto { Status = "Borrowed", Count = summary.BorrowedCount },
+                    new ItemStatusCountDto { Status = "Returned", Count = summary.ReturnedCount },
+                    new ItemStatusCountDto { Status = "Available", Count = summary.AvailableCount }
+                };
             }
             else if (user is Teacher teacher)
             {
-                return _mapper.Map<GetTeacherProfileDto>(teacher);
+                profile = _mapper.Map<GetTeacherProfileDto>(teacher);
             }
             else if (user is Staff staff)
             {
-                return _mapper.Map<GetStaffProfileDto>(staff);
+                profile = _mapper.Map<GetStaffProfileDto>(staff);
+            }
+            else
+            {
+                // Fallback: If the user is a base User or an unknown type, map to the base profile DTO.
+                profile = _mapper.Map<BaseProfileDto>(user);
             }
 
-            // Fallback: If the user is a base User or an unknown type, map to the base profile DTO.
-            // This is less likely to happen in a TPH setup, but is a safe fallback.
-            return _mapper.Map<BaseProfileDto>(user);
+            return profile;
         }
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
@@ -502,6 +520,39 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var student = await _userRepository.GetStudentByRfidUidAsync(rfidUid);
             if (student == null) return null;
             return new { student.Id, student.FirstName, student.LastName, student.StudentIdNumber };
+        }
+
+        public async Task<UserItemSummaryDto> GetUserItemSummaryAsync(Guid userId)
+        {
+            // Get all lent items for this specific user
+            var allLentItems = await _lentItemsRepository.GetAllAsync();
+            var userLentItems = allLentItems.Where(li => li.UserId == userId).ToList();
+
+            // Count items by status from the user's borrow history
+            var summary = new UserItemSummaryDto
+            {
+                // Reserved: User's lent items with Pending or Approved status (waiting to borrow)
+                ReservedCount = userLentItems.Count(li => 
+                    li.Status != null && 
+                    (li.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase) || 
+                     li.Status.Equals("Approved", StringComparison.OrdinalIgnoreCase))),
+                
+                // Borrowed: User's lent items with Borrowed status (currently borrowed)
+                BorrowedCount = userLentItems.Count(li => 
+                    li.Status != null && 
+                    li.Status.Equals("Borrowed", StringComparison.OrdinalIgnoreCase)),
+                
+                // Returned: User's lent items with Returned status
+                ReturnedCount = userLentItems.Count(li => 
+                    li.Status != null && 
+                    li.Status.Equals("Returned", StringComparison.OrdinalIgnoreCase)),
+                
+                // Available: Items that are available in the system (not user-specific, for reference)
+                AvailableCount = (await _itemRepository.GetAllAsync())
+                    .Count(i => i.Status == Enums.ItemStatus.Available)
+            };
+
+            return summary;
         }
     }
 }

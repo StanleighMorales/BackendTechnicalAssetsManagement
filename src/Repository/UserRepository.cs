@@ -81,15 +81,23 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         //}
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await _context.Users
-                .Include(u => u.LentItems
-                .Where(li => !li.IsHiddenFromUser).OrderByDescending(li => li.LentAt))
+            var user = await _context.Users
+                .Include(u => u.LentItems)
                     .ThenInclude(li => li.Item)
-                .Include(u => u.LentItems
-                    .Where(li => !li.IsHiddenFromUser) 
-                    .OrderByDescending(li => li.LentAt))
+                .Include(u => u.LentItems)
                     .ThenInclude(li => li.Teacher)
                 .FirstOrDefaultAsync(u => u.Id == id);
+
+            // Filter out hidden items after loading
+            if (user != null && user.LentItems != null)
+            {
+                user.LentItems = user.LentItems
+                    .Where(li => !li.IsHiddenFromUser)
+                    .OrderByDescending(li => li.CreatedAt)
+                    .ToList();
+            }
+
+            return user;
         }
 
         public async Task<User?> GetByIdentifierAsync(string identifier)
