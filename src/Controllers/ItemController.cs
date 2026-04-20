@@ -10,7 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/items")]
-    [Authorize(Policy = "AdminOrStaff")]
+    [Authorize]
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
@@ -22,6 +22,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // POST: /api/v1/items
         [HttpPost]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
         {
             try
@@ -42,6 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items
         [HttpGet]
+        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ItemDto>>>> GetAllItems()
         {
             var items = await _itemService.GetAllItemsAsync();
@@ -50,6 +52,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemById(Guid id)
         {
             var item = await _itemService.GetItemByIdAsync(id);
@@ -60,6 +63,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // GET: /api/v1/items/by-serial/{serialNumber}
         [HttpGet("by-serial/{serialNumber}")]
+        [Authorize(Roles = "Admin,SuperAdmin,Staff,Teacher,Student")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> GetItemBySerialNumber(string serialNumber)
         {
             var item = await _itemService.GetItemBySerialNumberAsync(serialNumber);
@@ -76,6 +80,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// </summary>
         [HttpPost("import")]
         [Consumes("multipart/form-data")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ImportItemsResponseDto>>> ImportItemsFromExcel(IFormFile file)
         {
             // Comprehensive file validation (extension, MIME type, magic bytes)
@@ -115,6 +120,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // PATCH: /api/v1/items/{id}
         [HttpPatch("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateItem(Guid id, [FromForm] UpdateItemsDto updateItemDto)
         {
             try
