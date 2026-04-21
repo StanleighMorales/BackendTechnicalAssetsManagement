@@ -14,7 +14,7 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
         {
             if (SkipSeedData) return;
 
-            var passwordHasher = new PasswordHashingService();
+            var passwordHasher = new PasswordHashingService(workFactor: 4);
             string pw = passwordHasher.HashPassword("@Pass123");
 
             // =========================================================
