@@ -229,7 +229,8 @@ builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 
 // Utility Services (Singleton: single instance for application lifetime)
-builder.Services.AddSingleton<IPasswordHashingService, PasswordHashingService>();
+builder.Services.AddSingleton<IPasswordHashingService>(sp =>
+    new PasswordHashingService(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddSingleton<IDevelopmentLoggerService, DevelopmentLoggerService>();
 builder.Services.AddSingleton<ISupabaseStorageService, SupabaseStorageService>();
 

@@ -4,6 +4,9 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
 {
     public class ChangePasswordDto
     {
+        // Required when a user is changing their own password. Not required for Admin/SuperAdmin changing another user's password.
+        public string? OldPassword { get; set; }
+
         [Required]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         // This regex ensures the password contains the required characters.

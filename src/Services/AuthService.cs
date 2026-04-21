@@ -379,6 +379,17 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 throw new UnauthorizedAccessException("You do not have permission to change a SuperAdmin's password.");
             }
 
+            // When a user is changing their own password, they must provide the current password to verify identity.
+            // Admins/SuperAdmins changing another user's password are exempt from this check.
+            if (isChangingOwnPassword)
+            {
+                if (string.IsNullOrEmpty(request.OldPassword))
+                    throw new UnauthorizedAccessException("Current password is required to change your own password.");
+
+                if (!_passwordHashingService.VerifyPassword(request.OldPassword, userToUpdate.PasswordHash ?? string.Empty))
+                    throw new UnauthorizedAccessException("The current password you provided is incorrect.");
+            }
+
             // Hashes the new password securely before storing it in the database.
             userToUpdate.PasswordHash = _passwordHashingService.HashPassword(request.NewPassword ?? throw new ArgumentNullException(nameof(request.NewPassword)));
 
