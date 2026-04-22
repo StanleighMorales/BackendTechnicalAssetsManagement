@@ -43,6 +43,9 @@ using static BackendTechnicalAssetsManagement.src.Classes.Enums;
             // Auto-expiry
             Task<int> CancelExpiredReservationsAsync();
 
+            // Student cancel reservation
+            Task<(bool Success, string ErrorMessage)> CancelReservationAsync(Guid lentItemId, Guid userId);
+
             // Persistence
             Task<bool> SaveChangesAsync();
 

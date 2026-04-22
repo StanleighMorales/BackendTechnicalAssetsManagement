@@ -5,6 +5,6 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.User
     public class RegisterStudentRfidDto
     {
         [Required]
-        public string RfidUid { get; set; } = string.Empty;
+        public string RfidCode { get; set; } = string.Empty;
     }
 }

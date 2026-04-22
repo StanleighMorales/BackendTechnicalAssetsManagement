@@ -48,6 +48,9 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
         public string Section { get; set; } = string.Empty;
         public string Year { get; set; } = string.Empty;
 
+        public string? RfidUid { get; set; }
+        public string? RfidCode { get; set; }
+
         public string Street { get; set; } = string.Empty;
         public string CityMunicipality { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;

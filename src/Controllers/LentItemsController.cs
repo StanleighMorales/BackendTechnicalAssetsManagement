@@ -36,10 +36,21 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// Future reservation — item will be picked up at a scheduled time.
         /// ReservedFor is required and must be in the future.
         /// Status is set to Pending by the backend.
+        /// If userId is not provided in the request, the authenticated user's ID is used automatically.
         /// </summary>
         [HttpPost("reserve")]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> Reserve([FromBody] CreateReservationDto dto)
         {
+            // If userId is not provided, use the authenticated user's ID
+            if (!dto.UserId.HasValue && !dto.TeacherId.HasValue)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (Guid.TryParse(userIdClaim, out var authenticatedUserId))
+                {
+                    dto.UserId = authenticatedUserId;
+                }
+            }
+
             var created = await _service.AddReservationAsync(dto);
             var response = ApiResponse<LentItemsDto>.SuccessResponse(created, "Reservation created successfully.");
 
@@ -186,6 +197,35 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             }
             var successResponse = ApiResponse<object>.SuccessResponse(null, "Item archived successfully.");
             return Ok(successResponse);
+        }
+
+        /// <summary>
+        /// Allows students to cancel their own Pending or Approved reservations.
+        /// Cannot cancel if item is already Borrowed, Returned, Denied, Expired, or Canceled.
+        /// </summary>
+        [HttpPatch("cancel/{id}")]
+        [Authorize]
+        public async Task<ActionResult<ApiResponse<object>>> CancelReservation(Guid id)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(ApiResponse<object>.FailResponse("User not authenticated."));
+            }
+
+            var (success, errorMessage) = await _service.CancelReservationAsync(id, userId);
+            
+            if (!success)
+            {
+                if (errorMessage.Contains("not found"))
+                    return NotFound(ApiResponse<object>.FailResponse(errorMessage));
+                if (errorMessage.Contains("not authorized"))
+                    return StatusCode(403, ApiResponse<object>.FailResponse(errorMessage));
+                
+                return BadRequest(ApiResponse<object>.FailResponse(errorMessage));
+            }
+
+            return Ok(ApiResponse<object>.SuccessResponse(null, "Reservation canceled successfully."));
         }
     }
 }

@@ -140,10 +140,46 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (item.Condition == ItemCondition.Defective || item.Condition == ItemCondition.NeedRepair)
                 throw new InvalidOperationException($"Item '{item.ItemName}' is in {item.Condition} condition and cannot be lent.");
 
+            var allLentItems = await _repository.GetAllAsync();
+
+            // Check if the user has an existing reservation for this item
+            if (dto.UserId.HasValue)
+            {
+                var userReservation = allLentItems.FirstOrDefault(li =>
+                    li.ItemId == dto.ItemId &&
+                    li.UserId == dto.UserId.Value &&
+                    (li.Status == "Pending" || li.Status == "Approved"));
+
+                // If user has a reservation, convert it to Borrowed instead of creating new record
+                if (userReservation != null)
+                {
+                    userReservation.Status = LentItemsStatus.Borrowed.ToString();
+                    userReservation.LentAt = DateTime.UtcNow;
+                    userReservation.Room = dto.Room ?? userReservation.Room;
+                    userReservation.SubjectTimeSchedule = dto.SubjectTimeSchedule ?? userReservation.SubjectTimeSchedule;
+                    userReservation.UpdatedAt = DateTime.UtcNow;
+
+                    // Mark item as Borrowed
+                    item.Status = ItemStatus.Borrowed;
+                    item.UpdatedAt = DateTime.UtcNow;
+                    await _itemRepository.UpdateAsync(item);
+
+                    await _repository.UpdateAsync(userReservation);
+                    await _repository.SaveChangesAsync();
+
+                    await _notificationService.SendItemBorrowedNotificationAsync(
+                        userReservation.Id, userReservation.UserId, userReservation.ItemName, userReservation.BorrowerFullName ?? "Unknown");
+
+                    await WriteLogAsync(ActivityLogCategory.BorrowedItem,
+                        $"Reservation converted to borrowed via RFID scan", userReservation, "Pending/Approved", userReservation.Status);
+
+                    return _mapper.Map<LentItemsDto>(userReservation);
+                }
+            }
+
+            // No reservation found, proceed with normal borrow flow
             if (item.Status == ItemStatus.Borrowed || item.Status == ItemStatus.Reserved)
                 throw new InvalidOperationException($"Item '{item.ItemName}' is already {item.Status.ToString().ToLower()} and cannot be lent.");
-
-            var allLentItems = await _repository.GetAllAsync();
 
             var activeLentItem = allLentItems.FirstOrDefault(li =>
                 li.ItemId == dto.ItemId &&
@@ -837,6 +873,79 @@ namespace BackendTechnicalAssetsManagement.src.Services
             }
 
             return expiredCount;
+        }
+
+        /// <summary>
+        /// Allows a student to cancel their own Pending or Approved reservation.
+        /// Cannot cancel if already Borrowed, Returned, Denied, Expired, or Canceled.
+        /// </summary>
+        public async Task<(bool Success, string ErrorMessage)> CancelReservationAsync(Guid lentItemId, Guid userId)
+        {
+            // 1. Get the lent item
+            var lentItem = await _repository.GetByIdAsync(lentItemId);
+            if (lentItem == null)
+            {
+                return (false, "Reservation not found.");
+            }
+
+            // 2. Verify ownership - user can only cancel their own reservations
+            if (lentItem.UserId != userId)
+            {
+                return (false, "You are not authorized to cancel this reservation.");
+            }
+
+            // 3. Check if the status allows cancellation
+            var currentStatus = lentItem.Status ?? string.Empty;
+            var allowedStatuses = new[] { "Pending", "Approved" };
+            
+            if (!allowedStatuses.Contains(currentStatus, StringComparer.OrdinalIgnoreCase))
+            {
+                return (false, $"Cannot cancel reservation with status '{currentStatus}'. Only Pending or Approved reservations can be canceled.");
+            }
+
+            // 4. Update the lent item status to Canceled
+            var oldStatus = lentItem.Status;
+            lentItem.Status = LentItemsStatus.Canceled.ToString();
+            lentItem.UpdatedAt = DateTime.UtcNow;
+            lentItem.LentAt = null;
+
+            // 5. Set the item back to Available
+            var item = await _itemRepository.GetByIdAsync(lentItem.ItemId);
+            if (item != null)
+            {
+                item.Status = ItemStatus.Available;
+                item.UpdatedAt = DateTime.UtcNow;
+                await _itemRepository.UpdateAsync(item);
+            }
+
+            // 6. Save changes
+            await _repository.UpdateAsync(lentItem);
+            var saved = await _repository.SaveChangesAsync();
+
+            if (!saved)
+            {
+                return (false, "Failed to cancel reservation.");
+            }
+
+            // 7. Send notification about the cancellation
+            await _notificationService.SendStatusChangeNotificationAsync(
+                lentItem.Id,
+                lentItem.UserId,
+                lentItem.ItemName ?? "Unknown Item",
+                oldStatus ?? "Unknown",
+                LentItemsStatus.Canceled.ToString()
+            );
+
+            // 8. Log the cancellation
+            await WriteLogAsync(
+                ActivityLogCategory.Canceled,
+                $"Reservation canceled by user",
+                lentItem,
+                oldStatus,
+                LentItemsStatus.Canceled.ToString()
+            );
+
+            return (true, string.Empty);
         }
     }
 }
