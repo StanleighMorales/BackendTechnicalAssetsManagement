@@ -22,18 +22,23 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
 #define WIFI_SSID      "EjGwapo2.4G"
 #define WIFI_PASSWORD  "vigheadTHEG0D2.4G"
-#define API_BASE_URL   "http://192.168.1.7:5289"
+#define API_BASE_URL   "http://192.168.1.4:5289"
 
-#define API_IDENTIFIER "admin"
-#define API_PASSWORD   "@Pass123"
+#define API_IDENTIFIER "christian"
+#define API_PASSWORD   "@Password123"
 
-// Default borrow metadata — adjust or make dynamic as needed
-#define DEFAULT_ROOM     "Room 101"
-#define DEFAULT_SCHEDULE "MWF 8:00-9:30"
+// NTP Configuration (Philippines timezone)
+#define NTP_SERVER     "pool.ntp.org"
+#define GMT_OFFSET_SEC 28800  // GMT+8 (Philippines)
+#define DAYLIGHT_OFFSET_SEC 0
+
+// Default borrow metadata
+#define DEFAULT_ROOM     ""
 
 // ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
@@ -71,6 +76,7 @@ void setup() {
   nfc.SAMConfig();
 
   connectWiFi();
+  syncTime();
   login();
 
   Serial.println("\n[Step 1] Scan your student ID card...");
@@ -114,6 +120,58 @@ void connectWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
   Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
+}
+
+void syncTime() {
+  Serial.println("Syncing time with NTP server...");
+  configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+  
+  struct tm timeinfo;
+  int attempts = 0;
+  while (!getLocalTime(&timeinfo) && attempts < 10) {
+    Serial.print(".");
+    delay(1000);
+    attempts++;
+  }
+  
+  if (attempts >= 10) {
+    Serial.println("\nWarning: Failed to sync time. Using default schedule.");
+  } else {
+    Serial.println("\nTime synced successfully!");
+    Serial.printf("Current time: %s", asctime(&timeinfo));
+  }
+}
+
+String getCurrentSchedule() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    // Fallback if time sync failed
+    return "Monday-Friday 8:00 AM";
+  }
+  
+  // Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+  int dayOfWeek = timeinfo.tm_wday;
+  
+  // Get current hour and minute
+  int hour = timeinfo.tm_hour;
+  int minute = timeinfo.tm_min;
+  
+  // Convert to 12-hour format
+  String ampm = (hour >= 12) ? "PM" : "AM";
+  int hour12 = hour % 12;
+  if (hour12 == 0) hour12 = 12;
+  
+  // Format time as "8:30 AM"
+  char timeStr[20];
+  sprintf(timeStr, "%d:%02d %s", hour12, minute, ampm.c_str());
+  
+  // Day names
+  const char* dayNames[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+  
+  // Generate schedule string
+  String schedule = String(dayNames[dayOfWeek]) + " " + String(timeStr);
+  
+  return schedule;
 }
 
 void login() {
@@ -224,11 +282,14 @@ void submitBorrow() {
   String url = String(API_BASE_URL) + "/api/v1/lentItems";
   Serial.printf("POST %s\n", url.c_str());
 
+  // Get current schedule dynamically
+  String currentSchedule = getCurrentSchedule();
+  Serial.printf("Schedule: %s\n", currentSchedule.c_str());
+
   StaticJsonDocument<256> doc;
   doc["itemId"]               = itemId;
   doc["userId"]               = studentId;
-  doc["room"]                 = DEFAULT_ROOM;
-  doc["subjectTimeSchedule"]  = DEFAULT_SCHEDULE;
+  doc["subjectTimeSchedule"]  = currentSchedule;
   doc["status"]               = "Pending";
   String body;
   serializeJson(doc, body);

@@ -2,26 +2,33 @@
 #include <Adafruit_PN532.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>
 
-// PN532 pins (same as your working code)
+// PN532 pins
 #define PN532_IRQ   4
 #define PN532_RESET 2
 
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 // Network Credentials
-// const char* ssid = "";
-// const char* password = "";
+const char* ssid = "EjGwapo2.4G";
+const char* password = "vigheadTHEG0D2.4G";
 
-// Supabase Configuration
-// const char* serverName = "";
-// const char* apiKey = "";
+// Backend API Configuration
+const char* apiBaseUrl = "http://192.168.1.4:5289";
+
+// Admin credentials for authentication
+const char* adminIdentifier = "christian";
+const char* adminPassword = "@Password123";
+
+// JWT Token
+String jwtToken = "";
 
 void setup() {
   Serial.begin(115200);
   delay(500);
   
-  Serial.println("\n=== RFID Registration Mode ===");
+  Serial.println("\n=== RFID Card Registration Station ===");
   
   // Initialize PN532
   nfc.begin();
@@ -41,7 +48,42 @@ void setup() {
     Serial.print(".");
   }
   Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
-  Serial.println("\nWaiting for RFID tags...");
+  
+  // Login to get JWT token
+  login();
+  
+  Serial.println("\nWaiting for RFID cards to register...");
+}
+
+void login() {
+  String url = String(apiBaseUrl) + "/api/v1/auth/login-mobile";
+  Serial.printf("Logging in as %s...\n", adminIdentifier);
+
+  StaticJsonDocument<128> doc;
+  doc["identifier"] = adminIdentifier;
+  doc["password"]   = adminPassword;
+  String body;
+  serializeJson(doc, body);
+
+  HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+
+  int code = http.POST(body);
+  String resp = http.getString();
+  http.end();
+
+  if (code != 200) {
+    Serial.printf("Login failed (%d) — halting.\n", code);
+    while (1);
+  }
+
+  StaticJsonDocument<1024> respDoc;
+  deserializeJson(respDoc, resp);
+  jwtToken = respDoc["data"]["accessToken"].as<String>();
+  Serial.println("Login successful.");
 }
 
 // Function to generate 8-character random Alphanumeric code
@@ -64,46 +106,80 @@ String getUidString(uint8_t* buf, uint8_t len) {
   return s;
 }
 
-void sendData(String uid, String regCode) {
+bool registerRfidCard(String uid, String regCode) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi disconnected, reconnecting...");
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 10) {
       delay(500);
       Serial.print(".");
+      attempts++;
+    }
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("\nWiFi reconnection failed!");
+      return false;
     }
     Serial.println("\nReconnected!");
+    login(); // Re-login after reconnection
   }
   
+  String url = String(apiBaseUrl) + "/api/v1/rfids";
+  
   HTTPClient http;
-  http.begin(serverName);
-  
-  // Standard Supabase Headers
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
+  http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("apikey", apiKey);
-  http.addHeader("Authorization", "Bearer " + String(apiKey));
+  http.addHeader("Authorization", "Bearer " + jwtToken);
   
-  // JSON Payload with correct column names: RfidUid and RfidCode
-  String jsonPayload = "{\"RfidUid\": \"" + uid + "\", \"RfidCode\": \"" + regCode + "\"}";
+  // Create JSON payload
+  StaticJsonDocument<200> doc;
+  doc["rfidUid"] = uid;
+  doc["rfidCode"] = regCode;
   
-  Serial.printf("Sending to Supabase: %s\n", jsonPayload.c_str());
+  String jsonPayload;
+  serializeJson(doc, jsonPayload);
+  
+  Serial.printf("POST %s\n", url.c_str());
+  Serial.printf("Payload: %s\n", jsonPayload.c_str());
   
   int httpResponseCode = http.POST(jsonPayload);
   String response = http.getString();
-  
-  Serial.printf("HTTP Response code: %d\n", httpResponseCode);
-  
-  if (httpResponseCode > 0) {
-    if (httpResponseCode == 201 || httpResponseCode == 200) {
-      Serial.println("✓ Registration Successful!");
-      Serial.printf("Response: %s\n", response.c_str());
-    } else {
-      Serial.printf("✗ Unexpected response: %s\n", response.c_str());
-    }
-  } else {
-    Serial.printf("✗ Error code: %d\n", httpResponseCode);
-  }
   http.end();
+  
+  Serial.printf("HTTP %d\n", httpResponseCode);
+  
+  if (httpResponseCode == 200) {
+    Serial.println("✓ RFID card registered successfully!");
+    
+    // Parse response message
+    StaticJsonDocument<512> responseDoc;
+    DeserializationError error = deserializeJson(responseDoc, response);
+    if (!error) {
+      const char* message = responseDoc["message"];
+      if (message) {
+        Serial.printf("   %s\n", message);
+      }
+    }
+    return true;
+  } else if (httpResponseCode == 401) {
+    Serial.println("✗ Unauthorized! Token expired, re-logging in...");
+    login();
+    return false;
+  } else if (httpResponseCode == 409) {
+    Serial.println("✗ RFID already registered!");
+    Serial.println("   This card is already in the system.");
+    return false;
+  } else if (httpResponseCode == -1) {
+    Serial.println("✗ Connection error!");
+    Serial.println("   Cannot reach backend server.");
+    return false;
+  } else {
+    Serial.printf("✗ Unexpected error: %d\n", httpResponseCode);
+    Serial.printf("   Response: %s\n", response.c_str());
+    return false;
+  }
 }
 
 void loop() {
@@ -118,16 +194,20 @@ void loop() {
   String uidStr = getUidString(uid, uidLength);
   
   Serial.println("\n─────────────────────────────");
-  Serial.println("Found an RFID tag!");
-  Serial.printf("UID Length: %d bytes\n", uidLength);
-  Serial.printf("UID Value: %s\n", uidStr.c_str());
+  Serial.println("Found RFID card!");
+  Serial.printf("UID: %s (%d bytes)\n", uidStr.c_str(), uidLength);
   
   // Generate random 8-character registration code
   String regCode = generateRegCode();
-  Serial.printf("Generated Registration Code: %s\n", regCode.c_str());
+  Serial.printf("Generated Code: %s\n", regCode.c_str());
   
-  // Send data to Supabase
-  sendData(uidStr, regCode);
+  // Register to backend
+  bool success = registerRfidCard(uidStr, regCode);
+  
+  if (success) {
+    Serial.println("\n✓ Registration Complete!");
+    Serial.println("   Students can now use this code to register.");
+  }
   
   // Wait 5 seconds before next scan to prevent duplicates
   Serial.println("\nWaiting 5 seconds before next scan...");

@@ -1,16 +1,13 @@
 /**
- * ESP32 + PN532 Location Tracking Sketch
+ * ESP32 + PN532 Item Return Sketch
  *
  * Flow:
  *   1. Connect to WiFi
  *   2. Login via POST /api/v1/auth/login-mobile → get JWT
  *   3. Scan item RFID tag → GET /api/v1/items/rfid/{uid} → resolve itemId
  *   4. GET /api/v1/lentItems/borrowed → find active lent item for this itemId
- *   5. PATCH /api/v1/lentItems/{lentItemId} with { room: LOCATION_LABEL }
- *      to update the borrowed item's current room location
- *
- * Each ESP32 unit is deployed at a fixed location (e.g. a room or cabinet).
- * Set LOCATION_LABEL to identify where this unit is installed.
+ *   5. PATCH /api/v1/lentItems/{lentItemId} with { status: "Returned", returnedAt: <now> }
+ *      to mark the item as returned
  *
  * Wiring (PN532 → ESP32) — I2C mode:
  *   VCC → 3.3V  |  GND → GND
@@ -25,6 +22,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <time.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
 #define WIFI_SSID      "EjGwapo2.4G"
@@ -34,8 +32,10 @@
 #define API_IDENTIFIER "christian"
 #define API_PASSWORD   "@Password123"
 
-// Label for this unit's physical location — change per deployment
-#define LOCATION_LABEL "Room 111"
+// NTP server for getting current time
+#define NTP_SERVER     "pool.ntp.org"
+#define GMT_OFFSET_SEC 28800  // GMT+8 (Philippines)
+#define DAYLIGHT_OFFSET_SEC 0
 
 // ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
@@ -56,8 +56,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Serial.println("\n=== RFID Location Tracker ===");
-  Serial.printf("Location: %s\n", LOCATION_LABEL);
+  Serial.println("\n=== RFID Item Return Station ===");
 
   nfc.begin();
   uint32_t ver = nfc.getFirmwareVersion();
@@ -69,9 +68,15 @@ void setup() {
   nfc.SAMConfig();
 
   connectWiFi();
+  
+  // Configure time
+  configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+  Serial.println("Syncing time with NTP server...");
+  delay(2000);
+  
   login();
 
-  Serial.println("\nReady — scan an item tag to update its location.");
+  Serial.println("\nReady — scan an item tag to mark it as returned.");
 }
 
 void loop() {
@@ -93,7 +98,7 @@ void loop() {
   if (itemId.length() > 0) {
     String lentItemId = findActiveLentItem(itemId);
     if (lentItemId.length() > 0) {
-      updateLentItemRoom(lentItemId);
+      returnItem(lentItemId);
     }
   }
 }
@@ -146,6 +151,19 @@ String getUidString(uint8_t* buf, uint8_t len) {
   }
   s.toUpperCase();
   return s;
+}
+
+// Get current time in ISO 8601 format
+String getCurrentTimestamp() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Failed to obtain time");
+    return "";
+  }
+  
+  char buffer[25];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &timeinfo);
+  return String(buffer);
 }
 
 // Calls GET /api/v1/items/rfid/{uid} → returns itemId GUID or empty string on failure
@@ -205,7 +223,8 @@ String findActiveLentItem(const String& itemId) {
     String lentItemItemId = item["item"]["id"].as<String>();
     if (lentItemItemId == itemId) {
       String lentItemId = item["id"].as<String>();
-      Serial.printf("✓ Found active lent item: %s\n", lentItemId.c_str());
+      String borrower = item["borrowerFullName"].as<String>();
+      Serial.printf("✓ Found active lent item: %s (Borrower: %s)\n", lentItemId.c_str(), borrower.c_str());
       return lentItemId;
     }
   }
@@ -214,15 +233,22 @@ String findActiveLentItem(const String& itemId) {
   return "";
 }
 
-// Calls PATCH /api/v1/lentItems/{lentItemId} with { room }
-void updateLentItemRoom(const String& lentItemId) {
+// Calls PATCH /api/v1/lentItems/{lentItemId} with { status: "Returned", returnedAt: <now> }
+void returnItem(const String& lentItemId) {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+
+  String timestamp = getCurrentTimestamp();
+  if (timestamp.length() == 0) {
+    Serial.println("✗ Cannot get current time, aborting return.");
+    return;
+  }
 
   String url = String(API_BASE_URL) + "/api/v1/lentItems/" + lentItemId;
   Serial.printf("PATCH %s\n", url.c_str());
 
-  StaticJsonDocument<128> doc;
-  doc["room"] = LOCATION_LABEL;
+  StaticJsonDocument<256> doc;
+  doc["status"] = "Returned";
+  doc["returnedAt"] = timestamp;
   String body;
   serializeJson(doc, body);
 
@@ -238,7 +264,7 @@ void updateLentItemRoom(const String& lentItemId) {
   Serial.printf("HTTP %d — %s\n", code, resp.c_str());
 
   if (code == 200)
-    Serial.printf("✓ Room updated to \"%s\"\n", LOCATION_LABEL);
+    Serial.printf("✓ Item marked as RETURNED at %s\n", timestamp.c_str());
   else if (code == 401) {
     Serial.println("✗ Unauthorized — re-logging in..."); login();
   } else if (code == 404)
