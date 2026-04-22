@@ -10,12 +10,12 @@
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 // Network Credentials
-const char* ssid = "EjGwapo2.4G";
-const char* password = "vigheadTHEG0D2.4G";
+// const char* ssid = "";
+// const char* password = "";
 
 // Supabase Configuration
-const char* serverName = "";
-const char* apiKey = "";
+// const char* serverName = "";
+// const char* apiKey = "";
 
 void setup() {
   Serial.begin(115200);
