@@ -254,8 +254,21 @@ builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var connectionString = builder.Configuration.GetConnectionString("Supabase")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Supabase connection string is not configured.");
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    // Log available configuration keys for debugging
+    var allKeys = builder.Configuration.AsEnumerable()
+        .Where(x => x.Key.Contains("Connection", StringComparison.OrdinalIgnoreCase))
+        .Select(x => x.Key);
+    
+    var availableKeys = string.Join(", ", allKeys);
+    throw new InvalidOperationException(
+        $"Supabase connection string is not configured. " +
+        $"Looking for 'ConnectionStrings:Supabase' or 'ConnectionStrings:DefaultConnection'. " +
+        $"Available connection keys: {availableKeys}");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
