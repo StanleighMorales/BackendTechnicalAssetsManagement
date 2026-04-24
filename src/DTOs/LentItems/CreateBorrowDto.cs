@@ -21,8 +21,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         /// </summary>
         public Guid? TeacherId { get; set; }
 
-        [Required]
-        public string Room { get; set; } = string.Empty;
+        public string? Room { get; set; }
 
         [Required]
         public string SubjectTimeSchedule { get; set; } = string.Empty;

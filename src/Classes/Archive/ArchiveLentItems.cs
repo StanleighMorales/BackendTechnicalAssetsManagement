@@ -25,7 +25,7 @@ namespace BackendTechnicalAssetsManagement.src.Classes
         public string? StudentIdNumber { get; set; }
         public string? TeacherFullName { get; set; } = string.Empty;
 
-        public string Room { get; set; } = string.Empty;
+        public string? Room { get; set; }
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
         public DateTime? LentAt { get; set; }
