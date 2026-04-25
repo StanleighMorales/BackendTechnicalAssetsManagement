@@ -6,6 +6,10 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
     {
         Task<LentItems?> GetByIdAsync(Guid id);
         Task<IEnumerable<LentItems>> GetAllAsync();
+        Task<IEnumerable<LentItems>> GetAllLightAsync();
+        Task<IEnumerable<LentItems>> GetActiveByItemIdLightAsync(Guid itemId);
+        Task<IEnumerable<LentItems>> GetActiveByUserIdLightAsync(Guid userId);
+        Task<IEnumerable<LentItems>> GetExpiredReservationsAsync(DateTime cutoff);
         Task<IEnumerable<LentItems>> GetByDateTime(DateTime dateTime);
         Task<IEnumerable<LentItems>> GetAllBorrowedItemsAsync();
 

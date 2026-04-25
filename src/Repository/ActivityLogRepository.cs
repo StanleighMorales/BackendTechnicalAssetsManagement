@@ -24,6 +24,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public async Task<ActivityLog?> GetByIdAsync(Guid id)
         {
             return await _context.ActivityLogs
+                .AsNoTracking()
                 .Include(l => l.ActorUser)
                 .Include(l => l.Item)
                 .Include(l => l.LentItem)
@@ -33,6 +34,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public async Task<IEnumerable<ActivityLog>> GetAllAsync()
         {
             return await _context.ActivityLogs
+                .AsNoTracking()
                 .Include(l => l.ActorUser)
                 .Include(l => l.Item)
                 .OrderByDescending(l => l.CreatedAt)
@@ -48,6 +50,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             string? status)
         {
             var query = _context.ActivityLogs
+                .AsNoTracking()
                 .Include(l => l.ActorUser)
                 .Include(l => l.Item)
                 .AsQueryable();

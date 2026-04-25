@@ -6,7 +6,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ReservationExpiryBackgroundService> _logger;
-        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(5); // Check every 5 minutes
+        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(15); // Check every 15 minutes
 
         public ReservationExpiryBackgroundService(
             IServiceProvider serviceProvider,
@@ -20,11 +20,19 @@ namespace BackendTechnicalAssetsManagement.src.Services
         {
             _logger.LogInformation("Reservation Expiry Background Service is starting.");
 
+            // Delay the first run by 3 minutes so the app finishes starting up
+            // before we open a DB connection, avoiding connection pressure at startup.
+            await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     await CancelExpiredReservations();
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {

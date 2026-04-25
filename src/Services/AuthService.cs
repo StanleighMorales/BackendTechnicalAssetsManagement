@@ -218,30 +218,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
+
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
 
-            // Revoke any existing refresh tokens for security (using repository)
-            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
-
-            // --- SHARED LOGIC ---
+            // Issue new tokens — old tokens expire naturally or are cleaned up by the
+            // RefreshTokenCleanupService every 24 hours. Revoking on every login caused
+            // a full-table UPDATE that blocked the login path under load.
             var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
-            // --- WEB-SPECIFIC ACTION: Set Cookie ---
             SetAccessTokenCookie(accessToken, user.UserRole);
             SetRefreshTokenCookie(refreshTokenEntity.Token, refreshTokenEntity.ExpiresAt, user.UserRole);
+
             if (_env.IsDevelopment())
-            {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
-            }
 
             user.Status = "Online";
-            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync();
 
             return _mapper.Map<UserDto>(user);
         }
@@ -251,30 +245,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
+
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
 
-            // Revoke any existing refresh tokens for security (using repository)
-            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
-
-            // --- SHARED LOGIC ---
+            // Issue new tokens — old tokens expire naturally or are cleaned up by the
+            // RefreshTokenCleanupService every 24 hours.
             var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
-            // --- MOBILE-SPECIFIC ACTION: No cookie, just update status and save ---
             user.Status = "Online";
-            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync();
 
             if (_env.IsDevelopment())
-            {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
-            }
 
-            // --- MOBILE-SPECIFIC RESPONSE: Return DTO with tokens in JSON body ---
             return new MobileLoginResponseDto
             {
                 User = _mapper.Map<UserDto>(user),

@@ -29,7 +29,7 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.LentItems
         public string SubjectTimeSchedule { get; set; } = string.Empty;
 
         /// <summary>
-        /// When the borrower plans to pick up the item. Must be in the future.
+        /// When the borrower plans to pick up the item. Must be in the future and within 7 days.
         /// </summary>
         [Required]
         public DateTime ReservedFor { get; set; }
