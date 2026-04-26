@@ -36,5 +36,11 @@ namespace BackendTechnicalAssetsManagement.src.IService
         /// pick up the item within the allowed time window.
         /// </summary>
         Task SendReservationExpiredNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName, DateTime reservedFor);
+
+        /// <summary>
+        /// Send a notification to admin/staff when an approved reservation is due within
+        /// the next 15 minutes, so they can prepare the item for pickup.
+        /// </summary>
+        Task SendReservationDueSoonNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName, DateTime reservedFor, string borrowerRole, string? guestImageUrl, string? frontStudentIdPictureUrl);
     }
 }

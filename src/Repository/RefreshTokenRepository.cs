@@ -31,15 +31,13 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task RevokeAllForUserAsync(Guid userId)
     {
-        var tokensToRevoke = await _context.RefreshTokens
+        // Single bulk UPDATE — no rows loaded into memory, no full table scan.
+        // Requires the IX_RefreshTokens_UserId_IsRevoked index to be fast.
+        await _context.RefreshTokens
             .Where(rt => rt.UserId == userId && !rt.IsRevoked)
-            .ToListAsync();
-
-        foreach (var token in tokensToRevoke)
-        {
-            token.IsRevoked = true;
-            token.RevokedAt = DateTime.UtcNow;
-        }
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(rt => rt.IsRevoked, true)
+                .SetProperty(rt => rt.RevokedAt, DateTime.UtcNow));
     }
 
     public async Task SaveChangesAsync()

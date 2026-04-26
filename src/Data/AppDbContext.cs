@@ -185,6 +185,12 @@ namespace BackendTechnicalAssetsManagement.src.Data
                .IsUnique()
                .HasFilter("(\"StudentIdNumber\" IS NOT NULL AND \"StudentIdNumber\" <> '')");
 
+            // Index on RefreshTokens(UserId, IsRevoked) — makes RevokeAllForUserAsync and
+            // GetLatestActiveTokenForUserAsync fast instead of doing a full table scan.
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => new { rt.UserId, rt.IsRevoked })
+                .HasDatabaseName("IX_RefreshTokens_UserId_IsRevoked");
+
             // TODO: This is a good place to add more advanced configurations in the future, such as:
             // - Defining complex relationships (many-to-many).
             // - Creating database indexes for performance (.HasIndex()).

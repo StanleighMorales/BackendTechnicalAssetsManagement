@@ -30,7 +30,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         }
         public async Task<IEnumerable<Item>> GetAllAsync()
         {
-            return await _context.Items.ToListAsync();
+            return await _context.Items.AsNoTracking().ToListAsync();
         }
 
         public async Task<Item?> GetByIdAsync(Guid id)

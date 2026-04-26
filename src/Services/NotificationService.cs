@@ -188,6 +188,61 @@ namespace BackendTechnicalAssetsManagement.src.Services
         }
 
         /// <summary>
+        /// Send a notification to admin/staff when an approved reservation is due within
+        /// the next 15 minutes, so they can prepare the item for pickup.
+        /// Also notifies the borrower so they know to come pick up the item.
+        /// </summary>
+        public async Task SendReservationDueSoonNotificationAsync(Guid lentItemId, Guid? userId, string itemName, string borrowerName, DateTime reservedFor, string borrowerRole, string? guestImageUrl, string? frontStudentIdPictureUrl)
+        {
+            try
+            {
+                var notification = new
+                {
+                    Type = "reservation_due_soon",
+                    LentItemId = lentItemId,
+                    ItemName = itemName,
+                    BorrowerName = borrowerName,
+                    BorrowerRole = borrowerRole,
+                    GuestImageUrl = guestImageUrl,
+                    FrontStudentIdPictureUrl = frontStudentIdPictureUrl,
+                    ReservedFor = reservedFor,
+                    Message = $"{borrowerName}'s reservation for '{itemName}' is due at {reservedFor.ToLocalTime():h:mm tt}. Please prepare the item for pickup.",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                // Notify admin/staff so they can prepare the item
+                await _hubContext.Clients.Group("admin_staff")
+                    .SendAsync("ReceiveReservationDueSoon", notification);
+
+                // Also notify the borrower so they know to come pick up
+                if (userId.HasValue)
+                {
+                    var userNotification = new
+                    {
+                        Type = "reservation_due_soon",
+                        LentItemId = lentItemId,
+                        ItemName = itemName,
+                        BorrowerName = borrowerName,
+                        ReservedFor = reservedFor,
+                        Message = $"Your reservation for '{itemName}' is due at {reservedFor.ToLocalTime():h:mm tt}. Please come to pick it up.",
+                        Timestamp = DateTime.UtcNow
+                    };
+
+                    await _hubContext.Clients.Group($"user_{userId.Value}")
+                        .SendAsync("ReceiveReservationDueSoon", userNotification);
+                }
+
+                _logger.LogInformation(
+                    "Reservation due-soon notification sent for LentItem {LentItemId} (user: {UserId}, item: {ItemName}, due: {ReservedFor})",
+                    lentItemId, userId, itemName, reservedFor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send reservation due-soon notification for LentItem {LentItemId}", lentItemId);
+            }
+        }
+
+        /// <summary>
         /// Send a notification to a user when their reservation expired because they did not
         /// pick up the item within the allowed time window.
         /// Also notifies admin/staff so they are aware the item is back to available.

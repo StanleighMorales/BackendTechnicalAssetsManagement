@@ -245,6 +245,9 @@ builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 // Cancel expired reservations periodically
 builder.Services.AddHostedService<ReservationExpiryBackgroundService>();
+
+// Alert admin/staff (and borrower) when an approved reservation is due within 15 minutes
+builder.Services.AddHostedService<ReservationDueSoonBackgroundService>();
 #endregion
 
 #region Database Configuration
@@ -271,7 +274,21 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        // Automatically retry transient failures (dropped connections, network blips).
+        // This handles the SocketException (10054) that occurs when Supabase/PostgreSQL
+        // kills idle connections after ~15 minutes and the pool tries to reuse them.
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null
+        );
+
+        // Keep connections alive so the server doesn't close them while idle.
+        // KeepAlive sends a TCP keepalive every 30 seconds on idle connections.
+        npgsqlOptions.CommandTimeout(60);
+    }));
 #endregion
 
 #region Health Checks
@@ -292,9 +309,16 @@ builder.Services.AddAuthServices(builder.Configuration);
 
 #region SignalR Configuration
 /// <summary>
-/// Configure SignalR for real-time notifications
+/// Configure SignalR for real-time notifications.
+/// AddJsonProtocol with CamelCaseNamingPolicy ensures property names sent over
+/// the hub match the camelCase convention used by the REST API and the frontend.
 /// </summary>
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy =
+            System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 #endregion
 
 
