@@ -13,11 +13,10 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class ArchiveItemsController : ControllerBase
     {
         private readonly IArchiveItemsService _archiveItemsService;
-        private readonly ILogger<ArchiveItemsController> _logger;
-        public ArchiveItemsController(IArchiveItemsService archiveItemsService, ILogger<ArchiveItemsController> logger)
+
+        public ArchiveItemsController(IArchiveItemsService archiveItemsService)
         {
             _archiveItemsService = archiveItemsService;
-            _logger = logger;
         }
         /// <summary>
         /// Retrieves all archived items.

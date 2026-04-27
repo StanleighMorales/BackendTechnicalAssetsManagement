@@ -19,12 +19,11 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         private readonly IAuthService _authService;
         private readonly IUserService _userService;
         private readonly IWebHostEnvironment _env;
-        private readonly ILogger<AuthController> _logger;
-        public AuthController(IAuthService authService, IWebHostEnvironment env, ILogger<AuthController> logger, IUserService userService)
+
+        public AuthController(IAuthService authService, IWebHostEnvironment env, IUserService userService)
         {
             _authService = authService;
             _env = env;
-            _logger = logger;
             _userService = userService;
         }
         [HttpGet("me")]
@@ -94,13 +93,6 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             UserDto user = await _authService.Login(request);
             var response = ApiResponse<UserDto>.SuccessResponse(user, "Login successful.");
-
-            // Optionally log or include debug info only in development
-            if (_env.IsDevelopment())
-            {
-                _logger.LogInformation("User {Email} logged in during development.", user.Email);
-            }
-
             return Ok(response);
         }
         /// <summary>
@@ -114,12 +106,6 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         {
             var data = await _authService.LoginMobile(request);
             var response = ApiResponse<MobileLoginResponseDto>.SuccessResponse(data, "Mobile login successful.");
-
-            if (_env.IsDevelopment())
-            {
-                _logger.LogInformation("User {Email} logged in via mobile endpoint.", data.User.Email);
-            }
-
             return Ok(response);
         }
 
