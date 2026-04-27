@@ -223,6 +223,31 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
                 throw new InvalidCredentialsException("Invalid username or password.");
 
+            // Check if user is blocked
+            if (user.IsBlocked)
+            {
+                // Check if temporary ban has expired
+                if (user.BlockedUntil.HasValue && user.BlockedUntil.Value <= DateTime.UtcNow)
+                {
+                    // Automatically unblock if temporary ban expired
+                    user.IsBlocked = false;
+                    user.BlockReason = null;
+                    user.BlockedAt = null;
+                    user.BlockedUntil = null;
+                    user.BlockedById = null;
+                    await _userRepository.UpdateAsync(user);
+                    await _userRepository.SaveChangesAsync();
+                }
+                else
+                {
+                    // User is still blocked
+                    var blockMessage = user.BlockedUntil.HasValue
+                        ? $"Your account has been temporarily blocked until {user.BlockedUntil.Value:yyyy-MM-dd HH:mm} UTC. Reason: {user.BlockReason}"
+                        : $"Your account has been permanently blocked. Reason: {user.BlockReason}";
+                    throw new UserBlockedException(blockMessage);
+                }
+            }
+
             // Issue new tokens — old tokens expire naturally or are cleaned up by the
             // RefreshTokenCleanupService every 24 hours. Revoking on every login caused
             // a full-table UPDATE that blocked the login path under load.
@@ -249,6 +274,31 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
                 throw new InvalidCredentialsException("Invalid username or password.");
+
+            // Check if user is blocked
+            if (user.IsBlocked)
+            {
+                // Check if temporary ban has expired
+                if (user.BlockedUntil.HasValue && user.BlockedUntil.Value <= DateTime.UtcNow)
+                {
+                    // Automatically unblock if temporary ban expired
+                    user.IsBlocked = false;
+                    user.BlockReason = null;
+                    user.BlockedAt = null;
+                    user.BlockedUntil = null;
+                    user.BlockedById = null;
+                    await _userRepository.UpdateAsync(user);
+                    await _userRepository.SaveChangesAsync();
+                }
+                else
+                {
+                    // User is still blocked
+                    var blockMessage = user.BlockedUntil.HasValue
+                        ? $"Your account has been temporarily blocked until {user.BlockedUntil.Value:yyyy-MM-dd HH:mm} UTC. Reason: {user.BlockReason}"
+                        : $"Your account has been permanently blocked. Reason: {user.BlockReason}";
+                    throw new UserBlockedException(blockMessage);
+                }
+            }
 
             // Issue new tokens — old tokens expire naturally or are cleaned up by the
             // RefreshTokenCleanupService every 24 hours.

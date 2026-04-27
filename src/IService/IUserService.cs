@@ -19,5 +19,8 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidCode);
         Task<object?> GetStudentByRfidUidAsync(string rfidUid);
         Task<UserItemSummaryDto> GetUserItemSummaryAsync(Guid userId);
+        Task<(bool Success, string ErrorMessage)> BlockUserAsync(Guid userId, BlockUserDto dto, Guid blockedById);
+        Task<(bool Success, string ErrorMessage)> UnblockUserAsync(Guid userId, Guid unblockedById);
+        Task<BlockStatusDto?> GetBlockStatusAsync(Guid userId);
     }
 }

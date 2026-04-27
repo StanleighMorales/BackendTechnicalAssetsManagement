@@ -33,6 +33,12 @@ namespace BackendTechnicalAssetsManagement.src.Middleware
 
                 switch (ex)
                 {
+                    // Handle blocked user accounts for a 403 Forbidden
+                    case UserBlockedException:
+                        response.StatusCode = (int)HttpStatusCode.Forbidden; // 403
+                        apiResponse = ApiResponse<object>.FailResponse(ex.Message);
+                        break;
+
                     // V-- NEW: Handle unauthorized access specifically for a 403 Forbidden --V
                     case UnauthorizedAccessException:
                         response.StatusCode = (int)HttpStatusCode.Forbidden; // 403

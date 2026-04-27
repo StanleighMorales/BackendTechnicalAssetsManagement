@@ -566,5 +566,153 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             return summary;
         }
+
+        public async Task<(bool Success, string ErrorMessage)> BlockUserAsync(Guid userId, BlockUserDto dto, Guid blockedById)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "User not found.");
+            }
+
+            // Get the blocker's information to validate role hierarchy
+            var blocker = await _userRepository.GetByIdAsync(blockedById);
+            if (blocker == null)
+            {
+                return (false, "Blocker user not found.");
+            }
+
+            // Prevent blocking SuperAdmin
+            if (user.UserRole == Enums.UserRole.SuperAdmin)
+            {
+                return (false, "Cannot block a SuperAdmin account.");
+            }
+
+            // Role hierarchy validation
+            // Staff can only block Teachers and Students
+            if (blocker.UserRole == Enums.UserRole.Staff)
+            {
+                if (user.UserRole == Enums.UserRole.Admin || user.UserRole == Enums.UserRole.Staff)
+                {
+                    return (false, "Staff members can only block Teachers and Students.");
+                }
+            }
+
+            // Admin cannot block other Admins or SuperAdmins (SuperAdmin already checked above)
+            if (blocker.UserRole == Enums.UserRole.Admin)
+            {
+                if (user.UserRole == Enums.UserRole.Admin)
+                {
+                    return (false, "Admins cannot block other Admin accounts.");
+                }
+            }
+
+            // Prevent self-blocking
+            if (userId == blockedById)
+            {
+                return (false, "You cannot block your own account.");
+            }
+
+            // Validate temporary ban has an end date
+            if (!dto.IsPermanent && dto.BlockedUntil == null)
+            {
+                return (false, "Temporary ban requires an end date.");
+            }
+
+            // Validate end date is in the future
+            if (!dto.IsPermanent && dto.BlockedUntil <= DateTime.UtcNow)
+            {
+                return (false, "Block end date must be in the future.");
+            }
+
+            user.IsBlocked = true;
+            user.BlockReason = dto.Reason;
+            user.BlockedAt = DateTime.UtcNow;
+            user.BlockedUntil = dto.IsPermanent ? null : dto.BlockedUntil;
+            user.BlockedById = blockedById;
+
+            await _userRepository.UpdateAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            return (true, "User blocked successfully.");
+        }
+
+        public async Task<(bool Success, string ErrorMessage)> UnblockUserAsync(Guid userId, Guid unblockedById)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return (false, "User not found.");
+            }
+
+            if (!user.IsBlocked)
+            {
+                return (false, "User is not currently blocked.");
+            }
+
+            // Get the unblocker's information to validate role hierarchy
+            var unblocker = await _userRepository.GetByIdAsync(unblockedById);
+            if (unblocker == null)
+            {
+                return (false, "Unblocker user not found.");
+            }
+
+            // Role hierarchy validation - same rules as blocking
+            // Staff can only unblock Teachers and Students
+            if (unblocker.UserRole == Enums.UserRole.Staff)
+            {
+                if (user.UserRole == Enums.UserRole.Admin || user.UserRole == Enums.UserRole.Staff || user.UserRole == Enums.UserRole.SuperAdmin)
+                {
+                    return (false, "Staff members can only unblock Teachers and Students.");
+                }
+            }
+
+            // Admin cannot unblock other Admins or SuperAdmins
+            if (unblocker.UserRole == Enums.UserRole.Admin)
+            {
+                if (user.UserRole == Enums.UserRole.Admin || user.UserRole == Enums.UserRole.SuperAdmin)
+                {
+                    return (false, "Admins cannot unblock Admin or SuperAdmin accounts.");
+                }
+            }
+
+            user.IsBlocked = false;
+            user.BlockReason = null;
+            user.BlockedAt = null;
+            user.BlockedUntil = null;
+            user.BlockedById = null;
+
+            await _userRepository.UpdateAsync(user);
+            await _userRepository.SaveChangesAsync();
+
+            return (true, "User unblocked successfully.");
+        }
+
+        public async Task<BlockStatusDto?> GetBlockStatusAsync(Guid userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            string? blockedByUsername = null;
+            if (user.BlockedById.HasValue)
+            {
+                var blockedByUser = await _userRepository.GetByIdAsync(user.BlockedById.Value);
+                blockedByUsername = blockedByUser?.Username;
+            }
+
+            return new BlockStatusDto
+            {
+                IsBlocked = user.IsBlocked,
+                BlockReason = user.BlockReason,
+                BlockedAt = user.BlockedAt,
+                BlockedUntil = user.BlockedUntil,
+                IsPermanent = user.IsBlocked && user.BlockedUntil == null,
+                BlockedById = user.BlockedById,
+                BlockedByUsername = blockedByUsername
+            };
+        }
     }
 }

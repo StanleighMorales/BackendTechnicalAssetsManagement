@@ -305,4 +305,72 @@ public class UserController : ControllerBase
             return NotFound(ApiResponse<object>.FailResponse("No student registered to this RFID."));
         return Ok(ApiResponse<object>.SuccessResponse(student, "Student found."));
     }
+
+    /// <summary>
+    /// Blocks a user account with a reason and optional expiration date.
+    /// Accessible by Staff, Admin, and SuperAdmin roles.
+    /// Staff can only block Teachers and Students.
+    /// </summary>
+    [HttpPost("{id}/block")]
+    [Authorize(Roles = "Staff,Admin,SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<object>>> BlockUser(Guid id, [FromBody] BlockUserDto dto)
+    {
+        var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(currentUserIdString, out var currentUserId))
+        {
+            return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
+        }
+
+        var (success, errorMessage) = await _userService.BlockUserAsync(id, dto, currentUserId);
+        
+        if (!success)
+        {
+            return BadRequest(ApiResponse<object>.FailResponse(errorMessage));
+        }
+
+        return Ok(ApiResponse<object>.SuccessResponse(null, "User blocked successfully."));
+    }
+
+    /// <summary>
+    /// Unblocks a previously blocked user account.
+    /// Accessible by Staff, Admin, and SuperAdmin roles.
+    /// Staff can only unblock Teachers and Students.
+    /// </summary>
+    [HttpPost("{id}/unblock")]
+    [Authorize(Roles = "Staff,Admin,SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<object>>> UnblockUser(Guid id)
+    {
+        var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(currentUserIdString, out var currentUserId))
+        {
+            return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
+        }
+
+        var (success, errorMessage) = await _userService.UnblockUserAsync(id, currentUserId);
+        
+        if (!success)
+        {
+            return BadRequest(ApiResponse<object>.FailResponse(errorMessage));
+        }
+
+        return Ok(ApiResponse<object>.SuccessResponse(null, "User unblocked successfully."));
+    }
+
+    /// <summary>
+    /// Gets the block status of a user account.
+    /// Accessible by Staff, Admin, and SuperAdmin roles.
+    /// </summary>
+    [HttpGet("{id}/block-status")]
+    [Authorize(Roles = "Staff,Admin,SuperAdmin")]
+    public async Task<ActionResult<ApiResponse<BlockStatusDto>>> GetBlockStatus(Guid id)
+    {
+        var blockStatus = await _userService.GetBlockStatusAsync(id);
+        
+        if (blockStatus == null)
+        {
+            return NotFound(ApiResponse<BlockStatusDto>.FailResponse("User not found."));
+        }
+
+        return Ok(ApiResponse<BlockStatusDto>.SuccessResponse(blockStatus, "Block status retrieved successfully."));
+    }
 }

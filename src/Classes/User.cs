@@ -20,6 +20,13 @@ namespace BackendTechnicalAssetsManagement.src.Classes
 
         public string? Status { get; set; } = string.Empty;
 
+        // Account Blocking Properties
+        public bool IsBlocked { get; set; } = false;
+        public string? BlockReason { get; set; }
+        public DateTime? BlockedAt { get; set; }
+        public DateTime? BlockedUntil { get; set; }
+        public Guid? BlockedById { get; set; }
+
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
         public ICollection<LentItems> LentItems { get; set; } = new List<LentItems>();
 

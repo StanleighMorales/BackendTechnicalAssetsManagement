@@ -24,6 +24,12 @@
 
             public string PhoneNumber { get; set; } = string.Empty;
 
+            // Account Blocking Properties
+            public bool IsBlocked { get; set; }
+            public string? BlockReason { get; set; }
+            public DateTime? BlockedAt { get; set; }
+            public DateTime? BlockedUntil { get; set; }
+
     }
 
         public class StaffDto : UserDto

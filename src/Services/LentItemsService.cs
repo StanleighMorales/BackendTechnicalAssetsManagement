@@ -211,6 +211,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 if (user == null)
                     throw new KeyNotFoundException($"User with ID {dto.UserId.Value} not found.");
 
+                // Check if user is blocked
+                if (user.IsBlocked)
+                {
+                    var blockMessage = user.BlockedUntil.HasValue
+                        ? $"Your account is temporarily blocked until {user.BlockedUntil.Value:yyyy-MM-dd HH:mm} UTC. Reason: {user.BlockReason}"
+                        : $"Your account is permanently blocked. Reason: {user.BlockReason}";
+                    throw new UnauthorizedAccessException(blockMessage);
+                }
+
                 if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
                 {
                     var activeUserCount = await _repository.GetActiveByUserIdLightAsync(dto.UserId.Value);
@@ -294,6 +303,15 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 var user = await _userRepository.GetByIdAsync(dto.UserId.Value);
                 if (user == null)
                     throw new KeyNotFoundException($"User with ID {dto.UserId.Value} not found.");
+
+                // Check if user is blocked
+                if (user.IsBlocked)
+                {
+                    var blockMessage = user.BlockedUntil.HasValue
+                        ? $"Your account is temporarily blocked until {user.BlockedUntil.Value:yyyy-MM-dd HH:mm} UTC. Reason: {user.BlockReason}"
+                        : $"Your account is permanently blocked. Reason: {user.BlockReason}";
+                    throw new UnauthorizedAccessException(blockMessage);
+                }
 
                 if (user.UserRole == UserRole.Teacher || user.UserRole == UserRole.Student)
                 {
