@@ -38,8 +38,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
         {
-            // 1. Fetch the user object (it will be the derived type: Student, Teacher, etc.)
-            var user = await _userRepository.GetByIdAsync(userId);
+            // 1. Fetch the user object with LentItems history (it will be the derived type: Student, Teacher, etc.)
+            var user = await _userRepository.GetByIdWithHistoryAsync(userId);
             if (user == null)
             {
                 return null; // Not found

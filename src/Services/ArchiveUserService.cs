@@ -4,6 +4,7 @@ using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Users;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
+using Microsoft.EntityFrameworkCore;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums.UserRole;
 
 namespace BackendTechnicalAssetsManagement.src.Services
@@ -59,49 +60,45 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return (false, "Cannot archive your own account.");
             }
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var userToArchive = await _userRepository.GetByIdAsync(targetUserId);
-
-                // Check if user exists
-                if (userToArchive == null)
+            // Use the execution strategy to handle retries with transactions
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteInTransactionAsync(
+                async (ct) =>
                 {
-                    await transaction.RollbackAsync();
-                    return (false, "User not found.");
-                }
+                    var userToArchive = await _userRepository.GetByIdAsync(targetUserId);
 
-                // Existing validation for SuperAdmin
-                if (userToArchive.UserRole == SuperAdmin)
-                {
-                    await transaction.RollbackAsync();
-                    return (false, "SuperAdmin users cannot be archived.");
-                }
+                    // Check if user exists
+                    if (userToArchive == null)
+                    {
+                        return (false, "User not found.");
+                    }
 
-                // NEW VALIDATION: Check user status
-                // Using OrdinalIgnoreCase is a robust way to compare strings like "Online", "online", "ONLINE", etc.
-                if (userToArchive.Status?.Equals("Online", StringComparison.OrdinalIgnoreCase) == true)
-                {
-                    // You cannot archive a user who is currently online.
-                    await transaction.RollbackAsync();
-                    return (false, "Cannot archive a user who is currently online.");
-                }
-                userToArchive.Status = "Archived";
+                    // Existing validation for SuperAdmin
+                    if (userToArchive.UserRole == SuperAdmin)
+                    {
+                        return (false, "SuperAdmin users cannot be archived.");
+                    }
 
-                // ... The rest of the method (mapping, adding, deleting, committing) remains the same ...
-                var archivedUser = _mapper.Map<ArchiveUser>(userToArchive);
-                await _archiveUserRepository.AddAsync(archivedUser);
-                await _archiveUserRepository.SaveChangesAsync();
-                await _userRepository.DeleteAsync(targetUserId); // Use targetUserId here
-                await _userRepository.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return (true, string.Empty);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return (false, $"Archive operation failed: {ex.Message}");
-            }
+                    // NEW VALIDATION: Check user status
+                    // Using OrdinalIgnoreCase is a robust way to compare strings like "Online", "online", "ONLINE", etc.
+                    if (userToArchive.Status?.Equals("Online", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        // You cannot archive a user who is currently online.
+                        return (false, "Cannot archive a user who is currently online.");
+                    }
+                    userToArchive.Status = "Archived";
+
+                    // ... The rest of the method (mapping, adding, deleting, committing) remains the same ...
+                    var archivedUser = _mapper.Map<ArchiveUser>(userToArchive);
+                    await _archiveUserRepository.AddAsync(archivedUser);
+                    await _archiveUserRepository.SaveChangesAsync();
+                    await _userRepository.DeleteAsync(targetUserId); // Use targetUserId here
+                    await _userRepository.SaveChangesAsync();
+                    return (true, string.Empty);
+                },
+                async (ct) => await Task.FromResult(true), // verifySucceeded - always return true
+                CancellationToken.None
+            );
         }
 
         /// <summary>
@@ -109,40 +106,37 @@ namespace BackendTechnicalAssetsManagement.src.Services
         /// </summary>
         public async Task<bool> RestoreUserAsync(Guid archiveUserId)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                // 1. Fetch the archived user
-                var userToRestore = await _archiveUserRepository.GetByIdAsync(archiveUserId);
-                if (userToRestore == null)
+            // Use the execution strategy to handle retries with transactions
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteInTransactionAsync(
+                async (ct) =>
                 {
-                    await transaction.RollbackAsync();
-                    return false;
-                }
+                    // 1. Fetch the archived user
+                    var userToRestore = await _archiveUserRepository.GetByIdAsync(archiveUserId);
+                    if (userToRestore == null)
+                    {
+                        return false;
+                    }
 
-                // 2. Map the archived user back to an active user entity
-                // The mapping profile will handle resetting the Status, etc.
-                
-                var restoredUser = _mapper.Map<Classes.User>(userToRestore);
-                restoredUser.Status = "Offline"; // Explicitly set status to Active
-                // 3. Add the user back to the active user table
-                await _userRepository.AddAsync(restoredUser);
-                await _userRepository.SaveChangesAsync();
+                    // 2. Map the archived user back to an active user entity
+                    // The mapping profile will handle resetting the Status, etc.
+                    
+                    var restoredUser = _mapper.Map<Classes.User>(userToRestore);
+                    restoredUser.Status = "Offline"; // Explicitly set status to Active
+                    // 3. Add the user back to the active user table
+                    await _userRepository.AddAsync(restoredUser);
+                    await _userRepository.SaveChangesAsync();
 
-                // 4. Delete the user from the archive table
-                await _archiveUserRepository.DeleteAsync(archiveUserId);
-                await _archiveUserRepository.SaveChangesAsync();
+                    // 4. Delete the user from the archive table
+                    await _archiveUserRepository.DeleteAsync(archiveUserId);
+                    await _archiveUserRepository.SaveChangesAsync();
 
-                // 5. If all operations succeed, commit the transaction
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch (Exception)
-            {
-                // 6. If any error occurs, roll back all changes
-                await transaction.RollbackAsync();
-                return false;
-            }
+                    // 5. If all operations succeed, return true
+                    return true;
+                },
+                async (ct) => await Task.FromResult(true), // verifySucceeded - always return true
+                CancellationToken.None
+            );
         }
 
         /// <summary>
