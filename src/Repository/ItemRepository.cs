@@ -68,6 +68,26 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             return await _context.SaveChangesAsync() > 0;
         }
 
+        public async Task NullifyActivityLogItemReferencesAsync(Guid itemId)
+        {
+            // Use ExecuteSqlRaw to update ActivityLog records directly in the database
+            // This avoids loading all activity logs into memory and is more efficient
+            // We need to nullify both ItemId and LentItemId references
+            await _context.Database.ExecuteSqlRawAsync(
+                "UPDATE \"ActivityLogs\" SET \"ItemId\" = NULL WHERE \"ItemId\" = {0}",
+                itemId);
+            
+            // Also nullify LentItemId for any lent items related to this item
+            // This prevents FK_ActivityLogs_LentItems_LentItemId constraint violations
+            await _context.Database.ExecuteSqlRawAsync(
+                @"UPDATE ""ActivityLogs"" 
+                  SET ""LentItemId"" = NULL 
+                  WHERE ""LentItemId"" IN (
+                      SELECT ""Id"" FROM ""LentItems"" WHERE ""ItemId"" = {0}
+                  )",
+                itemId);
+        }
+
         public Task UpdateAsync(Item item)
         {
             // This method simply tells EF Core's change tracker that the entity is modified.

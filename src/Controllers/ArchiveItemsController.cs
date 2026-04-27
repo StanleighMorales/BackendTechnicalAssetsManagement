@@ -57,7 +57,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <param name="id">The ID of the archived item to restore.</param>
         /// <returns>The newly restored item.</returns>
         [HttpDelete("restore/{id}")]
-        [Authorize(Roles = "Admin,SuperAdmin")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> RestoreArchivedItem(Guid id)
         {
             var restoredItem = await _archiveItemsService.RestoreItemAsync(id);

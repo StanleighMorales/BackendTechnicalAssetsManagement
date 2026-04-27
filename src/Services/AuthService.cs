@@ -558,11 +558,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
+            // Determine token expiration based on user role
+            // Staff, Admin, and SuperAdmin get tokens that don't expire (10 years)
+            // Students and Teachers get 15-minute tokens
+            DateTime expirationTime;
+            if (user.UserRole == UserRole.Staff || 
+                user.UserRole == UserRole.Admin || 
+                user.UserRole == UserRole.SuperAdmin)
+            {
+                expirationTime = DateTime.UtcNow.AddYears(10); // Effectively no expiration
+            }
+            else
+            {
+                expirationTime = DateTime.UtcNow.AddMinutes(15); // Standard 15-minute expiry
+            }
+
             var token = new JwtSecurityToken(
                 claims: claims,
-                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
-                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
-
+                expires: expirationTime,
                 signingCredentials: creds
             );
 
