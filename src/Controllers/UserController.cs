@@ -76,11 +76,10 @@ public class UserController : ControllerBase
 
     /// <summary>
     /// Updates a student's profile information.
-    /// An 'Admin' can update any student profile. A 'Student' can only update their own.
-    /// Note: Student ownership is not checked here and must be enforced by the client or a more specific policy.
+    /// SuperAdmin, Admin, and Staff can update any student profile. A Student can only update their own.
     /// </summary>
     [HttpPatch("students/profile/{id}")]
-    [Authorize(Roles = "Admin,Student")]
+    [Authorize(Roles = "SuperAdmin,Admin,Staff,Student")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateStudentProfile(Guid id, [FromForm] UpdateStudentProfileDto studentDto)
     {
         try
@@ -92,9 +91,11 @@ public class UserController : ControllerBase
                 return Unauthorized(ApiResponse<object>.FailResponse("Invalid user token."));
             }
 
-            // Check if user is trying to update their own profile or is an Admin
+            // Check if user is trying to update their own profile or has admin/staff privileges
             var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
-            if (currentUserRole != "Admin" && currentUserId != id)
+            bool isAdminOrStaff = currentUserRole == "SuperAdmin" || currentUserRole == "Admin" || currentUserRole == "Staff";
+            
+            if (!isAdminOrStaff && currentUserId != id)
             {
                 return Forbid(); // Students can only update their own profile
             }
@@ -120,14 +121,15 @@ public class UserController : ControllerBase
 
     /// <summary>
     /// Updates a teacher's profile information.
-    /// An 'Admin' can update any teacher profile. A 'Teacher' can only update their own profile.
+    /// SuperAdmin, Admin, and Staff can update any teacher profile. A Teacher can only update their own profile.
     /// </summary>
     [HttpPatch("teachers/profile/{id}")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "SuperAdmin,Admin,Staff,Teacher")]
     public async Task<ActionResult<ApiResponse<object>>> UpdateTeacherProfile(Guid id, [FromBody] UpdateTeacherProfileDto teacherDto)
     {
-        // Enforce that a non-admin user can only update their own profile.
-        if (!User.IsInRole("Admin") && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
+        // Enforce that a non-admin/staff user can only update their own profile.
+        bool isAdminOrStaff = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff");
+        if (!isAdminOrStaff && id.ToString() != User.FindFirstValue(ClaimTypes.NameIdentifier))
         {
             return StatusCode(403, ApiResponse<object>.FailResponse("Not authorized."));
         }
@@ -149,7 +151,7 @@ public class UserController : ControllerBase
     /// Updates the profile of the currently authenticated 'Admin' or 'Staff' user.
     /// </summary>
     [HttpPatch("admin-or-staff/profile/{id}")] // Using PATCH as per our last discussion
-    [Authorize(Roles = "SuperAdmin, Admin, Staff")]
+    [Authorize(Roles = "SuperAdmin,Admin,Staff")]
     public async Task<IActionResult> UpdateUserProfile(Guid id, [FromBody] UpdateStaffProfileDto dto)
     {
         // We get the current user's ID securely from the token claims.

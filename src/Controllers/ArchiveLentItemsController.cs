@@ -13,11 +13,10 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
     public class ArchiveLentItemsController : ControllerBase
     {
         private readonly IArchiveLentItemsService _archiveLentItemsService;
-        private readonly ILogger<ArchiveLentItemsController> _logger;
-        public ArchiveLentItemsController(IArchiveLentItemsService archiveLentItemsService, ILogger<ArchiveLentItemsController> logger)
+
+        public ArchiveLentItemsController(IArchiveLentItemsService archiveLentItemsService)
         {
             _archiveLentItemsService = archiveLentItemsService;
-            _logger = logger;
         }
         [HttpGet]
         [Authorize(Policy = "AdminOrStaff")]

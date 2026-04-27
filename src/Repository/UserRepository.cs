@@ -138,12 +138,28 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<bool> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync() > 0;
+            var changeCount = await _context.SaveChangesAsync();
+            Console.WriteLine($"[DEBUG] SaveChangesAsync - Changes saved: {changeCount}");
+            return changeCount > 0;
         }
 
         public Task UpdateAsync(User user)
         {
+            var entry = _context.Entry(user);
+            Console.WriteLine($"[DEBUG] UpdateAsync - Entity State before Update(): {entry.State}");
+            
             _context.Users.Update(user);
+            
+            entry = _context.Entry(user);
+            Console.WriteLine($"[DEBUG] UpdateAsync - Entity State after Update(): {entry.State}");
+            
+            // Log modified properties
+            var modifiedProperties = entry.Properties
+                .Where(p => p.IsModified)
+                .Select(p => $"{p.Metadata.Name}={p.CurrentValue}")
+                .ToList();
+            Console.WriteLine($"[DEBUG] UpdateAsync - Modified properties: {string.Join(", ", modifiedProperties)}");
+            
             return Task.CompletedTask;
         }
 
