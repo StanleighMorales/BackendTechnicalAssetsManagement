@@ -195,7 +195,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         // DELETE: /api/v1/items/archive/{id}
         [HttpDelete("archive/{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<object>>> ArchiveItem(Guid id)
         {
             var (success, errorMessage) = await _itemService.DeleteItemAsync(id);

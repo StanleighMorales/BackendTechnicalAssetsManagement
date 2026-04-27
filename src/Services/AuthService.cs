@@ -218,30 +218,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
+
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
 
-            // Revoke any existing refresh tokens for security (using repository)
-            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
-
-            // --- SHARED LOGIC ---
+            // Issue new tokens — old tokens expire naturally or are cleaned up by the
+            // RefreshTokenCleanupService every 24 hours. Revoking on every login caused
+            // a full-table UPDATE that blocked the login path under load.
             var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
-            // --- WEB-SPECIFIC ACTION: Set Cookie ---
-            SetAccessTokenCookie(accessToken);
-            SetRefreshTokenCookie(refreshTokenEntity.Token, refreshTokenEntity.ExpiresAt);
+            SetAccessTokenCookie(accessToken, user.UserRole);
+            SetRefreshTokenCookie(refreshTokenEntity.Token, refreshTokenEntity.ExpiresAt, user.UserRole);
+
             if (_env.IsDevelopment())
-            {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
-            }
 
             user.Status = "Online";
-            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync();
 
             return _mapper.Map<UserDto>(user);
         }
@@ -251,30 +245,21 @@ namespace BackendTechnicalAssetsManagement.src.Services
             var user = await _userRepository.GetByIdentifierAsync(loginDto.Identifier);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
+
             if (!_passwordHashingService.VerifyPassword(loginDto.Password, user.PasswordHash))
-            {
                 throw new InvalidCredentialsException("Invalid username or password.");
-            }
 
-            // Revoke any existing refresh tokens for security (using repository)
-            await _refreshTokenRepository.RevokeAllForUserAsync(user.Id);
-
-            // --- SHARED LOGIC ---
+            // Issue new tokens — old tokens expire naturally or are cleaned up by the
+            // RefreshTokenCleanupService every 24 hours.
             var (accessToken, refreshTokenEntity) = await GenerateAndPersistTokensAsync(user);
 
-            // --- MOBILE-SPECIFIC ACTION: No cookie, just update status and save ---
             user.Status = "Online";
-            await _refreshTokenRepository.SaveChangesAsync(); // Save user, revoked tokens, and new refresh token.
+            await _refreshTokenRepository.SaveChangesAsync();
 
             if (_env.IsDevelopment())
-            {
                 _developmentLoggerService.LogTokenSent(TimeSpan.FromMinutes(15), "ACCESS");
-            }
 
-            // --- MOBILE-SPECIFIC RESPONSE: Return DTO with tokens in JSON body ---
             return new MobileLoginResponseDto
             {
                 User = _mapper.Map<UserDto>(user),
@@ -417,7 +402,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private async Task<(string accessToken, RefreshToken refreshTokenEntity)> GenerateAndPersistTokensAsync(User user)
         {
             string accessToken = CreateAccessToken(user);
-            var refreshTokenEntity = GenerateRefreshToken();
+            var refreshTokenEntity = GenerateRefreshToken(user.UserRole);
 
             // 1. Link the Refresh Token to the user
             refreshTokenEntity.UserId = user.Id;
@@ -453,7 +438,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 4. Generate new tokens
             string newAccessToken = CreateAccessToken(user);
-            var newRefreshTokenEntity = GenerateRefreshToken();
+            var newRefreshTokenEntity = GenerateRefreshToken(user.UserRole);
             newRefreshTokenEntity.UserId = user.Id;
 
             // 5. Add the new refresh token to the database (using repository)
@@ -533,7 +518,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             // 5. Generate NEW tokens (AT and RT)
             string newAccessToken = CreateAccessToken(user);
-            var newRefreshTokenEntity = GenerateRefreshToken(); // Generates a completely new RT string
+            var newRefreshTokenEntity = GenerateRefreshToken(user.UserRole); // Generates a completely new RT string
             newRefreshTokenEntity.UserId = user.Id;
 
             // 6. Add the new refresh token to the database (using repository)
@@ -543,8 +528,8 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _refreshTokenRepository.SaveChangesAsync();
 
             // 8. Set the NEW Access Token cookie AND the NEW Refresh Token cookie
-            SetAccessTokenCookie(newAccessToken);
-            SetRefreshTokenCookie(newRefreshTokenEntity.Token, newRefreshTokenEntity.ExpiresAt);
+            SetAccessTokenCookie(newAccessToken, user.UserRole);
+            SetRefreshTokenCookie(newRefreshTokenEntity.Token, newRefreshTokenEntity.ExpiresAt, user.UserRole);
 
             if (_env.IsDevelopment())
             {
@@ -573,11 +558,24 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
+            // Determine token expiration based on user role
+            // Staff, Admin, and SuperAdmin get tokens that don't expire (10 years)
+            // Students and Teachers get 15-minute tokens
+            DateTime expirationTime;
+            if (user.UserRole == UserRole.Staff || 
+                user.UserRole == UserRole.Admin || 
+                user.UserRole == UserRole.SuperAdmin)
+            {
+                expirationTime = DateTime.UtcNow.AddYears(10); // Effectively no expiration
+            }
+            else
+            {
+                expirationTime = DateTime.UtcNow.AddMinutes(15); // Standard 15-minute expiry
+            }
+
             var token = new JwtSecurityToken(
                 claims: claims,
-                //expires: DateTime.UtcNow.AddSeconds(30), // <-- Set to 30 seconds for dev test
-                expires: DateTime.UtcNow.AddMinutes(15), // Access Token expiry time
-
+                expires: expirationTime,
                 signingCredentials: creds
             );
 
@@ -585,29 +583,45 @@ namespace BackendTechnicalAssetsManagement.src.Services
             return jwt;
         }
 
-        private RefreshToken GenerateRefreshToken()
+        private RefreshToken GenerateRefreshToken(UserRole role)
         {
+            // Admin, Staff, and SuperAdmin sessions never expire on their own —
+            // they are only invalidated on explicit logout (token rotation + revocation).
+            // A 1-year expiry acts as a safety net while being effectively "permanent".
+            bool isWebStaff = role == UserRole.SuperAdmin
+                           || role == UserRole.Admin
+                           || role == UserRole.Staff;
+
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                ExpiresAt = DateTime.UtcNow.AddDays(7), // You might want to make this configurable
+                ExpiresAt = isWebStaff
+                    ? DateTime.UtcNow.AddYears(1)   // Web staff: expires only on logout
+                    : DateTime.UtcNow.AddDays(7),   // Students/Teachers: standard 7-day window
                 CreatedAt = DateTime.UtcNow
             };
         }
 
-        private void SetAccessTokenCookie(string accessToken)
+        private void SetAccessTokenCookie(string accessToken, UserRole role)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
 
             var isDevelopment = _env.IsDevelopment();
 
+            bool isWebStaff = role == UserRole.SuperAdmin
+                           || role == UserRole.Admin
+                           || role == UserRole.Staff;
+
             var accessTokenCookieOptions = new CookieOptions
             {
-                HttpOnly = !isDevelopment, // Keep HttpOnly logic based on environment
-                Secure = true,             // Required for SameSite=None
-                SameSite = SameSiteMode.None, // Required for cross-domain cookies
-                Expires = DateTime.UtcNow.AddMinutes(15) // Access Token expiry time
+                HttpOnly = !isDevelopment,        // Keep HttpOnly logic based on environment
+                Secure = true,                    // Required for SameSite=None
+                SameSite = SameSiteMode.None,     // Required for cross-domain cookies
+                // Web staff: session cookie (no Expires) — browser clears it on close.
+                // The auto-refresh middleware keeps it alive while the browser is open.
+                // Students/Teachers: explicit 15-min expiry.
+                Expires = isWebStaff ? null : DateTime.UtcNow.AddMinutes(15)
             };
 
             httpContext.Response.Cookies.Append("4CLC-XSRF-TOKEN", accessToken, accessTokenCookieOptions);
@@ -631,19 +645,23 @@ namespace BackendTechnicalAssetsManagement.src.Services
             // To clear, you just call Delete
             httpContext.Response.Cookies.Delete("4CLC-Auth-SRT");
         }
-        private void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt)
+        private void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt, UserRole role)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
 
-            var isDevelopment = _env.IsDevelopment();
+            bool isWebStaff = role == UserRole.SuperAdmin
+                           || role == UserRole.Admin
+                           || role == UserRole.Staff;
 
             var refreshTokenCookieOptions = new CookieOptions
             {
-                HttpOnly = true,           // Critical: ALWAYS HttpOnly
-                Secure = true,             // Required for SameSite=None
+                HttpOnly = true,              // Critical: ALWAYS HttpOnly
+                Secure = true,               // Required for SameSite=None
                 SameSite = SameSiteMode.None, // Required for cross-domain cookies
-                Expires = expiresAt        // Use the token's actual expiry time (e.g., 7 days)
+                // Web staff: session cookie — browser clears it on close, logout revokes it in DB.
+                // Students/Teachers: persist for the token's actual expiry (e.g., 7 days).
+                Expires = isWebStaff ? null : expiresAt
             };
 
             httpContext.Response.Cookies.Append("4CLC-Auth-SRT", refreshToken, refreshTokenCookieOptions);

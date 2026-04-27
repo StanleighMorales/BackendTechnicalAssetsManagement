@@ -11,74 +11,110 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public LentItemsRepository(AppDbContext context)
         {
             _context = context;
-        }   
+        }
 
         public async Task<LentItems> AddAsync(LentItems lentItem)
         {
             await _context.LentItems.AddAsync(lentItem);
-
             return lentItem;
         }
 
+        // Full load with navigation properties — used when the caller needs User/Teacher/Item data.
+        // AsNoTracking: these are read-only projections; no change tracking needed.
         public async Task<IEnumerable<LentItems>> GetAllAsync()
         {
             return await _context.LentItems
+                .AsNoTracking()
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)
                 .ToListAsync();
+        }
 
+        // Lightweight: returns only the scalar fields of LentItems — no navigation properties.
+        // Used by service-layer guards that only need Status, ItemId, UserId, etc.
+        public async Task<IEnumerable<LentItems>> GetAllLightAsync()
+        {
+            return await _context.LentItems
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        // Returns only active records (Pending/Approved/Borrowed) for a specific item.
+        // Much cheaper than loading the whole table when checking availability.
+        public async Task<IEnumerable<LentItems>> GetActiveByItemIdLightAsync(Guid itemId)
+        {
+            return await _context.LentItems
+                .AsNoTracking()
+                .Where(li => li.ItemId == itemId &&
+                             (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"))
+                .ToListAsync();
+        }
+
+        // Returns only active records for a specific user — used for borrowing-limit checks.
+        public async Task<IEnumerable<LentItems>> GetActiveByUserIdLightAsync(Guid userId)
+        {
+            return await _context.LentItems
+                .AsNoTracking()
+                .Where(li => li.UserId == userId &&
+                             (li.Status == "Pending" || li.Status == "Approved" || li.Status == "Borrowed"))
+                .ToListAsync();
+        }
+
+        // Returns only Pending/Approved reservations that have passed their grace period.
+        // Used by the expiry background service — avoids loading the entire table.
+        public async Task<IEnumerable<LentItems>> GetExpiredReservationsAsync(DateTime cutoff)
+        {
+            return await _context.LentItems
+                .AsNoTracking()
+                .Where(li => li.ReservedFor.HasValue &&
+                             li.ReservedFor.Value < cutoff &&
+                             (li.Status == "Pending" || li.Status == "Approved") &&
+                             !li.LentAt.HasValue)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<LentItems>> GetByDateTime(DateTime dateTime)
         {
-            // Ensure we're working with UTC time for database comparison
-            var utcDateTime = dateTime.Kind == DateTimeKind.Utc ? dateTime : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
-            
-            // If only date is provided (time is 00:00:00), search for all items on that date
+            var utcDateTime = dateTime.Kind == DateTimeKind.Utc
+                ? dateTime
+                : DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+
             if (utcDateTime.TimeOfDay == TimeSpan.Zero)
             {
                 var startOfDay = utcDateTime.Date;
                 var endOfDay = startOfDay.AddDays(1);
-                
-                // Debug: Log the search range
-                Console.WriteLine($"Searching for date range: {startOfDay:yyyy-MM-dd HH:mm:ss.fff} to {endOfDay:yyyy-MM-dd HH:mm:ss.fff}");
-                
                 return await _context.LentItems
+                    .AsNoTracking()
                     .Include(li => li.User)
                     .Include(li => li.Teacher)
                     .Include(li => li.Item)
-                    .Where(li => li.LentAt.HasValue && 
-                                li.LentAt.Value >= startOfDay && 
-                                li.LentAt.Value < endOfDay)
+                    .Where(li => li.LentAt.HasValue &&
+                                 li.LentAt.Value >= startOfDay &&
+                                 li.LentAt.Value < endOfDay)
                     .ToListAsync();
             }
-            
-            // If specific time is provided, search for items within that minute (ignoring seconds)
-            var startOfMinute = new DateTime(utcDateTime.Year, utcDateTime.Month, utcDateTime.Day, 
-                                           utcDateTime.Hour, utcDateTime.Minute, 0, DateTimeKind.Utc);
+
+            var startOfMinute = new DateTime(utcDateTime.Year, utcDateTime.Month, utcDateTime.Day,
+                                             utcDateTime.Hour, utcDateTime.Minute, 0, DateTimeKind.Utc);
             var endOfMinute = startOfMinute.AddMinutes(1);
-            
-            // Debug: Log the search range
-            Console.WriteLine($"Searching for time range: {startOfMinute:yyyy-MM-dd HH:mm:ss.fff} to {endOfMinute:yyyy-MM-dd HH:mm:ss.fff}");
-            
+
             return await _context.LentItems
+                .AsNoTracking()
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)
-                .Where(li => li.LentAt.HasValue && 
-                            li.LentAt.Value >= startOfMinute && 
-                            li.LentAt.Value < endOfMinute)
+                .Where(li => li.LentAt.HasValue &&
+                             li.LentAt.Value >= startOfMinute &&
+                             li.LentAt.Value < endOfMinute)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<LentItems>> GetAllBorrowedItemsAsync()
         {
-            // Returns every record that has ever been a borrow transaction,
-            // regardless of current status (Pending, Approved, Borrowed, Returned, etc.)
             var borrowStatuses = new[] { "Pending", "Approved", "Borrowed", "Returned", "Canceled", "Denied", "Expired" };
-
             return await _context.LentItems
+                .AsNoTracking()
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)
@@ -89,6 +125,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<LentItems?> GetByIdAsync(Guid id)
         {
+            // Tracked — callers may update this entity
             return await _context.LentItems
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
@@ -100,15 +137,16 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
         public async Task SoftDeleteAsync(Guid id)
         {
             var itemToSoftDelete = await _context.LentItems.FindAsync(id);
             if (itemToSoftDelete != null)
             {
-            // this should forward the list to archive table later
-
+                // placeholder — forward to archive table later
             }
         }
+
         public Task UpdateAsync(LentItems lentItem)
         {
             _context.LentItems.Update(lentItem);
@@ -127,6 +165,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         public async Task<LentItems?> GetActiveByItemIdAsync(Guid itemId)
         {
             return await _context.LentItems
+                .AsNoTracking()
                 .Include(li => li.User)
                 .Include(li => li.Teacher)
                 .Include(li => li.Item)

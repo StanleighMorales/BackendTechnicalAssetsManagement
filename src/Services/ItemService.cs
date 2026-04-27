@@ -71,7 +71,14 @@ namespace BackendTechnicalAssetsManagement.src.Services
 
             if (createItemDto.Image != null)
             {
-                newItem.ImageUrl = await _storageService.UploadImageAsync(createItemDto.Image, "items");
+                try
+                {
+                    newItem.ImageUrl = await _storageService.UploadImageAsync(createItemDto.Image, "items");
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to upload image: {ex.Message}", ex);
+                }
             }
 
             await _itemRepository.AddAsync(newItem);
@@ -213,22 +220,36 @@ namespace BackendTechnicalAssetsManagement.src.Services
             if (itemToDelete == null) 
                 return (false, "Item not found.");
 
+            // Check if item has any active lent records (Borrowed, Pending, Approved, Reserved)
+            var activeLentItems = await _lentItemsRepository.GetActiveByItemIdLightAsync(id);
+            if (activeLentItems.Any())
+            {
+                var activeStatuses = string.Join(", ", activeLentItems.Select(li => li.Status).Distinct());
+                return (false, $"Cannot archive item. It has active lent records with status: {activeStatuses}. Please return or cancel these records first.");
+            }
+
             try
             {
-                //// We REMOVE the call to DeleteImage. It's not needed.
-                //// The image bytes will be deleted from the database when the row is deleted.
-
-                // Set item status to Archived before archiving
-                itemToDelete.Status = ItemStatus.Archived;
-                itemToDelete.UpdatedAt = DateTime.UtcNow;
-
+                // Create a copy of the item data for archiving BEFORE modifying the entity
                 var archiveDto = _mapper.Map<CreateArchiveItemsDto>(itemToDelete);
+                
+                // Set the archived status in the DTO (not the tracked entity)
+                // UpdatedAt will be set automatically by ArchiveItemsService.CreateItemArchiveAsync
+                archiveDto.Status = ItemStatus.Archived.ToString();
+                
+                // Create the archive record
                 await _archiveItemsService.CreateItemArchiveAsync(archiveDto);
 
-                // 4. Delete the original item from the main table
+                // Before deleting the item, we need to handle the foreign key constraint
+                // from ActivityLogs. We'll set ItemId to NULL in all related activity logs
+                // to preserve the audit trail while allowing the item to be deleted.
+                // This is done at the database level to avoid loading all activity logs into memory.
+                await _itemRepository.NullifyActivityLogItemReferencesAsync(id);
+
+                // Delete the original item from the main table
                 await _itemRepository.DeleteAsync(id);
 
-                // 5. Save the deletion change. This commits the removal of the item.
+                // Save the deletion change
                 var success = await _itemRepository.SaveChangesAsync();
                 
                 return success 

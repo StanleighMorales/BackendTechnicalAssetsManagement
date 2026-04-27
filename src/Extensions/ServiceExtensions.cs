@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 namespace BackendTechnicalAssetsManagement.src.Extensions
@@ -54,7 +55,9 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true, // Must be true for security!
-                    ClockSkew = TimeSpan.Zero
+                    ClockSkew = TimeSpan.Zero,
+                    // Explicitly map the role claim type so ASP.NET Core can properly read roles from JWT
+                    RoleClaimType = ClaimTypes.Role
                 };
 
             });

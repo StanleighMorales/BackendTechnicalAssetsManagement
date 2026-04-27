@@ -9,7 +9,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 {
     [ApiController]
     [Route("api/v1/archiveusers")]
-    [Authorize(Roles = "Admin,Staff")] // Secure all endpoints in this controller for Admin or Staff
+    [Authorize(Policy = "AdminOrStaff")] // Secure all endpoints in this controller for Admin or Staff
     public class ArchiveUsersController : ControllerBase
     {
         private readonly IArchiveUserService _archiveUserService;
@@ -57,6 +57,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// </summary>
         /// <param name="archiveUserId">The GUID of the archived user to restore.</param>
         [HttpDelete("restore/{archiveUserId}")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RestoreUser(Guid archiveUserId)
@@ -76,7 +77,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// </summary>
         /// <param name="id">The GUID of the archived user to delete permanently.</param>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")] // Example: Restrict permanent deletion to only Admins
+        [Authorize(Roles = "Admin,SuperAdmin")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PermanentDeleteUser(Guid id)

@@ -30,7 +30,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         }
         public async Task<IEnumerable<Item>> GetAllAsync()
         {
-            return await _context.Items.ToListAsync();
+            return await _context.Items.AsNoTracking().ToListAsync();
         }
 
         public async Task<Item?> GetByIdAsync(Guid id)
@@ -66,6 +66,26 @@ namespace BackendTechnicalAssetsManagement.src.Repository
             // SaveChangesAsync returns the number of state entries written to the database.
             // Returning > 0 is a reliable way to confirm changes were made.
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task NullifyActivityLogItemReferencesAsync(Guid itemId)
+        {
+            // Use ExecuteSqlRaw to update ActivityLog records directly in the database
+            // This avoids loading all activity logs into memory and is more efficient
+            // We need to nullify both ItemId and LentItemId references
+            await _context.Database.ExecuteSqlRawAsync(
+                "UPDATE \"ActivityLogs\" SET \"ItemId\" = NULL WHERE \"ItemId\" = {0}",
+                itemId);
+            
+            // Also nullify LentItemId for any lent items related to this item
+            // This prevents FK_ActivityLogs_LentItems_LentItemId constraint violations
+            await _context.Database.ExecuteSqlRawAsync(
+                @"UPDATE ""ActivityLogs"" 
+                  SET ""LentItemId"" = NULL 
+                  WHERE ""LentItemId"" IN (
+                      SELECT ""Id"" FROM ""LentItems"" WHERE ""ItemId"" = {0}
+                  )",
+                itemId);
         }
 
         public Task UpdateAsync(Item item)

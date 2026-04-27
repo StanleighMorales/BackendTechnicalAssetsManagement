@@ -20,6 +20,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _logger = logger;
         }
         [HttpGet]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<IEnumerable<ArchiveLentItemsDto>>>> GetAllLentItemsArchives()
         {
             var archivedLentItems = await _archiveLentItemsService.GetAllLentItemsArchivesAsync();
@@ -27,6 +28,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
         [HttpGet("{id}")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ArchiveLentItemsDto?>>> GetLentItemsArchiveById(Guid id)
         {
             var archivedLentItems = await _archiveLentItemsService.GetLentItemsArchiveByIdAsync(id);
@@ -41,6 +43,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
         [HttpDelete("restore/{id}")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<ActionResult<ApiResponse<ArchiveLentItemsDto>>> RestoreArchivedLentItems(Guid id)
         {
             var restoredLentItems = await _archiveLentItemsService.RestoreLentItemsAsync(id);
@@ -52,6 +55,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             return Ok(response);
         }
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteLentItemsArchive(Guid id)
         {
             var success = await _archiveLentItemsService.DeleteLentItemsArchiveAsync(id);

@@ -1,8 +1,7 @@
 # Makefile for Backend Technical Assets Management
 
 # Variables
-PROJECT_DIR = BackendTechnicalAssetsManagement
-PROJECT_FILE = $(PROJECT_DIR)/BackendTechnicalAssetsManagement.csproj
+PROJECT_FILE = BackendTechnicalAssetsManagement.csproj
 TEST_DIR = BackendTechnicalAssetsManagementTest
 TEST_FILE = $(TEST_DIR)/BackendTechnicalAssetsManagementTest.csproj
 

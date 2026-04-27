@@ -57,7 +57,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <param name="id">The ID of the archived item to restore.</param>
         /// <returns>The newly restored item.</returns>
         [HttpDelete("restore/{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOrStaff")]
         public async Task<ActionResult<ApiResponse<ItemDto>>> RestoreArchivedItem(Guid id)
         {
             var restoredItem = await _archiveItemsService.RestoreItemAsync(id);
@@ -76,7 +76,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         /// <param name="id">The ID of the archived item to delete.</param>
         /// <returns>A confirmation message upon successful deletion.</returns>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
         public async Task<ActionResult<ApiResponse<string>>> DeleteArchivedItem(Guid id)
         {
             var success = await _archiveItemsService.DeleteItemArchiveAsync(id);

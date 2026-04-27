@@ -14,6 +14,8 @@ namespace BackendTechnicalAssetsManagement.src.DTOs.ActivityLog
         public string BorrowerName { get; set; } = string.Empty;
         public string BorrowerRole { get; set; } = string.Empty;
         public string? StudentIdNumber { get; set; }
+        public string? FrontStudentIdPictureUrl { get; set; }
+        public string? GuestImageUrl { get; set; }
 
         // Item
         public Guid ItemId { get; set; }

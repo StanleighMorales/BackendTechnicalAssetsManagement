@@ -61,6 +61,13 @@ namespace BackendTechnicalAssetsManagement.src.IRepository
         /// <returns>True if at least one change was successfully saved; otherwise, false.</returns>
         Task<bool> SaveChangesAsync();
 
+        /// <summary>
+        /// Sets ItemId to NULL in all ActivityLog records that reference the specified item.
+        /// This is necessary before deleting an item to avoid foreign key constraint violations.
+        /// </summary>
+        /// <param name="itemId">The ID of the item being archived/deleted.</param>
+        Task NullifyActivityLogItemReferencesAsync(Guid itemId);
+
         Task AddRangeAsync(IEnumerable<Item> items);
     }
 }

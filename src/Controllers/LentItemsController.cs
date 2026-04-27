@@ -59,7 +59,8 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
         [HttpPost("guests")]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromBody] CreateLentItemsForGuestDto dto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ApiResponse<LentItemsDto>>> AddForGuest([FromForm] CreateLentItemsForGuestDto dto)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdClaim, out var issuedById))

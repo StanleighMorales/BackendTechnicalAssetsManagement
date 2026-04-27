@@ -37,42 +37,43 @@ namespace BackendTechnicalAssetsManagement.src.Repository
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<StaffDto>> GetAllStaffAsync()
         {
-            // Use the Staff -> StaffDto mapping you defined
             return await _context.Users.OfType<Staff>()
+                .AsNoTracking()
                 .ProjectTo<StaffDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync()
         {
-            // Use the Student -> StudentDto mapping you defined (which includes base64 conversion)
             return await _context.Users.OfType<Student>()
+                .AsNoTracking()
                 .ProjectTo<StudentDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<TeacherDto>> GetAllTeachersAsync()
         {
-            // Use the Teacher -> TeacherDto mapping you defined
             return await _context.Users.OfType<Teacher>()
+                .AsNoTracking()
                 .ProjectTo<TeacherDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<UserDto>> GetAllUserDtosAsync()
         {
-            var allUsers = await _context.Users.ToListAsync();
+            var allUsers = await _context.Users.AsNoTracking().ToListAsync();
             return _mapper.Map<IEnumerable<UserDto>>(allUsers);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+            return await _context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
         }
 
         //public async Task<User?> GetByIdAsync(Guid id)
@@ -81,6 +82,20 @@ namespace BackendTechnicalAssetsManagement.src.Repository
         //}
         public async Task<User?> GetByIdAsync(Guid id)
         {
+            // Load the user without LentItems — callers that need LentItems
+            // should use a dedicated method to avoid loading the full history on every lookup.
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            return user;
+        }
+
+        /// <summary>
+        /// Loads a user together with their full LentItems history (including Item and Teacher).
+        /// Use this only when the history is actually needed — not for auth or profile lookups.
+        /// </summary>
+        public async Task<User?> GetByIdWithHistoryAsync(Guid id)
+        {
             var user = await _context.Users
                 .Include(u => u.LentItems)
                     .ThenInclude(li => li.Item)
@@ -88,8 +103,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                     .ThenInclude(li => li.Teacher)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
-            // Filter out hidden items after loading
-            if (user != null && user.LentItems != null)
+            if (user?.LentItems != null)
             {
                 user.LentItems = user.LentItems
                     .Where(li => !li.IsHiddenFromUser)

@@ -40,62 +40,45 @@ namespace BackendTechnicalAssetsManagement.src.BackgroundServices
         {
             _logger.LogInformation("Refresh Token Cleanup Service is starting.");
 
-            // This loop runs for the entire lifetime of the application. It will only exit
-            // when the stoppingToken is cancelled (i.e., when the application is shutting down).
+            // Delay the first run by 2 minutes so the app finishes starting up
+            // before we open a DB connection, avoiding connection pressure at startup.
+            await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     _logger.LogInformation("Running refresh token cleanup task.");
 
-                    // IMPORTANT: We must create a new 'scope' to resolve our DbContext.
-                    // AppDbContext is a 'scoped' service, meaning it's designed to live for a short time (like an HTTP request).
-                    // This background service is a 'singleton' (lives forever). To safely use a scoped service inside a
-                    // singleton, we create a new scope for each unit of work.
                     using (var scope = _serviceProvider.CreateScope())
                     {
-                        // Safely resolve a new instance of AppDbContext from our temporary scope.
                         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                        // Build a query to find all refresh tokens that meet the criteria for deletion:
-                        // 1. The token's expiration date is in the past (it's expired).
-                        // 2. The token has been manually revoked (e.g., via logout or token rotation).
-                        var tokensToRemove = await dbContext.RefreshTokens
+                        // Single bulk DELETE — no rows loaded into memory
+                        var deletedCount = await dbContext.RefreshTokens
                             .Where(rt => rt.ExpiresAt <= DateTime.UtcNow || rt.IsRevoked)
-                            .ToListAsync(stoppingToken);
+                            .ExecuteDeleteAsync(stoppingToken);
 
-                        // Check if the query found any tokens to delete.
-                        if (tokensToRemove.Any())
-                        {
-                            // Use RemoveRange for an efficient bulk-delete operation.
-                            dbContext.RefreshTokens.RemoveRange(tokensToRemove);
-                            // Commit the changes to the database.
-                            await dbContext.SaveChangesAsync(stoppingToken);
-
-                            _logger.LogInformation($"Removed {tokensToRemove.Count} old refresh tokens.");
-                        }
+                        if (deletedCount > 0)
+                            _logger.LogInformation($"Removed {deletedCount} old refresh tokens.");
                         else
-                        {
                             _logger.LogInformation("No old refresh tokens to remove.");
-                        }
-                    } // The scope (and the DbContext instance) is automatically disposed of here.
+                    }
 
-                    // Wait 24 hours before the next cleanup cycle
+                    // Run once every 24 hours
                     await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
-                    // This exception is expected when the application is shutting down. The Task.Delay is cancelled
-                    // by the 'stoppingToken', which throws this exception. We catch it and break the loop
-                    // to allow for a graceful shutdown.
                     break;
                 }
                 catch (Exception ex)
                 {
-                    // This is a safety net. If any other unexpected error occurs during the cleanup process,
-                    // we log it and the loop will continue on its next cycle. This prevents the entire
-                    // background service from crashing due to a transient database error, for example.
                     _logger.LogError(ex, "An error occurred in the Refresh Token Cleanup Service.");
+
+                    // Back off for 5 minutes before retrying after an error
+                    // to avoid hammering the DB when it's under pressure.
+                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
                 }
             }
 
