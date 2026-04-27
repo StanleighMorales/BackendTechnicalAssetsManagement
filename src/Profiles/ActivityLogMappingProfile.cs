@@ -18,7 +18,11 @@ namespace BackendTechnicalAssetsManagement.src.Profiles
                 .ForMember(dest => dest.BorrowerRole, opt => opt.MapFrom(src => src.ActorRole))
                 .ForMember(dest => dest.CurrentStatus, opt => opt.MapFrom(src => src.NewStatus ?? string.Empty))
                 .ForMember(dest => dest.StudentIdNumber, opt => opt.MapFrom(src =>
-                    src.LentItem != null ? src.LentItem.StudentIdNumber : null));
+                    src.LentItem != null ? src.LentItem.StudentIdNumber : null))
+                .ForMember(dest => dest.FrontStudentIdPictureUrl, opt => opt.MapFrom(src =>
+                    src.LentItem != null ? src.LentItem.FrontStudentIdPictureUrl : null))
+                .ForMember(dest => dest.GuestImageUrl, opt => opt.MapFrom(src =>
+                    src.LentItem != null ? src.LentItem.GuestImageUrl : null));
         }
     }
 }

@@ -37,6 +37,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .AsNoTracking()
                 .Include(l => l.ActorUser)
                 .Include(l => l.Item)
+                .Include(l => l.LentItem)
                 .OrderByDescending(l => l.CreatedAt)
                 .ToListAsync();
         }
@@ -53,6 +54,7 @@ namespace BackendTechnicalAssetsManagement.src.Repository
                 .AsNoTracking()
                 .Include(l => l.ActorUser)
                 .Include(l => l.Item)
+                .Include(l => l.LentItem)
                 .AsQueryable();
 
             if (category.HasValue)
