@@ -1,5 +1,6 @@
 using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.Data;
 using BackendTechnicalAssetsManagement.src.DTOs.Archive.Items;
 using BackendTechnicalAssetsManagement.src.DTOs.Item;
 using BackendTechnicalAssetsManagement.src.IRepository;
@@ -21,8 +22,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly IWebHostEnvironment _hostEnvironment;
         private readonly ILentItemsRepository _lentItemsRepository;
         private readonly ISupabaseStorageService _storageService;
+        private readonly AppDbContext _db;
 
-        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, ILentItemsRepository lentItemsRepository, ISupabaseStorageService storageService)
+        public ItemService(IItemRepository itemRepository, IMapper mapper, IWebHostEnvironment hostEnvironment, IArchiveItemsService archiveItemsService, ILentItemsRepository lentItemsRepository, ISupabaseStorageService storageService, AppDbContext db)
         {
             _itemRepository = itemRepository;
             _mapper = mapper;
@@ -30,6 +32,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _archiveItemsService = archiveItemsService;
             _lentItemsRepository = lentItemsRepository;
             _storageService = storageService;
+            _db = db;
         }
 
         public class DuplicateSerialNumberException : Exception
@@ -37,9 +40,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
             public DuplicateSerialNumberException(string message) : base(message) { }
         }
 
-        public async Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto)
+        public async Task<(ItemDto Item, RfidRegistrationSessionDto? Session)> CreateItemAsync(CreateItemsDto createItemDto)
         {
-            // A. **Standardize the SerialNumber with "SN-" prefix only if it's missing**
+            // A. Standardize the SerialNumber with "SN-" prefix only if it's missing
             if (string.IsNullOrEmpty(createItemDto.SerialNumber))
             {
                 throw new ArgumentException("SerialNumber cannot be empty.");
@@ -84,7 +87,35 @@ namespace BackendTechnicalAssetsManagement.src.Services
             await _itemRepository.AddAsync(newItem);
             await _itemRepository.SaveChangesAsync();
 
-            return _mapper.Map<ItemDto>(newItem);
+            var itemDto = _mapper.Map<ItemDto>(newItem);
+
+            // C. If no RFID was provided at creation, auto-create a pending registration session
+            //    so the ESP32 can pick it up immediately without a separate web action.
+            RfidRegistrationSessionDto? sessionDto = null;
+            if (string.IsNullOrEmpty(newItem.RfidUid))
+            {
+                var session = new RfidRegistrationSession
+                {
+                    ItemId = newItem.Id,
+                    Status = "Pending",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+                };
+                _db.RfidRegistrationSessions.Add(session);
+                await _db.SaveChangesAsync();
+
+                sessionDto = new RfidRegistrationSessionDto
+                {
+                    Id = session.Id,
+                    ItemId = session.ItemId,
+                    Status = session.Status,
+                    ScannedRfidUid = session.ScannedRfidUid,
+                    ErrorMessage = session.ErrorMessage,
+                    CreatedAt = session.CreatedAt,
+                    ExpiresAt = session.ExpiresAt
+                };
+            }
+
+            return (itemDto, sessionDto);
         }
 
         public async Task<IEnumerable<ItemDto>> GetAllItemsAsync()

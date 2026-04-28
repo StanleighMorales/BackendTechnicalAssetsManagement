@@ -1,12 +1,12 @@
 /**
- * ESP32 + PN532 RFID Item Registration Station
+ * ESP32 + PN532 Student RFID Registration Station
  *
  * Flow:
  *   1. Connect to WiFi
- *   2. Poll GET /api/v1/rfid-sessions/pending → check for pending item registration
- *   3. If session found, scan item's RFID tag
- *   4. POST /api/v1/rfid-sessions/{sessionId}/complete with scanned UID
- *   5. Backend links RFID to item and marks session complete
+ *   2. Poll GET /api/v1/rfid-sessions/pending/student → check for pending student registration
+ *   3. If session found, scan student's RFID card
+ *   4. POST /api/v1/rfid-sessions/{sessionId}/complete/student with scanned RFID UID
+ *   5. Backend links RFID to student and marks session complete
  *   6. Return to polling
  *
  * Wiring (PN532 → ESP32) — I2C mode:
@@ -24,26 +24,23 @@
 #include <ArduinoJson.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
+#define WIFI_SSID      "EjGwapo2.4G"
+#define WIFI_PASSWORD  "vigheadTHEG0D2.4G"
+#define API_BASE_URL   "http://192.168.1.17:5289"
+
+// ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
 #define PN532_RESET 2
 
-// Network Credentials
-const char* ssid     = "EjGwapo2.4G";
-const char* password = "vigheadTHEG0D2.4G";
-
-// Backend API Configuration
-const char* apiBaseUrl = "http://192.168.1.17:5289";
-
-// ── Globals ───────────────────────────────────────────────────────────────────
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 // ── State machine ─────────────────────────────────────────────────────────────
 enum State { POLLING, WAITING_FOR_SCAN, SUBMITTING };
-State currentState = POLLING;
 
+State  currentState = POLLING;
 String sessionId    = "";
-String itemId       = "";
-String itemName     = "";
+String studentId    = "";
+String studentName  = "";
 String lastUid      = "";
 unsigned long lastScanTime = 0;
 unsigned long lastPollTime = 0;
@@ -57,9 +54,8 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Serial.println("\n=== RFID Item Registration Station ===");
+  Serial.println("\n=== Student RFID Registration Station ===");
 
-  // Initialize PN532
   nfc.begin();
   uint32_t ver = nfc.getFirmwareVersion();
   if (!ver) {
@@ -69,16 +65,9 @@ void setup() {
   Serial.printf("PN532 firmware v%d.%d\n", (ver >> 16) & 0xFF, (ver >> 8) & 0xFF);
   nfc.SAMConfig();
 
-  // Connect to WiFi
-  Serial.printf("Connecting to %s", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
+  connectWiFi();
 
-  Serial.println("\nPolling for item registration requests...");
+  Serial.println("\nPolling for student registration requests...");
 }
 
 void loop() {
@@ -93,7 +82,7 @@ void loop() {
     return;
   }
 
-  // State: WAITING_FOR_SCAN - Wait for RFID tag scan
+  // State: WAITING_FOR_SCAN - Wait for RFID card scan
   if (currentState == WAITING_FOR_SCAN) {
     uint8_t uid[7];
     uint8_t uidLength;
@@ -117,6 +106,13 @@ void loop() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+void connectWiFi() {
+  Serial.printf("Connecting to %s", WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
+  Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
+}
+
 String getUidString(uint8_t* buf, uint8_t len) {
   String s = "";
   for (uint8_t i = 0; i < len; i++) {
@@ -127,13 +123,15 @@ String getUidString(uint8_t* buf, uint8_t len) {
   return s;
 }
 
-// Poll for pending item registration sessions
+// Poll for pending student registration sessions
 void checkPendingSession() {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
-  String url = String(apiBaseUrl) + "/api/v1/rfid-sessions/pending";
+  String url = String(API_BASE_URL) + "/api/v1/rfid-sessions/pending/student";
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
 
   int code = http.GET();
@@ -158,15 +156,17 @@ void checkPendingSession() {
     return;
   }
 
-  sessionId = doc["data"]["id"].as<String>();
-  itemId    = doc["data"]["itemId"].as<String>();
+  sessionId   = doc["data"]["id"].as<String>();
+  studentId   = doc["data"]["studentId"].as<String>();
+  studentName = doc["data"]["studentName"].as<String>();
 
   Serial.println("\n─────────────────────────────────────────");
-  Serial.println("✓ New item registration request!");
-  Serial.printf("  Item ID: %s\n", itemId.c_str());
+  Serial.println("✓ New registration request!");
+  Serial.printf("  Student: %s\n", studentName.c_str());
+  Serial.printf("  Student ID: %s\n", studentId.c_str());
   Serial.printf("  Session ID: %s\n", sessionId.c_str());
   Serial.println("─────────────────────────────────────────");
-  Serial.println("\n[Action Required] Place item's RFID tag on scanner...");
+  Serial.println("\n[Action Required] Place student's RFID card on scanner...");
 
   currentState = WAITING_FOR_SCAN;
 }
@@ -175,7 +175,7 @@ void checkPendingSession() {
 void completeSession(const String& rfidUid) {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
-  String url = String(apiBaseUrl) + "/api/v1/rfid-sessions/" + sessionId + "/complete";
+  String url = String(API_BASE_URL) + "/api/v1/rfid-sessions/" + sessionId + "/complete/student";
   Serial.printf("POST %s\n", url.c_str());
 
   StaticJsonDocument<128> doc;
@@ -184,6 +184,8 @@ void completeSession(const String& rfidUid) {
   serializeJson(doc, body);
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
 
@@ -195,30 +197,24 @@ void completeSession(const String& rfidUid) {
 
   if (code == 200) {
     Serial.println("\n✓✓✓ SUCCESS ✓✓✓");
-    Serial.printf("RFID '%s' registered to item successfully.\n", rfidUid.c_str());
-    Serial.println("Item is now scannable for borrowing/returning.");
+    Serial.printf("RFID '%s' registered to %s\n", rfidUid.c_str(), studentName.c_str());
+    Serial.println("Student can now use their card for borrowing items.");
   } else if (code == 404) {
     Serial.println("✗ Session not found or expired.");
   } else if (code == 409) {
-    Serial.println("✗ RFID already assigned to another item.");
+    Serial.println("✗ RFID already registered to another student.");
+    Serial.println("  This card is already in use.");
   } else {
     Serial.printf("✗ Unexpected error: %d\n", code);
     Serial.printf("  Response: %s\n", resp.c_str());
   }
 }
 
-void connectWiFi() {
-  Serial.printf("Connecting to %s", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
-  Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
-}
-
 void resetSession() {
-  sessionId   = "";
-  itemId      = "";
-  itemName    = "";
-  lastUid     = "";
+  sessionId    = "";
+  studentId    = "";
+  studentName  = "";
+  lastUid      = "";
   currentState = POLLING;
   
   Serial.println("\n── Session reset ──");

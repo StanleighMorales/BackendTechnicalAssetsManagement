@@ -3,6 +3,7 @@ using System;
 using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260426084236_AddRfidCodeToStudent")]
+    partial class AddRfidCodeToStudent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,7 +164,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "6-foot HDMI cable, retired from service.",
-                            ImageUrl = "temp/items/item_06_hdmi_short.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_06_hdmi_short.png",
                             ItemMake = "Generic",
                             ItemName = "HDMI Cable 6ft",
                             ItemType = "Cable",
@@ -178,7 +181,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Defective",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "USB condenser microphone, defective.",
-                            ImageUrl = "temp/items/item_07_usb_mic.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_07_usb_mic.png",
                             ItemMake = "Blue",
                             ItemName = "USB Microphone",
                             ItemType = "Microphone",
@@ -195,7 +198,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "NeedRepair",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Wireless optical mouse, needs repair.",
-                            ImageUrl = "temp/items/item_08_mouse.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_08_mouse.png",
                             ItemMake = "Logitech",
                             ItemName = "Wireless Mouse",
                             ItemType = "Peripheral",
@@ -212,7 +215,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "15-foot extension wire, retired.",
-                            ImageUrl = "temp/items/item_09_extension.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_09_extension.png",
                             ItemMake = "Generic",
                             ItemName = "Extension Wire 15ft",
                             ItemType = "Cable",
@@ -229,7 +232,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Refurbished",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "7-port USB 3.0 hub, refurbished.",
-                            ImageUrl = "temp/items/item_10_usb_hub.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_10_usb_hub.png",
                             ItemMake = "Anker",
                             ItemName = "USB Hub 7-Port",
                             ItemType = "Peripheral",
@@ -486,7 +489,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Archived",
                             LastName = "Admin",
                             OriginalUserId = new Guid("00000001-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = 1,
                             Username = "archived.admin"
@@ -564,7 +567,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "10-foot HDMI 2.0 cable for display connections.",
-                            ImageUrl = "temp/items/item_01_hdmi_cable.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_01_hdmi_cable.png",
                             ItemMake = "Generic",
                             ItemModel = "Standard HDMI 2.0",
                             ItemName = "HDMI Cable 10ft",
@@ -582,7 +585,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Dual-channel wireless microphone system.",
-                            ImageUrl = "temp/items/item_02_wireless_mic.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_02_wireless_mic.png",
                             ItemMake = "Shure",
                             ItemModel = "BLX288/PG58",
                             ItemName = "Wireless Microphone",
@@ -600,7 +603,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "3600-lumen portable LCD projector.",
-                            ImageUrl = "temp/items/item_03_projector.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_03_projector.png",
                             ItemMake = "Epson",
                             ItemModel = "EB-X41",
                             ItemName = "Portable Projector",
@@ -618,7 +621,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Portable waterproof Bluetooth speaker.",
-                            ImageUrl = "temp/items/item_04_speaker.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_04_speaker.png",
                             ItemMake = "JBL",
                             ItemModel = "Charge 5",
                             ItemName = "Bluetooth Speaker",
@@ -636,7 +639,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Compact TKL mechanical keyboard with RGB.",
-                            ImageUrl = "temp/items/item_05_keyboard.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_05_keyboard.png",
                             ItemMake = "Keychron",
                             ItemModel = "K2 Pro",
                             ItemName = "Mechanical Keyboard",
@@ -654,7 +657,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "6-foot HDMI cable, retired from service.",
-                            ImageUrl = "temp/items/item_06_hdmi_short.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_06_hdmi_short.png",
                             ItemMake = "Generic",
                             ItemName = "HDMI Cable 6ft",
                             ItemType = "Cable",
@@ -671,7 +674,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Defective",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "USB condenser microphone, defective.",
-                            ImageUrl = "temp/items/item_07_usb_mic.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_07_usb_mic.png",
                             ItemMake = "Blue",
                             ItemName = "USB Microphone",
                             ItemType = "Microphone",
@@ -688,7 +691,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "NeedRepair",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Wireless optical mouse, needs repair.",
-                            ImageUrl = "temp/items/item_08_mouse.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_08_mouse.png",
                             ItemMake = "Logitech",
                             ItemName = "Wireless Mouse",
                             ItemType = "Peripheral",
@@ -705,7 +708,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "15-foot extension wire, retired.",
-                            ImageUrl = "temp/items/item_09_extension.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_09_extension.png",
                             ItemMake = "Generic",
                             ItemName = "Extension Wire 15ft",
                             ItemType = "Cable",
@@ -722,7 +725,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Condition = "Refurbished",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "7-port USB 3.0 hub, refurbished.",
-                            ImageUrl = "temp/items/item_10_usb_hub.png",
+                            ImageUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/items/item_10_usb_hub.png",
                             ItemMake = "Anker",
                             ItemName = "USB Hub 7-Port",
                             ItemType = "Peripheral",
@@ -842,7 +845,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             BorrowerFullName = "Juan Dela Cruz",
                             BorrowerRole = "Student",
                             CreatedAt = new DateTime(2025, 4, 20, 8, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_01_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_01_id_front.png",
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000001"),
                             ItemName = "HDMI Cable 10ft",
@@ -863,7 +866,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             BorrowerFullName = "Maria Santos",
                             BorrowerRole = "Student",
                             CreatedAt = new DateTime(2025, 4, 20, 9, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_02_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_02_id_front.png",
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000002"),
                             ItemName = "Wireless Microphone",
@@ -903,7 +906,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             BorrowerFullName = "Pedro Reyes",
                             BorrowerRole = "Student",
                             CreatedAt = new DateTime(2025, 4, 10, 13, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_03_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_03_id_front.png",
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000004"),
                             ItemName = "Bluetooth Speaker",
@@ -991,58 +994,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.ToTable("Rfids");
                 });
 
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RfidRegistrationSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ScannedRfidUid")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
-
-                    b.ToTable("RfidRegistrationSessions");
-                });
-
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("BlockReason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("BlockedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid?>("BlockedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("BlockedUntil")
-                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -1051,9 +1007,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -1091,9 +1044,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000001-0000-0000-0000-000000000001"),
                             Email = "superadmin@school.edu.ph",
                             FirstName = "Super",
-                            IsBlocked = false,
                             LastName = "Admin",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "SuperAdmin",
                             Username = "sadmin"
@@ -1103,9 +1055,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000001-0000-0000-0000-000000000002"),
                             Email = "christian.admin@school.edu.ph",
                             FirstName = "Christian",
-                            IsBlocked = false,
                             LastName = "Dela Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Admin",
                             Username = "christian"
@@ -1115,9 +1066,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000001-0000-0000-0000-000000000003"),
                             Email = "ejay.admin@school.edu.ph",
                             FirstName = "Ejay",
-                            IsBlocked = false,
                             LastName = "Santos",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Admin",
                             Username = "ejay"
@@ -1127,9 +1077,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000001-0000-0000-0000-000000000004"),
                             Email = "stan.admin@school.edu.ph",
                             FirstName = "Stan",
-                            IsBlocked = false,
                             LastName = "Reyes",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Admin",
                             Username = "stan"
@@ -1139,9 +1088,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000001-0000-0000-0000-000000000005"),
                             Email = "archived.admin@school.edu.ph",
                             FirstName = "Archived",
-                            IsBlocked = false,
                             LastName = "Admin",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = "Admin",
                             Username = "archived.admin"
@@ -1166,7 +1114,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Archived",
                             LastName = "Staff",
                             OriginalUserId = new Guid("00000002-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = 2,
                             Username = "archived.staff",
@@ -1225,7 +1173,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Archived",
                             LastName = "Student",
                             OriginalUserId = new Guid("00000004-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = 4,
                             Username = "archived.student",
@@ -1254,7 +1202,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             FirstName = "Archived",
                             LastName = "Teacher",
                             OriginalUserId = new Guid("00000003-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = 3,
                             Username = "archived.teacher",
@@ -1277,9 +1225,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000002-0000-0000-0000-000000000001"),
                             Email = "carlos.mendoza@school.edu.ph",
                             FirstName = "Carlos",
-                            IsBlocked = false,
                             LastName = "Mendoza",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Staff",
                             Username = "cmendoza",
@@ -1290,9 +1237,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000002-0000-0000-0000-000000000002"),
                             Email = "rosa.garcia@school.edu.ph",
                             FirstName = "Rosa",
-                            IsBlocked = false,
                             LastName = "Garcia",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Staff",
                             Username = "rgarcia",
@@ -1303,9 +1249,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000002-0000-0000-0000-000000000003"),
                             Email = "ben.torres@school.edu.ph",
                             FirstName = "Ben",
-                            IsBlocked = false,
                             LastName = "Torres",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Staff",
                             Username = "btorres",
@@ -1316,9 +1261,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000002-0000-0000-0000-000000000004"),
                             Email = "liza.villanueva@school.edu.ph",
                             FirstName = "Liza",
-                            IsBlocked = false,
                             LastName = "Villanueva",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Staff",
                             Username = "lvillanueva",
@@ -1329,9 +1273,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000002-0000-0000-0000-000000000005"),
                             Email = "archived.staff@school.edu.ph",
                             FirstName = "Archived",
-                            IsBlocked = false,
                             LastName = "Staff",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = "Staff",
                             Username = "archived.staff",
@@ -1404,19 +1347,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000004-0000-0000-0000-000000000001"),
                             Email = "juan.delacruz@school.edu.ph",
                             FirstName = "Juan",
-                            IsBlocked = false,
                             LastName = "Dela Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             PhoneNumber = "09171234501",
                             Status = "Offline",
                             UserRole = "Student",
                             Username = "jdelacruz",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_01_id_back.png",
+                            BackStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-back/student_01_id_back.png",
                             CityMunicipality = "Quezon City",
                             Course = "Bachelor of Science in Computer Science",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_01_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_01_id_front.png",
                             PostalCode = "1100",
-                            ProfilePictureUrl = "temp/students/profile/student_01_profile.png",
+                            ProfilePictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/profile/student_01_profile.png",
                             Province = "Metro Manila",
                             RfidUid = "RFID-STU-001",
                             Section = "A",
@@ -1429,19 +1371,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000004-0000-0000-0000-000000000002"),
                             Email = "maria.santos@school.edu.ph",
                             FirstName = "Maria",
-                            IsBlocked = false,
                             LastName = "Santos",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             PhoneNumber = "09171234502",
                             Status = "Offline",
                             UserRole = "Student",
                             Username = "msantos",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_02_id_back.png",
+                            BackStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-back/student_02_id_back.png",
                             CityMunicipality = "Makati City",
                             Course = "Bachelor of Science in Information Technology",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_02_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_02_id_front.png",
                             PostalCode = "1200",
-                            ProfilePictureUrl = "temp/students/profile/student_02_profile.png",
+                            ProfilePictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/profile/student_02_profile.png",
                             Province = "Metro Manila",
                             RfidUid = "RFID-STU-002",
                             Section = "B",
@@ -1454,19 +1395,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000004-0000-0000-0000-000000000003"),
                             Email = "pedro.reyes@school.edu.ph",
                             FirstName = "Pedro",
-                            IsBlocked = false,
                             LastName = "Reyes",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             PhoneNumber = "09171234503",
                             Status = "Offline",
                             UserRole = "Student",
                             Username = "preyes",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_03_id_back.png",
+                            BackStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-back/student_03_id_back.png",
                             CityMunicipality = "Pasig City",
                             Course = "Bachelor of Science in Computer Science",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_03_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_03_id_front.png",
                             PostalCode = "1600",
-                            ProfilePictureUrl = "temp/students/profile/student_03_profile.png",
+                            ProfilePictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/profile/student_03_profile.png",
                             Province = "Metro Manila",
                             RfidUid = "RFID-STU-003",
                             Section = "A",
@@ -1479,19 +1419,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000004-0000-0000-0000-000000000004"),
                             Email = "ana.garcia@school.edu.ph",
                             FirstName = "Ana",
-                            IsBlocked = false,
                             LastName = "Garcia",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             PhoneNumber = "09171234504",
                             Status = "Offline",
                             UserRole = "Student",
                             Username = "agarcia",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_04_id_back.png",
+                            BackStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-back/student_04_id_back.png",
                             CityMunicipality = "Mandaluyong City",
                             Course = "Bachelor of Multimedia Arts",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_04_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_04_id_front.png",
                             PostalCode = "1550",
-                            ProfilePictureUrl = "temp/students/profile/student_04_profile.png",
+                            ProfilePictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/profile/student_04_profile.png",
                             Province = "Metro Manila",
                             RfidUid = "RFID-STU-004",
                             Section = "C",
@@ -1504,19 +1443,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000004-0000-0000-0000-000000000005"),
                             Email = "archived.student@school.edu.ph",
                             FirstName = "Archived",
-                            IsBlocked = false,
                             LastName = "Student",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             PhoneNumber = "09170000000",
                             Status = "Inactive",
                             UserRole = "Student",
                             Username = "archived.student",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_05_id_back.png",
+                            BackStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-back/student_05_id_back.png",
                             CityMunicipality = "Taguig City",
                             Course = "Bachelor of Science in Information Technology",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_05_id_front.png",
+                            FrontStudentIdPictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/id-front/student_05_id_front.png",
                             PostalCode = "1630",
-                            ProfilePictureUrl = "temp/students/profile/student_05_profile.png",
+                            ProfilePictureUrl = "https://oeyoyyxeluzaeckwpcsa.supabase.co/storage/v1/object/public/technical-bucket/students/profile/student_05_profile.png",
                             Province = "Metro Manila",
                             Section = "D",
                             Street = "999 Old Street",
@@ -1540,9 +1478,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000003-0000-0000-0000-000000000001"),
                             Email = "alice.williams@school.edu.ph",
                             FirstName = "Alice",
-                            IsBlocked = false,
                             LastName = "Williams",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Teacher",
                             Username = "awilliams",
@@ -1553,9 +1490,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000003-0000-0000-0000-000000000002"),
                             Email = "roberto.cruz@school.edu.ph",
                             FirstName = "Roberto",
-                            IsBlocked = false,
                             LastName = "Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Teacher",
                             Username = "rcruz",
@@ -1566,9 +1502,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000003-0000-0000-0000-000000000003"),
                             Email = "elena.fernandez@school.edu.ph",
                             FirstName = "Elena",
-                            IsBlocked = false,
                             LastName = "Fernandez",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Teacher",
                             Username = "efernandez",
@@ -1579,9 +1514,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000003-0000-0000-0000-000000000004"),
                             Email = "jose.miranda@school.edu.ph",
                             FirstName = "Jose",
-                            IsBlocked = false,
                             LastName = "Miranda",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Offline",
                             UserRole = "Teacher",
                             Username = "jmiranda",
@@ -1592,9 +1526,8 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000003-0000-0000-0000-000000000005"),
                             Email = "archived.teacher@school.edu.ph",
                             FirstName = "Archived",
-                            IsBlocked = false,
                             LastName = "Teacher",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$04$WuSJZNktuI9FLcH.Az5HpeKJFhyNCxNzz7tR3jTVdzusa7qAJBBSK",
                             Status = "Inactive",
                             UserRole = "Teacher",
                             Username = "archived.teacher",
@@ -1679,17 +1612,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RfidRegistrationSession", b =>
-                {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveStaff", b =>

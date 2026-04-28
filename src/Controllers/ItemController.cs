@@ -23,21 +23,32 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         // POST: /api/v1/items
         [HttpPost]
         [Authorize(Policy = "AdminOrStaff")]
-        public async Task<ActionResult<ApiResponse<ItemDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
+        public async Task<ActionResult<ApiResponse<CreateItemResponseDto>>> CreateItem([FromForm] CreateItemsDto createItemDto)
         {
             try
             {
-                var newItemDto = await _itemService.CreateItemAsync(createItemDto);
-                var response = ApiResponse<ItemDto>.SuccessResponse(newItemDto, "Item created successfully.");
+                var (newItemDto, sessionDto) = await _itemService.CreateItemAsync(createItemDto);
+
+                var responseData = new CreateItemResponseDto
+                {
+                    Item = newItemDto,
+                    RfidSession = sessionDto
+                };
+
+                var message = sessionDto != null
+                    ? "Item created successfully. RFID registration session started — place the tag on the scanner."
+                    : "Item created successfully.";
+
+                var response = ApiResponse<CreateItemResponseDto>.SuccessResponse(responseData, message);
                 return CreatedAtAction(nameof(GetItemById), new { id = newItemDto.Id }, response);
             }
             catch (ItemService.DuplicateSerialNumberException ex)
             {
-                return Conflict(ApiResponse<ItemDto>.FailResponse(ex.Message));
+                return Conflict(ApiResponse<CreateItemResponseDto>.FailResponse(ex.Message));
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ApiResponse<ItemDto>.FailResponse(ex.Message));
+                return BadRequest(ApiResponse<CreateItemResponseDto>.FailResponse(ex.Message));
             }
         }
 
