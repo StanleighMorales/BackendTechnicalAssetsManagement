@@ -16,7 +16,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<ImportStudentsResponseDto> ImportStudentsFromExcelAsync(IFormFile file);
         Task<(bool IsComplete, string ErrorMessage)> ValidateStudentProfileComplete(Guid userId);
         Task<object?> GetStudentByIdNumberAsync(string studentIdNumber);
-        Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidCode);
+        Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid);
         Task<object?> GetStudentByRfidUidAsync(string rfidUid);
         Task<UserItemSummaryDto> GetUserItemSummaryAsync(Guid userId);
         Task<(bool Success, string ErrorMessage)> BlockUserAsync(Guid userId, BlockUserDto dto, Guid blockedById);

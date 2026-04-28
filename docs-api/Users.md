@@ -407,22 +407,45 @@ GET /api/v1/users/students/rfid/A1B2C3D4
 
 ## Response Shape
 
+### Student Profile Response
+
 ```json
 {
   "success": true,
   "message": "User profile retrieved successfully.",
   "data": {
+    "$type": "Student",
     "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "username": "jdelacruz",
     "firstName": "Juan",
     "lastName": "Dela Cruz",
+    "middleName": "Santos",
     "email": "juan@example.com",
-    "role": "Student",
+    "phoneNumber": "+639123456789",
+    "userRole": "Student",
+    "status": "Active",
     "studentIdNumber": "2021-00123",
     "course": "BSIT",
     "section": "A",
-    "year": "3"
+    "year": "3",
+    "rfidUid": "04A1B2C3D4E5F6",
+    "rfidCode": "ABC123",
+    "street": "123 Main St",
+    "cityMunicipality": "Manila",
+    "province": "Metro Manila",
+    "postalCode": "1000",
+    "profilePicture": "https://...",
+    "frontStudentIdPicture": "https://...",
+    "backStudentIdPicture": "https://...",
+    "lentItemsHistory": [],
+    "itemSummary": [
+      { "status": "Reserved", "count": 2 },
+      { "status": "Borrowed", "count": 1 },
+      { "status": "Overdue", "count": 0 }
+    ]
   },
   "errors": null
 }
 ```
+
+**Note:** `rfidUid` and `rfidCode` will be `null` if the student hasn't registered an RFID card yet.

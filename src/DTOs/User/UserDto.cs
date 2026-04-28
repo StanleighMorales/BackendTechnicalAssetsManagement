@@ -70,7 +70,6 @@
             public string? GeneratedPassword { get; set; }
             
             public string? RfidUid { get; set; }
-            public string? RfidCode { get; set; }
         }
 
 

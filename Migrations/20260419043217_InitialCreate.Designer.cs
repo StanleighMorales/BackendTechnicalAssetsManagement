@@ -3,6 +3,7 @@ using System;
 using BackendTechnicalAssetsManagement.src.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BackendTechnicalAssetsManagement.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419043217_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,15 +162,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000007-0000-0000-0000-000000000005"),
                             Category = "Electronics",
                             Condition = "Good",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "6-foot HDMI cable, retired from service.",
-                            ImageUrl = "temp/items/item_06_hdmi_short.png",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ItemMake = "Generic",
                             ItemName = "HDMI Cable 6ft",
                             ItemType = "Cable",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-006",
-                            SerialNumber = "SN-HDMI-006",
+                            SerialNumber = "SN-HDMI-007",
                             Status = "Archived",
                             UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
                         },
@@ -176,66 +175,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Id = new Guid("00000007-0000-0000-0000-000000000006"),
                             Category = "MediaEquipment",
                             Condition = "Defective",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "USB condenser microphone, defective.",
-                            ImageUrl = "temp/items/item_07_usb_mic.png",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ItemMake = "Blue",
                             ItemName = "USB Microphone",
                             ItemType = "Microphone",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-007",
-                            SerialNumber = "SN-MIC-007",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000007"),
-                            Category = "Electronics",
-                            Condition = "NeedRepair",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Wireless optical mouse, needs repair.",
-                            ImageUrl = "temp/items/item_08_mouse.png",
-                            ItemMake = "Logitech",
-                            ItemName = "Wireless Mouse",
-                            ItemType = "Peripheral",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-008",
-                            SerialNumber = "SN-MOUSE-008",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000008"),
-                            Category = "Electronics",
-                            Condition = "Good",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "15-foot extension wire, retired.",
-                            ImageUrl = "temp/items/item_09_extension.png",
-                            ItemMake = "Generic",
-                            ItemName = "Extension Wire 15ft",
-                            ItemType = "Cable",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-009",
-                            SerialNumber = "SN-EXT-009",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000009"),
-                            Category = "Electronics",
-                            Condition = "Refurbished",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "7-port USB 3.0 hub, refurbished.",
-                            ImageUrl = "temp/items/item_10_usb_hub.png",
-                            ItemMake = "Anker",
-                            ItemName = "USB Hub 7-Port",
-                            ItemType = "Peripheral",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-010",
-                            SerialNumber = "SN-HUB-010",
+                            SerialNumber = "SN-MIC-008",
                             Status = "Archived",
                             UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
                         });
@@ -295,6 +239,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Room")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -338,97 +283,22 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("00000007-0000-0000-0000-000000000010"),
-                            BorrowerFullName = "Archived Teacher",
+                            Id = new Guid("00000007-0000-0000-0000-000000000007"),
+                            BorrowerFullName = "David Ramos",
                             BorrowerRole = "Teacher",
                             CreatedAt = new DateTime(2025, 1, 10, 11, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000006"),
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000007"),
                             ItemName = "HDMI Cable 6ft",
                             LentAt = new DateTime(2025, 1, 10, 11, 0, 0, 0, DateTimeKind.Utc),
                             ReturnedAt = new DateTime(2025, 1, 14, 11, 0, 0, 0, DateTimeKind.Utc),
                             Room = "Room 301",
                             Status = "Returned",
                             SubjectTimeSchedule = "MA101 - 11:00 AM",
-                            TeacherFullName = "Archived Teacher",
-                            TeacherId = new Guid("00000003-0000-0000-0000-000000000005"),
+                            TeacherFullName = "David Ramos",
+                            TeacherId = new Guid("00000003-0000-0000-0000-000000000004"),
                             UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000003-0000-0000-0000-000000000005")
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000011"),
-                            BorrowerFullName = "Archived Student",
-                            BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2024, 12, 5, 14, 0, 0, 0, DateTimeKind.Utc),
-                            IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000007"),
-                            ItemName = "USB Microphone",
-                            LentAt = new DateTime(2024, 12, 5, 14, 0, 0, 0, DateTimeKind.Utc),
-                            ReturnedAt = new DateTime(2024, 12, 7, 14, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Lab 201",
-                            Status = "Returned",
-                            StudentIdNumber = "2022-0099",
-                            SubjectTimeSchedule = "IT301 - 2:00 PM",
-                            TeacherFullName = "",
-                            UpdatedAt = new DateTime(2024, 12, 7, 14, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000004-0000-0000-0000-000000000005")
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000012"),
-                            BorrowerFullName = "Juan Dela Cruz",
-                            BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2024, 11, 20, 8, 0, 0, 0, DateTimeKind.Utc),
-                            IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000008"),
-                            ItemName = "Wireless Mouse",
-                            LentAt = new DateTime(2024, 11, 20, 8, 0, 0, 0, DateTimeKind.Utc),
-                            ReturnedAt = new DateTime(2024, 11, 22, 8, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Lab 101",
-                            Status = "Returned",
-                            StudentIdNumber = "2023-0001",
-                            SubjectTimeSchedule = "CS201 - 8:00 AM",
-                            TeacherFullName = "",
-                            UpdatedAt = new DateTime(2024, 11, 22, 8, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000004-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000013"),
-                            BorrowerFullName = "Alice Williams",
-                            BorrowerRole = "Teacher",
-                            CreatedAt = new DateTime(2024, 10, 15, 15, 0, 0, 0, DateTimeKind.Utc),
-                            IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000009"),
-                            ItemName = "Extension Wire 15ft",
-                            LentAt = new DateTime(2024, 10, 15, 15, 0, 0, 0, DateTimeKind.Utc),
-                            ReturnedAt = new DateTime(2024, 10, 17, 15, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Room 201",
-                            Status = "Returned",
-                            SubjectTimeSchedule = "IT401 - 3:00 PM",
-                            TeacherFullName = "Alice Williams",
-                            TeacherId = new Guid("00000003-0000-0000-0000-000000000001"),
-                            UpdatedAt = new DateTime(2024, 10, 17, 15, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000003-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("00000007-0000-0000-0000-000000000014"),
-                            BorrowerFullName = "Maria Santos",
-                            BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2024, 9, 9, 10, 0, 0, 0, DateTimeKind.Utc),
-                            IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000010"),
-                            ItemName = "USB Hub 7-Port",
-                            ReservedFor = new DateTime(2024, 9, 10, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Lab 102",
-                            Status = "Expired",
-                            StudentIdNumber = "2023-0002",
-                            SubjectTimeSchedule = "IT201 - 10:00 AM",
-                            TeacherFullName = "",
-                            UpdatedAt = new DateTime(2024, 9, 10, 10, 31, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000004-0000-0000-0000-000000000002")
+                            UserId = new Guid("00000003-0000-0000-0000-000000000004")
                         });
                 });
 
@@ -482,14 +352,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         {
                             Id = new Guid("00000007-0000-0000-0000-000000000001"),
                             ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "archived.admin@school.edu.ph",
-                            FirstName = "Archived",
-                            LastName = "Admin",
-                            OriginalUserId = new Guid("00000001-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            Email = "ana.reyes@gmail.com",
+                            FirstName = "Ana",
+                            LastName = "Reyes",
+                            OriginalUserId = new Guid("00000001-0000-0000-0000-000000000004"),
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = 1,
-                            Username = "archived.admin"
+                            Username = "areyes"
                         });
                 });
 
@@ -563,17 +433,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Category = "Electronics",
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "10-foot HDMI 2.0 cable for display connections.",
-                            ImageUrl = "temp/items/item_01_hdmi_cable.png",
                             ItemMake = "Generic",
-                            ItemModel = "Standard HDMI 2.0",
                             ItemName = "HDMI Cable 10ft",
                             ItemType = "Cable",
-                            Location = "Lab Cabinet A",
-                            RfidUid = "RFID-ITEM-001",
                             SerialNumber = "SN-HDMI-001",
                             Status = "Borrowed",
-                            UpdatedAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
@@ -581,17 +446,12 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Category = "MediaEquipment",
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Dual-channel wireless microphone system.",
-                            ImageUrl = "temp/items/item_02_wireless_mic.png",
                             ItemMake = "Shure",
-                            ItemModel = "BLX288/PG58",
                             ItemName = "Wireless Microphone",
                             ItemType = "Microphone",
-                            Location = "Media Room Shelf",
-                            RfidUid = "RFID-ITEM-002",
                             SerialNumber = "SN-MIC-002",
-                            Status = "Unavailable",
-                            UpdatedAt = new DateTime(2025, 4, 20, 9, 0, 0, 0, DateTimeKind.Utc)
+                            Status = "Borrowed",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
@@ -599,35 +459,26 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Category = "MediaEquipment",
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "3600-lumen portable LCD projector.",
-                            ImageUrl = "temp/items/item_03_projector.png",
-                            ItemMake = "Epson",
-                            ItemModel = "EB-X41",
-                            ItemName = "Portable Projector",
-                            ItemType = "Projector",
-                            Location = "AV Room Cabinet",
+                            ItemMake = "JBL",
+                            ItemName = "Portable Bluetooth Speaker",
+                            ItemType = "Speaker",
                             RfidUid = "RFID-ITEM-003",
-                            SerialNumber = "SN-PROJ-003",
-                            Status = "Reserved",
-                            UpdatedAt = new DateTime(2025, 4, 19, 10, 0, 0, 0, DateTimeKind.Utc)
+                            SerialNumber = "SN-SPK-003",
+                            Status = "Available",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("00000005-0000-0000-0000-000000000004"),
-                            Category = "MediaEquipment",
+                            Category = "Electronics",
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Portable waterproof Bluetooth speaker.",
-                            ImageUrl = "temp/items/item_04_speaker.png",
-                            ItemMake = "JBL",
-                            ItemModel = "Charge 5",
-                            ItemName = "Bluetooth Speaker",
-                            ItemType = "Speaker",
-                            Location = "Lab Cabinet B",
-                            RfidUid = "RFID-ITEM-004",
-                            SerialNumber = "SN-SPK-004",
-                            Status = "Available",
-                            UpdatedAt = new DateTime(2025, 4, 10, 14, 0, 0, 0, DateTimeKind.Utc)
+                            ItemMake = "Logitech",
+                            ItemName = "Wireless Mouse",
+                            ItemType = "Peripheral",
+                            SerialNumber = "SN-MOUSE-004",
+                            Status = "Borrowed",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
@@ -635,102 +486,53 @@ namespace BackendTechnicalAssetsManagement.Migrations
                             Category = "Electronics",
                             Condition = "Good",
                             CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Compact TKL mechanical keyboard with RGB.",
-                            ImageUrl = "temp/items/item_05_keyboard.png",
                             ItemMake = "Keychron",
-                            ItemModel = "K2 Pro",
                             ItemName = "Mechanical Keyboard",
                             ItemType = "Peripheral",
-                            Location = "Lab Cabinet A",
                             RfidUid = "RFID-ITEM-005",
                             SerialNumber = "SN-KB-005",
                             Status = "Available",
-                            UpdatedAt = new DateTime(2025, 3, 25, 9, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("00000005-0000-0000-0000-000000000006"),
                             Category = "Electronics",
                             Condition = "Good",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "6-foot HDMI cable, retired from service.",
-                            ImageUrl = "temp/items/item_06_hdmi_short.png",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ItemMake = "Generic",
-                            ItemName = "HDMI Cable 6ft",
+                            ItemName = "Extension Wire 15ft",
                             ItemType = "Cable",
-                            Location = "Storage Room",
                             RfidUid = "RFID-ITEM-006",
-                            SerialNumber = "SN-HDMI-006",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
+                            SerialNumber = "SN-EXT-006",
+                            Status = "Available",
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("00000005-0000-0000-0000-000000000007"),
-                            Category = "MediaEquipment",
-                            Condition = "Defective",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "USB condenser microphone, defective.",
-                            ImageUrl = "temp/items/item_07_usb_mic.png",
-                            ItemMake = "Blue",
-                            ItemName = "USB Microphone",
-                            ItemType = "Microphone",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-007",
-                            SerialNumber = "SN-MIC-007",
+                            Category = "Electronics",
+                            Condition = "Good",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Generic",
+                            ItemName = "HDMI Cable 6ft",
+                            ItemType = "Cable",
+                            SerialNumber = "SN-HDMI-007",
                             Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = new Guid("00000005-0000-0000-0000-000000000008"),
-                            Category = "Electronics",
-                            Condition = "NeedRepair",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Wireless optical mouse, needs repair.",
-                            ImageUrl = "temp/items/item_08_mouse.png",
-                            ItemMake = "Logitech",
-                            ItemName = "Wireless Mouse",
-                            ItemType = "Peripheral",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-008",
-                            SerialNumber = "SN-MOUSE-008",
+                            Category = "MediaEquipment",
+                            Condition = "Defective",
+                            CreatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemMake = "Blue",
+                            ItemName = "USB Microphone",
+                            ItemType = "Microphone",
+                            SerialNumber = "SN-MIC-008",
                             Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00000005-0000-0000-0000-000000000009"),
-                            Category = "Electronics",
-                            Condition = "Good",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "15-foot extension wire, retired.",
-                            ImageUrl = "temp/items/item_09_extension.png",
-                            ItemMake = "Generic",
-                            ItemName = "Extension Wire 15ft",
-                            ItemType = "Cable",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-009",
-                            SerialNumber = "SN-EXT-009",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
-                            Id = new Guid("00000005-0000-0000-0000-000000000010"),
-                            Category = "Electronics",
-                            Condition = "Refurbished",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "7-port USB 3.0 hub, refurbished.",
-                            ImageUrl = "temp/items/item_10_usb_hub.png",
-                            ItemMake = "Anker",
-                            ItemName = "USB Hub 7-Port",
-                            ItemType = "Peripheral",
-                            Location = "Storage Room",
-                            RfidUid = "RFID-ITEM-010",
-                            SerialNumber = "SN-HUB-010",
-                            Status = "Archived",
-                            UpdatedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2024, 6, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -795,6 +597,7 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Room")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -839,103 +642,93 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000006-0000-0000-0000-000000000001"),
-                            BorrowerFullName = "Juan Dela Cruz",
+                            BorrowerFullName = "John Doe",
                             BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2025, 4, 20, 8, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_01_id_front.png",
+                            CreatedAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000001"),
                             ItemName = "HDMI Cable 10ft",
-                            LentAt = new DateTime(2025, 4, 20, 8, 0, 0, 0, DateTimeKind.Utc),
+                            LentAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
                             Room = "Lab 101",
                             Status = "Borrowed",
                             StudentIdNumber = "2023-0001",
-                            StudentRfid = "RFID-STU-001",
                             SubjectTimeSchedule = "CS301 - 8:00 AM",
-                            TagUid = "RFID-ITEM-001",
                             TeacherFullName = "",
-                            UpdatedAt = new DateTime(2025, 4, 20, 8, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2025, 4, 11, 8, 0, 0, 0, DateTimeKind.Utc),
                             UserId = new Guid("00000004-0000-0000-0000-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000006-0000-0000-0000-000000000002"),
-                            BorrowerFullName = "Maria Santos",
+                            BorrowerFullName = "Jane Smith",
                             BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2025, 4, 20, 9, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_02_id_front.png",
+                            CreatedAt = new DateTime(2025, 4, 6, 10, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000002"),
-                            ItemName = "Wireless Microphone",
-                            ReservedFor = new DateTime(2025, 4, 27, 10, 0, 0, 0, DateTimeKind.Utc),
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000003"),
+                            ItemName = "Portable Bluetooth Speaker",
+                            LentAt = new DateTime(2025, 4, 6, 10, 0, 0, 0, DateTimeKind.Utc),
+                            ReturnedAt = new DateTime(2025, 4, 14, 10, 0, 0, 0, DateTimeKind.Utc),
                             Room = "Lab 102",
-                            Status = "Pending",
+                            Status = "Returned",
                             StudentIdNumber = "2023-0002",
-                            StudentRfid = "RFID-STU-002",
                             SubjectTimeSchedule = "IT201 - 10:00 AM",
-                            TagUid = "RFID-ITEM-002",
                             TeacherFullName = "",
-                            UpdatedAt = new DateTime(2025, 4, 20, 9, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2025, 4, 14, 10, 0, 0, 0, DateTimeKind.Utc),
                             UserId = new Guid("00000004-0000-0000-0000-000000000002")
                         },
                         new
                         {
                             Id = new Guid("00000006-0000-0000-0000-000000000003"),
-                            BorrowerFullName = "Alice Williams",
-                            BorrowerRole = "Teacher",
-                            CreatedAt = new DateTime(2025, 4, 19, 10, 0, 0, 0, DateTimeKind.Utc),
+                            BorrowerFullName = "Peter Jones",
+                            BorrowerRole = "Student",
+                            CreatedAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
-                            ItemId = new Guid("00000005-0000-0000-0000-000000000003"),
-                            ItemName = "Portable Projector",
-                            ReservedFor = new DateTime(2025, 4, 26, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Room 201",
-                            Status = "Approved",
-                            SubjectTimeSchedule = "IT401 - 1:00 PM",
-                            TagUid = "RFID-ITEM-003",
-                            TeacherFullName = "Alice Williams",
-                            TeacherId = new Guid("00000003-0000-0000-0000-000000000001"),
-                            UpdatedAt = new DateTime(2025, 4, 19, 11, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000003-0000-0000-0000-000000000001")
+                            ItemId = new Guid("00000005-0000-0000-0000-000000000002"),
+                            ItemName = "Wireless Microphone",
+                            LentAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Lab 103",
+                            Status = "Borrowed",
+                            StudentIdNumber = "2023-0003",
+                            SubjectTimeSchedule = "CS302 - 1:00 PM",
+                            TeacherFullName = "",
+                            UpdatedAt = new DateTime(2025, 4, 15, 13, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000004-0000-0000-0000-000000000003")
                         },
                         new
                         {
                             Id = new Guid("00000006-0000-0000-0000-000000000004"),
-                            BorrowerFullName = "Pedro Reyes",
-                            BorrowerRole = "Student",
-                            CreatedAt = new DateTime(2025, 4, 10, 13, 0, 0, 0, DateTimeKind.Utc),
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_03_id_front.png",
+                            BorrowerFullName = "Alice Williams",
+                            BorrowerRole = "Teacher",
+                            CreatedAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000004"),
-                            ItemName = "Bluetooth Speaker",
-                            LentAt = new DateTime(2025, 4, 10, 13, 0, 0, 0, DateTimeKind.Utc),
-                            ReturnedAt = new DateTime(2025, 4, 14, 15, 0, 0, 0, DateTimeKind.Utc),
-                            Room = "Lab 103",
-                            Status = "Returned",
-                            StudentIdNumber = "2023-0003",
-                            StudentRfid = "RFID-STU-003",
-                            SubjectTimeSchedule = "CS302 - 1:00 PM",
-                            TagUid = "RFID-ITEM-004",
-                            TeacherFullName = "",
-                            UpdatedAt = new DateTime(2025, 4, 14, 15, 0, 0, 0, DateTimeKind.Utc),
-                            UserId = new Guid("00000004-0000-0000-0000-000000000003")
+                            ItemName = "Wireless Mouse",
+                            LentAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
+                            Room = "Room 201",
+                            Status = "Borrowed",
+                            SubjectTimeSchedule = "IT401 - 3:00 PM",
+                            TeacherFullName = "Alice Williams",
+                            TeacherId = new Guid("00000003-0000-0000-0000-000000000001"),
+                            UpdatedAt = new DateTime(2025, 4, 13, 15, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = new Guid("00000003-0000-0000-0000-000000000001")
                         },
                         new
                         {
                             Id = new Guid("00000006-0000-0000-0000-000000000005"),
                             BorrowerFullName = "Roberto Cruz",
                             BorrowerRole = "Teacher",
-                            CreatedAt = new DateTime(2025, 4, 14, 9, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 3, 17, 9, 0, 0, 0, DateTimeKind.Utc),
                             IsHiddenFromUser = false,
                             ItemId = new Guid("00000005-0000-0000-0000-000000000005"),
                             ItemName = "Mechanical Keyboard",
-                            ReservedFor = new DateTime(2025, 4, 15, 9, 0, 0, 0, DateTimeKind.Utc),
+                            LentAt = new DateTime(2025, 3, 17, 9, 0, 0, 0, DateTimeKind.Utc),
+                            ReturnedAt = new DateTime(2025, 4, 1, 9, 0, 0, 0, DateTimeKind.Utc),
                             Room = "Room 202",
-                            Status = "Expired",
+                            Status = "Returned",
                             SubjectTimeSchedule = "CS201 - 9:00 AM",
-                            TagUid = "RFID-ITEM-005",
                             TeacherFullName = "Roberto Cruz",
                             TeacherId = new Guid("00000003-0000-0000-0000-000000000002"),
-                            UpdatedAt = new DateTime(2025, 4, 15, 9, 31, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2025, 4, 1, 9, 0, 0, 0, DateTimeKind.Utc),
                             UserId = new Guid("00000003-0000-0000-0000-000000000002")
                         });
                 });
@@ -969,61 +762,9 @@ namespace BackendTechnicalAssetsManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "IsRevoked")
-                        .HasDatabaseName("IX_RefreshTokens_UserId_IsRevoked");
+                    b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
-                });
-
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.Rfid", b =>
-                {
-                    b.Property<string>("RfidUid")
-                        .HasColumnType("text")
-                        .HasColumnName("RfidUid");
-
-                    b.Property<string>("RfidCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("RfidCode");
-
-                    b.HasKey("RfidUid");
-
-                    b.ToTable("Rfids");
-                });
-
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RfidRegistrationSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ScannedRfidUid")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
-
-                    b.ToTable("RfidRegistrationSessions");
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.User", b =>
@@ -1032,18 +773,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("BlockReason")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("BlockedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid?>("BlockedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("BlockedUntil")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1051,9 +780,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -1089,62 +815,46 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000001-0000-0000-0000-000000000001"),
-                            Email = "superadmin@school.edu.ph",
+                            Email = "superadmin@gmail.com",
                             FirstName = "Super",
-                            IsBlocked = false,
                             LastName = "Admin",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "SuperAdmin",
-                            Username = "sadmin"
+                            Username = "superadmin"
                         },
                         new
                         {
                             Id = new Guid("00000001-0000-0000-0000-000000000002"),
-                            Email = "christian.admin@school.edu.ph",
-                            FirstName = "Christian",
-                            IsBlocked = false,
-                            LastName = "Dela Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            Email = "maria.santos@gmail.com",
+                            FirstName = "Maria",
+                            LastName = "Santos",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Admin",
-                            Username = "christian"
+                            Username = "msantos"
                         },
                         new
                         {
                             Id = new Guid("00000001-0000-0000-0000-000000000003"),
-                            Email = "ejay.admin@school.edu.ph",
-                            FirstName = "Ejay",
-                            IsBlocked = false,
-                            LastName = "Santos",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            Email = "juan.delacruz@gmail.com",
+                            FirstName = "Juan",
+                            LastName = "Dela Cruz",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Admin",
-                            Username = "ejay"
+                            Username = "jdelacruz"
                         },
                         new
                         {
                             Id = new Guid("00000001-0000-0000-0000-000000000004"),
-                            Email = "stan.admin@school.edu.ph",
-                            FirstName = "Stan",
-                            IsBlocked = false,
+                            Email = "ana.reyes@gmail.com",
+                            FirstName = "Ana",
                             LastName = "Reyes",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
-                            UserRole = "Admin",
-                            Username = "stan"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000001-0000-0000-0000-000000000005"),
-                            Email = "archived.admin@school.edu.ph",
-                            FirstName = "Archived",
-                            IsBlocked = false,
-                            LastName = "Admin",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = "Admin",
-                            Username = "archived.admin"
+                            Username = "areyes"
                         });
                 });
 
@@ -1162,15 +872,15 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         {
                             Id = new Guid("00000007-0000-0000-0000-000000000002"),
                             ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "archived.staff@school.edu.ph",
-                            FirstName = "Archived",
-                            LastName = "Staff",
-                            OriginalUserId = new Guid("00000002-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            Email = "miguel.torres@gmail.com",
+                            FirstName = "Miguel",
+                            LastName = "Torres",
+                            OriginalUserId = new Guid("00000002-0000-0000-0000-000000000003"),
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = 2,
-                            Username = "archived.staff",
-                            Position = "Former Technician"
+                            Username = "mtorres",
+                            Position = "IT Support"
                         });
                 });
 
@@ -1221,18 +931,18 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         {
                             Id = new Guid("00000007-0000-0000-0000-000000000004"),
                             ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "archived.student@school.edu.ph",
-                            FirstName = "Archived",
-                            LastName = "Student",
-                            OriginalUserId = new Guid("00000004-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            Email = "sofia.gonzales@gmail.com",
+                            FirstName = "Sofia",
+                            LastName = "Gonzales",
+                            OriginalUserId = new Guid("00000004-0000-0000-0000-000000000006"),
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = 4,
-                            Username = "archived.student",
-                            Course = "Bachelor of Science in Information Technology",
-                            Section = "D",
-                            StudentIdNumber = "2022-0099",
-                            Year = "4th Year"
+                            Username = "sgonzales",
+                            Course = "Computer Science",
+                            Section = "B",
+                            StudentIdNumber = "2024-0001",
+                            Year = "1st Year"
                         });
                 });
 
@@ -1250,15 +960,15 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         {
                             Id = new Guid("00000007-0000-0000-0000-000000000003"),
                             ArchivedAt = new DateTime(2025, 1, 15, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "archived.teacher@school.edu.ph",
-                            FirstName = "Archived",
-                            LastName = "Teacher",
-                            OriginalUserId = new Guid("00000003-0000-0000-0000-000000000005"),
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            Email = "david.ramos@gmail.com",
+                            FirstName = "David",
+                            LastName = "Ramos",
+                            OriginalUserId = new Guid("00000003-0000-0000-0000-000000000004"),
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = 3,
-                            Username = "archived.teacher",
-                            Department = "Former Department"
+                            Username = "dramos",
+                            Department = "Multimedia Arts"
                         });
                 });
 
@@ -1275,12 +985,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000002-0000-0000-0000-000000000001"),
-                            Email = "carlos.mendoza@school.edu.ph",
+                            Email = "carlos.mendoza@gmail.com",
                             FirstName = "Carlos",
-                            IsBlocked = false,
                             LastName = "Mendoza",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Staff",
                             Username = "cmendoza",
                             Position = "Lab Technician"
@@ -1288,12 +997,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000002-0000-0000-0000-000000000002"),
-                            Email = "rosa.garcia@school.edu.ph",
+                            Email = "rosa.garcia@gmail.com",
                             FirstName = "Rosa",
-                            IsBlocked = false,
                             LastName = "Garcia",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Staff",
                             Username = "rgarcia",
                             Position = "Equipment Manager"
@@ -1301,41 +1009,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000002-0000-0000-0000-000000000003"),
-                            Email = "ben.torres@school.edu.ph",
-                            FirstName = "Ben",
-                            IsBlocked = false,
+                            Email = "miguel.torres@gmail.com",
+                            FirstName = "Miguel",
                             LastName = "Torres",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
-                            UserRole = "Staff",
-                            Username = "btorres",
-                            Position = "IT Support"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000002-0000-0000-0000-000000000004"),
-                            Email = "liza.villanueva@school.edu.ph",
-                            FirstName = "Liza",
-                            IsBlocked = false,
-                            LastName = "Villanueva",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
-                            UserRole = "Staff",
-                            Username = "lvillanueva",
-                            Position = "Asset Custodian"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000002-0000-0000-0000-000000000005"),
-                            Email = "archived.staff@school.edu.ph",
-                            FirstName = "Archived",
-                            IsBlocked = false,
-                            LastName = "Staff",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = "Staff",
-                            Username = "archived.staff",
-                            Position = "Former Technician"
+                            Username = "mtorres",
+                            Position = "IT Support"
                         });
                 });
 
@@ -1371,9 +1052,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("RfidCode")
-                        .HasColumnType("text");
-
                     b.Property<string>("RfidUid")
                         .HasColumnType("text");
 
@@ -1402,126 +1080,116 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000004-0000-0000-0000-000000000001"),
-                            Email = "juan.delacruz@school.edu.ph",
-                            FirstName = "Juan",
-                            IsBlocked = false,
-                            LastName = "Dela Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            PhoneNumber = "09171234501",
-                            Status = "Offline",
+                            Email = "john.doe@gmail.com",
+                            FirstName = "John",
+                            LastName = "Doe",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Student",
-                            Username = "jdelacruz",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_01_id_back.png",
-                            CityMunicipality = "Quezon City",
-                            Course = "Bachelor of Science in Computer Science",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_01_id_front.png",
-                            PostalCode = "1100",
-                            ProfilePictureUrl = "temp/students/profile/student_01_profile.png",
-                            Province = "Metro Manila",
-                            RfidUid = "RFID-STU-001",
+                            Username = "jdoe",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
                             Section = "A",
-                            Street = "123 Rizal Street",
+                            Street = "",
                             StudentIdNumber = "2023-0001",
                             Year = "3rd Year"
                         },
                         new
                         {
                             Id = new Guid("00000004-0000-0000-0000-000000000002"),
-                            Email = "maria.santos@school.edu.ph",
-                            FirstName = "Maria",
-                            IsBlocked = false,
-                            LastName = "Santos",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            PhoneNumber = "09171234502",
-                            Status = "Offline",
+                            Email = "jane.smith@gmail.com",
+                            FirstName = "Jane",
+                            LastName = "Smith",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Student",
-                            Username = "msantos",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_02_id_back.png",
-                            CityMunicipality = "Makati City",
-                            Course = "Bachelor of Science in Information Technology",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_02_id_front.png",
-                            PostalCode = "1200",
-                            ProfilePictureUrl = "temp/students/profile/student_02_profile.png",
-                            Province = "Metro Manila",
-                            RfidUid = "RFID-STU-002",
+                            Username = "jsmith",
+                            CityMunicipality = "",
+                            Course = "Information Technology",
+                            PostalCode = "",
+                            Province = "",
                             Section = "B",
-                            Street = "456 Mabini Avenue",
+                            Street = "",
                             StudentIdNumber = "2023-0002",
                             Year = "2nd Year"
                         },
                         new
                         {
                             Id = new Guid("00000004-0000-0000-0000-000000000003"),
-                            Email = "pedro.reyes@school.edu.ph",
-                            FirstName = "Pedro",
-                            IsBlocked = false,
-                            LastName = "Reyes",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            PhoneNumber = "09171234503",
-                            Status = "Offline",
+                            Email = "peter.jones@gmail.com",
+                            FirstName = "Peter",
+                            LastName = "Jones",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Student",
-                            Username = "preyes",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_03_id_back.png",
-                            CityMunicipality = "Pasig City",
-                            Course = "Bachelor of Science in Computer Science",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_03_id_front.png",
-                            PostalCode = "1600",
-                            ProfilePictureUrl = "temp/students/profile/student_03_profile.png",
-                            Province = "Metro Manila",
-                            RfidUid = "RFID-STU-003",
+                            Username = "pjones",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
                             Section = "A",
-                            Street = "789 Bonifacio Road",
+                            Street = "",
                             StudentIdNumber = "2023-0003",
                             Year = "3rd Year"
                         },
                         new
                         {
                             Id = new Guid("00000004-0000-0000-0000-000000000004"),
-                            Email = "ana.garcia@school.edu.ph",
-                            FirstName = "Ana",
-                            IsBlocked = false,
-                            LastName = "Garcia",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            PhoneNumber = "09171234504",
-                            Status = "Offline",
+                            Email = "maria.lopez@gmail.com",
+                            FirstName = "Maria",
+                            LastName = "Lopez",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Student",
-                            Username = "agarcia",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_04_id_back.png",
-                            CityMunicipality = "Mandaluyong City",
-                            Course = "Bachelor of Multimedia Arts",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_04_id_front.png",
-                            PostalCode = "1550",
-                            ProfilePictureUrl = "temp/students/profile/student_04_profile.png",
-                            Province = "Metro Manila",
-                            RfidUid = "RFID-STU-004",
+                            Username = "mlopez",
+                            CityMunicipality = "",
+                            Course = "Multimedia Arts",
+                            PostalCode = "",
+                            Province = "",
                             Section = "C",
-                            Street = "321 Luna Street",
+                            Street = "",
                             StudentIdNumber = "2023-0004",
                             Year = "1st Year"
                         },
                         new
                         {
                             Id = new Guid("00000004-0000-0000-0000-000000000005"),
-                            Email = "archived.student@school.edu.ph",
-                            FirstName = "Archived",
-                            IsBlocked = false,
-                            LastName = "Student",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            PhoneNumber = "09170000000",
+                            Email = "carlos.rivera@gmail.com",
+                            FirstName = "Carlos",
+                            LastName = "Rivera",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
+                            UserRole = "Student",
+                            Username = "crivera",
+                            CityMunicipality = "",
+                            Course = "Information Technology",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "A",
+                            Street = "",
+                            StudentIdNumber = "2023-0005",
+                            Year = "2nd Year"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000004-0000-0000-0000-000000000006"),
+                            Email = "sofia.gonzales@gmail.com",
+                            FirstName = "Sofia",
+                            LastName = "Gonzales",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = "Student",
-                            Username = "archived.student",
-                            BackStudentIdPictureUrl = "temp/students/id-back/student_05_id_back.png",
-                            CityMunicipality = "Taguig City",
-                            Course = "Bachelor of Science in Information Technology",
-                            FrontStudentIdPictureUrl = "temp/students/id-front/student_05_id_front.png",
-                            PostalCode = "1630",
-                            ProfilePictureUrl = "temp/students/profile/student_05_profile.png",
-                            Province = "Metro Manila",
-                            Section = "D",
-                            Street = "999 Old Street",
-                            StudentIdNumber = "2022-0099",
-                            Year = "4th Year"
+                            Username = "sgonzales",
+                            CityMunicipality = "",
+                            Course = "Computer Science",
+                            PostalCode = "",
+                            Province = "",
+                            Section = "B",
+                            Street = "",
+                            StudentIdNumber = "2024-0001",
+                            Year = "1st Year"
                         });
                 });
 
@@ -1538,12 +1206,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000003-0000-0000-0000-000000000001"),
-                            Email = "alice.williams@school.edu.ph",
+                            Email = "alice.williams@gmail.com",
                             FirstName = "Alice",
-                            IsBlocked = false,
                             LastName = "Williams",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Teacher",
                             Username = "awilliams",
                             Department = "Information Technology"
@@ -1551,12 +1218,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000003-0000-0000-0000-000000000002"),
-                            Email = "roberto.cruz@school.edu.ph",
+                            Email = "roberto.cruz@gmail.com",
                             FirstName = "Roberto",
-                            IsBlocked = false,
                             LastName = "Cruz",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Teacher",
                             Username = "rcruz",
                             Department = "Computer Science"
@@ -1564,12 +1230,11 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000003-0000-0000-0000-000000000003"),
-                            Email = "elena.fernandez@school.edu.ph",
+                            Email = "elena.fernandez@gmail.com",
                             FirstName = "Elena",
-                            IsBlocked = false,
                             LastName = "Fernandez",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
+                            Status = "Active",
                             UserRole = "Teacher",
                             Username = "efernandez",
                             Department = "Information Technology"
@@ -1577,28 +1242,14 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         new
                         {
                             Id = new Guid("00000003-0000-0000-0000-000000000004"),
-                            Email = "jose.miranda@school.edu.ph",
-                            FirstName = "Jose",
-                            IsBlocked = false,
-                            LastName = "Miranda",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
-                            Status = "Offline",
-                            UserRole = "Teacher",
-                            Username = "jmiranda",
-                            Department = "Multimedia Arts"
-                        },
-                        new
-                        {
-                            Id = new Guid("00000003-0000-0000-0000-000000000005"),
-                            Email = "archived.teacher@school.edu.ph",
-                            FirstName = "Archived",
-                            IsBlocked = false,
-                            LastName = "Teacher",
-                            PasswordHash = "$2a$04$i/Go7v4OgkdC/pmdKY4QDOoOtTQHFwktVc6E7fH.N97Y2cpgj0Ljm",
+                            Email = "david.ramos@gmail.com",
+                            FirstName = "David",
+                            LastName = "Ramos",
+                            PasswordHash = "$2a$11$2MsPT1w1IrQKGjo7.ZZ6duUDE9aS0P6P5qxULhHe//cLWRgRBXw/i",
                             Status = "Inactive",
                             UserRole = "Teacher",
-                            Username = "archived.teacher",
-                            Department = "Former Department"
+                            Username = "dramos",
+                            Department = "Multimedia Arts"
                         });
                 });
 
@@ -1679,17 +1330,6 @@ namespace BackendTechnicalAssetsManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.RfidRegistrationSession", b =>
-                {
-                    b.HasOne("BackendTechnicalAssetsManagement.src.Classes.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("BackendTechnicalAssetsManagement.src.Classes.ArchiveStaff", b =>

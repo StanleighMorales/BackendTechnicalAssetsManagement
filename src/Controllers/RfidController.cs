@@ -103,7 +103,7 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
 
             // Check if RFID is assigned to any student
             var assignedToStudent = await _context.Students
-                .AnyAsync(s => s.RfidUid == rfidUid || s.RfidCode == rfid.RfidCode);
+                .AnyAsync(s => s.RfidUid == rfidUid);
 
             if (assignedToStudent)
             {

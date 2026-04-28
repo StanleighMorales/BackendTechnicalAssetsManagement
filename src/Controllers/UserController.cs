@@ -262,13 +262,13 @@ public class UserController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<object>>> RegisterStudentRfid(Guid id, [FromBody] RegisterStudentRfidDto dto)
     {
-        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(id, dto.RfidCode);
+        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(id, dto.RfidUid);
         if (!success)
         {
             var errorResponse = ApiResponse<object>.FailResponse(errorMessage);
             return errorMessage.Contains("not found") ? NotFound(errorResponse) : Conflict(errorResponse);
         }
-        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidCode}' registered to student successfully."));
+        return Ok(ApiResponse<object>.SuccessResponse(null, $"RFID '{dto.RfidUid}' registered to student successfully."));
     }
 
     /// <summary>
@@ -285,7 +285,7 @@ public class UserController : ControllerBase
             return Unauthorized(ApiResponse<object>.FailResponse("User not authenticated."));
         }
 
-        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(userId, dto.RfidCode);
+        var (success, errorMessage) = await _userService.RegisterRfidToStudentAsync(userId, dto.RfidUid);
         if (!success)
         {
             var errorResponse = ApiResponse<object>.FailResponse(errorMessage);

@@ -542,9 +542,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 GeneratedPassword = student.GeneratedPassword
             };        }
 
-        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidCode)
+        public async Task<(bool Success, string ErrorMessage)> RegisterRfidToStudentAsync(Guid studentId, string rfidUid)
         {
-            var (success, errorMessage) = await _userRepository.RegisterRfidToStudentAsync(studentId, rfidCode);
+            var (success, errorMessage) = await _userRepository.RegisterRfidToStudentAsync(studentId, rfidUid);
             if (!success) return (false, errorMessage);
 
             var saved = await _userRepository.SaveChangesAsync();
