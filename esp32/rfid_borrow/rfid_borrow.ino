@@ -1,13 +1,16 @@
 /**
- * ESP32 + PN532 Student Borrow Sketch
+ * ESP32 + PN532 Student Borrow Sketch — Web-Triggered Session Mode
  *
  * Flow:
- *   1. Connect to WiFi
- *   2. Login via POST /api/v1/auth/login-mobile → get JWT
- *   3. Scan student ID card → GET /api/v1/users/students/rfid/{uid} → resolve userId
- *   4. Scan item tag     → GET /api/v1/items/rfid/{uid}             → resolve itemId
- *   5. POST /api/v1/lentItems with { itemId, userId, status: "Pending", room, subjectTimeSchedule }
- *   6. Reset and wait for next borrow session
+ *   1. Connect to WiFi + sync time
+ *   2. Poll GET /api/v1/borrow-sessions/pending every 2s  ← idles here until web triggers
+ *   3. Session found → scan student ID card → resolve userId
+ *   4. Scan item tag → resolve itemId
+ *   5. POST /api/v1/lentItems  { itemId, userId, room, subjectTimeSchedule, status: "Pending" }
+ *   6. POST /api/v1/borrow-sessions/{id}/complete  { success, studentName, itemName, lentItemId }
+ *   7. Reset → back to polling
+ *
+ * All endpoints are AllowAnonymous — no login required.
  *
  * Wiring (PN532 → ESP32) — I2C mode:
  *   VCC → 3.3V  |  GND → GND
@@ -25,20 +28,17 @@
 #include <time.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
-#define WIFI_SSID      "EjGwapo2.4G"
-#define WIFI_PASSWORD  "vigheadTHEG0D2.4G"
-#define API_BASE_URL   "http://192.168.1.4:5289"
+#define WIFI_SSID           "EjGwapo2.4G"
+#define WIFI_PASSWORD       "vigheadTHEG0D2.4G"
+#define API_BASE_URL        "http://192.168.1.17:5289"
 
-#define API_IDENTIFIER "christian"
-#define API_PASSWORD   "@Password123"
-
-// NTP Configuration (Philippines timezone)
-#define NTP_SERVER     "pool.ntp.org"
-#define GMT_OFFSET_SEC 28800  // GMT+8 (Philippines)
+#define NTP_SERVER          "pool.ntp.org"
+#define GMT_OFFSET_SEC      28800   // GMT+8 Philippines
 #define DAYLIGHT_OFFSET_SEC 0
 
-// Default borrow metadata
-#define DEFAULT_ROOM     ""
+#define DEFAULT_ROOM        "Technical"
+#define SCAN_COOLDOWN_MS    2000
+#define POLL_INTERVAL_MS    2000
 
 // ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
@@ -47,16 +47,17 @@
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 // ── State machine ─────────────────────────────────────────────────────────────
-enum State { WAIT_STUDENT, WAIT_ITEM, SUBMITTING };
+enum State { POLLING, WAIT_STUDENT, WAIT_ITEM, SUBMITTING };
 
-State  currentState = WAIT_STUDENT;
-String jwtToken     = "";
-String studentId    = "";   // GUID resolved from student RFID
-String itemId       = "";   // GUID resolved from item RFID
-String lastUid      = "";
+State  currentState  = POLLING;
+String sessionId     = "";
+String studentId     = "";
+String studentName   = "";
+String itemId        = "";
+String itemName      = "";
+String lastUid       = "";
 unsigned long lastScanTime = 0;
-
-#define SCAN_COOLDOWN_MS 2000
+unsigned long lastPollTime = 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Serial.println("\n=== RFID Borrow Mode ===");
+  Serial.println("\n=== RFID Borrow Station (Session Mode) ===");
 
   nfc.begin();
   uint32_t ver = nfc.getFirmwareVersion();
@@ -77,22 +78,31 @@ void setup() {
 
   connectWiFi();
   syncTime();
-  login();
 
-  Serial.println("\n[Step 1] Scan your student ID card...");
+  Serial.println("\nPolling for borrow sessions from web...");
 }
 
 void loop() {
+  unsigned long now = millis();
+
+  // ── POLLING: wait for web to create a session ─────────────────────────────
+  if (currentState == POLLING) {
+    if (now - lastPollTime >= POLL_INTERVAL_MS) {
+      lastPollTime = now;
+      checkPendingSession();
+    }
+    return;
+  }
+
+  // ── SUBMITTING: blocked until submitBorrow() finishes ─────────────────────
   if (currentState == SUBMITTING) return;
 
+  // ── WAIT_STUDENT / WAIT_ITEM: read RFID ───────────────────────────────────
   uint8_t uid[7];
   uint8_t uidLength;
-
   if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 1000)) return;
 
   String uidStr = getUidString(uid, uidLength);
-  unsigned long now = millis();
-
   if (uidStr == lastUid && (now - lastScanTime) < SCAN_COOLDOWN_MS) return;
   lastUid      = uidStr;
   lastScanTime = now;
@@ -113,7 +123,7 @@ void loop() {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── WiFi ──────────────────────────────────────────────────────────────────────
 
 void connectWiFi() {
   Serial.printf("Connecting to %s", WIFI_SSID);
@@ -122,109 +132,87 @@ void connectWiFi() {
   Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
 }
 
+// ── NTP ───────────────────────────────────────────────────────────────────────
+
 void syncTime() {
-  Serial.println("Syncing time with NTP server...");
+  Serial.print("Syncing time with NTP...");
   configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
-  
   struct tm timeinfo;
   int attempts = 0;
-  while (!getLocalTime(&timeinfo) && attempts < 10) {
-    Serial.print(".");
-    delay(1000);
-    attempts++;
-  }
-  
+  while (!getLocalTime(&timeinfo) && attempts < 10) { Serial.print("."); delay(1000); attempts++; }
   if (attempts >= 10) {
-    Serial.println("\nWarning: Failed to sync time. Using default schedule.");
+    Serial.println("\nWarning: NTP sync failed — schedule will use fallback.");
   } else {
-    Serial.println("\nTime synced successfully!");
-    Serial.printf("Current time: %s", asctime(&timeinfo));
+    char buf[32];
+    strftime(buf, sizeof(buf), "%A %I:%M %p", &timeinfo);
+    Serial.printf("\nTime synced: %s\n", buf);
   }
 }
 
 String getCurrentSchedule() {
   struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) {
-    // Fallback if time sync failed
-    return "Monday-Friday 8:00 AM";
-  }
-  
-  // Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
-  int dayOfWeek = timeinfo.tm_wday;
-  
-  // Get current hour and minute
-  int hour = timeinfo.tm_hour;
-  int minute = timeinfo.tm_min;
-  
-  // Convert to 12-hour format
-  String ampm = (hour >= 12) ? "PM" : "AM";
-  int hour12 = hour % 12;
-  if (hour12 == 0) hour12 = 12;
-  
-  // Format time as "8:30 AM"
-  char timeStr[20];
-  sprintf(timeStr, "%d:%02d %s", hour12, minute, ampm.c_str());
-  
-  // Day names
-  const char* dayNames[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-  
-  // Generate schedule string
-  String schedule = String(dayNames[dayOfWeek]) + " " + String(timeStr);
-  
-  return schedule;
+  if (!getLocalTime(&timeinfo)) return "Monday 8:00 AM";
+  const char* days[] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
+  int hour = timeinfo.tm_hour, minute = timeinfo.tm_min;
+  const char* ampm = (hour >= 12) ? "PM" : "AM";
+  int hour12 = hour % 12; if (hour12 == 0) hour12 = 12;
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%s %d:%02d %s", days[timeinfo.tm_wday], hour12, minute, ampm);
+  return String(buf);
 }
 
-void login() {
-  String url = String(API_BASE_URL) + "/api/v1/auth/login-mobile";
-  Serial.printf("Logging in as %s...\n", API_IDENTIFIER);
-
-  StaticJsonDocument<128> doc;
-  doc["identifier"] = API_IDENTIFIER;
-  doc["password"]   = API_PASSWORD;
-  String body;
-  serializeJson(doc, body);
-
-  HTTPClient http;
-  http.setConnectTimeout(5000);
-  http.setTimeout(10000);
-  http.begin(url);
-  http.addHeader("Content-Type", "application/json");
-
-  int code = http.POST(body);
-  String resp = http.getString();
-  http.end();
-
-  if (code != 200) {
-    Serial.printf("Login failed (%d) — halting.\n", code);
-    while (1);
-  }
-
-  StaticJsonDocument<1024> respDoc;
-  deserializeJson(respDoc, resp);
-  jwtToken = respDoc["data"]["accessToken"].as<String>();
-  Serial.println("Login successful.");
-}
+// ── UID Helper ────────────────────────────────────────────────────────────────
 
 String getUidString(uint8_t* buf, uint8_t len) {
   String s = "";
-  for (uint8_t i = 0; i < len; i++) {
-    if (buf[i] < 0x10) s += "0";
-    s += String(buf[i], HEX);
-  }
+  for (uint8_t i = 0; i < len; i++) { if (buf[i] < 0x10) s += "0"; s += String(buf[i], HEX); }
   s.toUpperCase();
   return s;
 }
 
-// Calls GET /api/v1/users/students/rfid/{uid} → stores studentId GUID
+// ── API Calls ─────────────────────────────────────────────────────────────────
+
+// Poll GET /api/v1/borrow-sessions/pending — 204 means nothing pending, 200 means go
+void checkPendingSession() {
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
+
+  String url = String(API_BASE_URL) + "/api/v1/borrow-sessions/pending";
+  HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
+  http.begin(url);
+
+  int code = http.GET();
+  String resp = http.getString();
+  http.end();
+
+  if (code == 204) return;  // nothing pending — keep polling silently
+  if (code != 200) { Serial.printf("✗ Poll error: %d\n", code); return; }
+
+  StaticJsonDocument<256> doc;
+  deserializeJson(doc, resp);
+  sessionId = doc["data"]["id"].as<String>();
+
+  Serial.println("\n─────────────────────────────────────────");
+  Serial.println("✓ Borrow session triggered from web!");
+  Serial.printf("  Session ID: %s\n", sessionId.c_str());
+  Serial.println("─────────────────────────────────────────");
+  Serial.println("\n[Step 1] Scan student ID card...");
+
+  currentState = WAIT_STUDENT;
+}
+
+// GET /api/v1/users/students/rfid/{uid}
 bool resolveStudent(const String& rfidUid) {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   String url = String(API_BASE_URL) + "/api/v1/users/students/rfid/" + rfidUid;
   Serial.printf("GET %s\n", url.c_str());
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
-  http.addHeader("Authorization", "Bearer " + jwtToken);
 
   int code = http.GET();
   String resp = http.getString();
@@ -232,29 +220,31 @@ bool resolveStudent(const String& rfidUid) {
 
   Serial.printf("HTTP %d\n", code);
 
-  if (code == 401) { Serial.println("Token expired, re-logging in..."); login(); return false; }
-  if (code == 404) { Serial.println("✗ Student not registered. Ask admin to register your ID card first."); return false; }
+  if (code == 404) { Serial.println("✗ Student not registered."); return false; }
   if (code != 200) { Serial.printf("✗ Unexpected error: %d\n", code); return false; }
 
   StaticJsonDocument<512> doc;
   deserializeJson(doc, resp);
-  studentId = doc["data"]["id"].as<String>();
+  studentId   = doc["data"]["id"].as<String>();
+  studentName = String(doc["data"]["firstName"].as<String>())
+              + " "
+              + String(doc["data"]["lastName"].as<String>());
 
-  String name = String(doc["data"]["firstName"].as<String>()) + " " + String(doc["data"]["lastName"].as<String>());
-  Serial.printf("✓ Student: %s (ID: %s)\n", name.c_str(), studentId.c_str());
+  Serial.printf("✓ Student: %s (ID: %s)\n", studentName.c_str(), studentId.c_str());
   return true;
 }
 
-// Calls GET /api/v1/items/rfid/{uid} → stores itemId GUID
+// GET /api/v1/items/rfid/{uid}
 bool resolveItem(const String& rfidUid) {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   String url = String(API_BASE_URL) + "/api/v1/items/rfid/" + rfidUid;
   Serial.printf("GET %s\n", url.c_str());
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
-  http.addHeader("Authorization", "Bearer " + jwtToken);
 
   int code = http.GET();
   String resp = http.getString();
@@ -262,64 +252,137 @@ bool resolveItem(const String& rfidUid) {
 
   Serial.printf("HTTP %d\n", code);
 
-  if (code == 401) { Serial.println("Token expired, re-logging in..."); login(); return false; }
-  if (code == 404) { Serial.println("✗ Item not registered. Ask admin to register this tag first."); return false; }
+  if (code == 404) { Serial.println("✗ Item not registered."); return false; }
   if (code != 200) { Serial.printf("✗ Unexpected error: %d\n", code); return false; }
 
   StaticJsonDocument<512> doc;
   deserializeJson(doc, resp);
-  itemId = doc["data"]["id"].as<String>();
+  itemId   = doc["data"]["id"].as<String>();
+  itemName = doc["data"]["itemName"].as<String>();
 
-  String itemName = doc["data"]["itemName"].as<String>();
   Serial.printf("✓ Item: %s (ID: %s)\n", itemName.c_str(), itemId.c_str());
   return true;
 }
 
-// Calls POST /api/v1/lentItems to create the borrow record
+// POST /api/v1/lentItems then POST /api/v1/borrow-sessions/{id}/complete
 void submitBorrow() {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
-  String url = String(API_BASE_URL) + "/api/v1/lentItems";
-  Serial.printf("POST %s\n", url.c_str());
+  String schedule = getCurrentSchedule();
 
-  // Get current schedule dynamically
-  String currentSchedule = getCurrentSchedule();
-  Serial.printf("Schedule: %s\n", currentSchedule.c_str());
+  // ── Step A: create the lent item ──────────────────────────────────────────
+  String lentUrl = String(API_BASE_URL) + "/api/v1/lentItems";
+  Serial.printf("POST %s\n", lentUrl.c_str());
+  Serial.printf("  Student : %s\n", studentName.c_str());
+  Serial.printf("  Item    : %s\n", itemName.c_str());
+  Serial.printf("  Room    : %s\n", DEFAULT_ROOM);
+  Serial.printf("  Schedule: %s\n", schedule.c_str());
 
-  StaticJsonDocument<256> doc;
-  doc["itemId"]               = itemId;
-  doc["userId"]               = studentId;
-  doc["subjectTimeSchedule"]  = currentSchedule;
-  doc["status"]               = "Pending";
-  String body;
-  serializeJson(doc, body);
+  StaticJsonDocument<256> lentDoc;
+  lentDoc["itemId"]              = itemId;
+  lentDoc["userId"]              = studentId;
+  lentDoc["subjectTimeSchedule"] = schedule;
+  lentDoc["status"]              = "Pending";
+  if (strlen(DEFAULT_ROOM) > 0) lentDoc["room"] = DEFAULT_ROOM;
+  String lentBody;
+  serializeJson(lentDoc, lentBody);
 
-  HTTPClient http;
-  http.begin(url);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", "Bearer " + jwtToken);
+  HTTPClient http1;
+  http1.setConnectTimeout(5000);
+  http1.setTimeout(10000);
+  http1.begin(lentUrl);
+  http1.addHeader("Content-Type", "application/json");
 
-  int code = http.POST(body);
-  String resp = http.getString();
-  http.end();
+  int lentCode = http1.POST(lentBody);
+  String lentResp = http1.getString();
+  http1.end();
 
-  Serial.printf("HTTP %d — %s\n", code, resp.c_str());
+  Serial.printf("LentItems HTTP %d\n", lentCode);
 
-  if (code == 201 || code == 200)
-    Serial.println("✓ Borrow request submitted! Waiting for admin approval.");
-  else if (code == 400)
-    Serial.println("✗ Request rejected — item may already be borrowed or your profile is incomplete.");
-  else if (code == 401)
-    Serial.println("✗ Unauthorized.");
-  else
-    Serial.printf("✗ Unexpected: %d\n", code);
+  bool    success    = (lentCode == 200 || lentCode == 201);
+  String  lentItemId = "";
+  String  errorMsg   = "";
+
+  if (success) {
+    StaticJsonDocument<512> respDoc;
+    deserializeJson(respDoc, lentResp);
+    lentItemId = respDoc["data"]["id"].as<String>();
+    Serial.println("✓ Borrow request submitted!");
+  } else {
+    errorMsg = "LentItems error " + String(lentCode);
+    Serial.printf("✗ Failed: %s\n", errorMsg.c_str());
+    Serial.printf("  Response: %s\n", lentResp.c_str());
+  }
+
+  // ── Step B: close the borrow session ──────────────────────────────────────
+  String sessUrl = String(API_BASE_URL) + "/api/v1/borrow-sessions/" + sessionId + "/complete";
+  Serial.printf("POST %s\n", sessUrl.c_str());
+
+  StaticJsonDocument<256> sessDoc;
+  sessDoc["success"]     = success;
+  sessDoc["studentName"] = studentName;
+  sessDoc["itemName"]    = itemName;
+  if (success && lentItemId.length() > 0) sessDoc["lentItemId"]   = lentItemId;
+  if (!success)                           sessDoc["errorMessage"] = errorMsg;
+  String sessBody;
+  serializeJson(sessDoc, sessBody);
+
+  HTTPClient http2;
+  http2.setConnectTimeout(5000);
+  http2.setTimeout(10000);
+  http2.begin(sessUrl);
+  http2.addHeader("Content-Type", "application/json");
+
+  int sessCode = http2.POST(sessBody);
+  http2.end();
+
+  Serial.printf("Session complete HTTP %d\n", sessCode);
+
+  if (sessCode == 200) {
+    Serial.println("✓ Session closed.");
+  } else {
+    Serial.printf("✗ Failed to complete session (HTTP %d) — retrying in 2s...\n", sessCode);
+    delay(2000);
+
+    // Retry once
+    HTTPClient http3;
+    http3.setConnectTimeout(5000);
+    http3.setTimeout(10000);
+    http3.begin(sessUrl);
+    http3.addHeader("Content-Type", "application/json");
+    int retryCode = http3.POST(sessBody);
+    http3.end();
+    Serial.printf("Session complete retry HTTP %d\n", retryCode);
+  }
 }
 
+// ── Session Reset ─────────────────────────────────────────────────────────────
+
 void resetSession() {
-  studentId    = "";
-  itemId       = "";
-  lastUid      = "";
-  currentState = WAIT_STUDENT;
-  Serial.println("\n── Session reset ──");
-  Serial.println("[Step 1] Scan your student ID card...");
+  sessionId   = "";
+  studentId   = "";
+  studentName = "";
+  itemId      = "";
+  itemName    = "";
+  lastUid     = "";
+  currentState = POLLING;
+
+  Serial.println("\n── Session reset — polling for next request...\n");
+
+  // Give the TCP stack time to fully close all connections before next poll
+  delay(3000);
+
+  // Force WiFi reconnect to clear any stale socket state
+  if (WiFi.status() != WL_CONNECTED) {
+    connectWiFi();
+  } else {
+    WiFi.disconnect(false);
+    delay(500);
+    WiFi.reconnect();
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) {
+      delay(200);
+    }
+    Serial.printf("WiFi ready — IP: %s\n", WiFi.localIP().toString().c_str());
+  }
 }

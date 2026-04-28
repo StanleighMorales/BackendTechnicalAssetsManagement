@@ -1,15 +1,17 @@
 /**
- * ESP32 + PN532 Item Return Sketch — Web-Triggered Session Mode
+ * ESP32 + PN532 Item Scan Sketch — Guest Borrow / Reserve
  *
  * Flow:
- *   1. Connect to WiFi + sync time
- *   2. Poll GET /api/v1/return-sessions/pending every 2s  ← idles until web triggers
- *   3. Session found → student taps item NFC tag
- *   4. GET /api/v1/items/rfid/{uid}           → resolve itemId + itemName
- *   5. GET /api/v1/lentItems/borrowed         → find active lent record for this item
- *   6. PATCH /api/v1/lentItems/{lentItemId}   → { status: "Returned", returnedAt: <now> }
- *   7. POST /api/v1/return-sessions/{id}/complete → report result back to web
- *   8. Reset → back to polling
+ *   1. Connect to WiFi
+ *   2. Poll GET /api/v1/item-scan-sessions/pending every 2s  ← idles until web triggers
+ *   3. Session found → scan item NFC tag
+ *   4. GET /api/v1/items/rfid/{uid} → resolve itemId + itemName
+ *   5. POST /api/v1/item-scan-sessions/{id}/complete → pass itemId + itemName back to web
+ *   6. Web receives itemId → opens guest borrow/reserve form pre-filled with item
+ *   7. Reset → back to polling
+ *
+ * The ESP32 does NOT create the lent record.
+ * Staff fills in guest details on the web and submits.
  *
  * All endpoints are AllowAnonymous — no login required.
  *
@@ -26,19 +28,14 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <time.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
-#define WIFI_SSID           "EjGwapo2.4G"
-#define WIFI_PASSWORD       "vigheadTHEG0D2.4G"
-#define API_BASE_URL        "http://192.168.1.17:5289"
+#define WIFI_SSID        "EjGwapo2.4G"
+#define WIFI_PASSWORD    "vigheadTHEG0D2.4G"
+#define API_BASE_URL     "http://192.168.1.17:5289"
 
-#define NTP_SERVER          "pool.ntp.org"
-#define GMT_OFFSET_SEC      28800   // GMT+8 Philippines
-#define DAYLIGHT_OFFSET_SEC 0
-
-#define SCAN_COOLDOWN_MS    2000
-#define POLL_INTERVAL_MS    2000
+#define SCAN_COOLDOWN_MS 2000
+#define POLL_INTERVAL_MS 2000
 
 // ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
@@ -61,7 +58,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  Serial.println("\n=== RFID Item Return Station (Session Mode) ===");
+  Serial.println("\n=== RFID Item Scan Station (Guest Borrow/Reserve) ===");
 
   nfc.begin();
   uint32_t ver = nfc.getFirmwareVersion();
@@ -73,9 +70,8 @@ void setup() {
   nfc.SAMConfig();
 
   connectWiFi();
-  syncTime();
 
-  Serial.println("\nPolling for return sessions from web...");
+  Serial.println("\nPolling for item scan sessions from web...");
 }
 
 void loop() {
@@ -90,7 +86,7 @@ void loop() {
     return;
   }
 
-  // ── SUBMITTING: blocked until processReturn() finishes ────────────────────
+  // ── SUBMITTING: blocked until processItemScan() finishes ──────────────────
   if (currentState == SUBMITTING) return;
 
   // ── WAIT_ITEM: read item NFC tag ───────────────────────────────────────────
@@ -106,7 +102,7 @@ void loop() {
   Serial.printf("\nScanned tag: %s\n", uidStr.c_str());
 
   currentState = SUBMITTING;
-  processReturn(uidStr);
+  processItemScan(uidStr);
   resetSession();
 }
 
@@ -117,31 +113,6 @@ void connectWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
   Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
-}
-
-// ── NTP ───────────────────────────────────────────────────────────────────────
-
-void syncTime() {
-  Serial.print("Syncing time with NTP...");
-  configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
-  struct tm timeinfo;
-  int attempts = 0;
-  while (!getLocalTime(&timeinfo) && attempts < 10) { Serial.print("."); delay(1000); attempts++; }
-  if (attempts >= 10) {
-    Serial.println("\nWarning: NTP sync failed.");
-  } else {
-    char buf[32];
-    strftime(buf, sizeof(buf), "%A %I:%M %p", &timeinfo);
-    Serial.printf("\nTime synced: %s\n", buf);
-  }
-}
-
-String getCurrentTimestamp() {
-  struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)) return "";
-  char buf[25];
-  strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &timeinfo);
-  return String(buf);
 }
 
 // ── UID Helper ────────────────────────────────────────────────────────────────
@@ -155,11 +126,11 @@ String getUidString(uint8_t* buf, uint8_t len) {
 
 // ── API Calls ─────────────────────────────────────────────────────────────────
 
-// Poll GET /api/v1/return-sessions/pending — 204 = nothing, 200 = go
+// Poll GET /api/v1/item-scan-sessions/pending — 204 = nothing, 200 = go
 void checkPendingSession() {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
-  String url = String(API_BASE_URL) + "/api/v1/return-sessions/pending";
+  String url = String(API_BASE_URL) + "/api/v1/item-scan-sessions/pending";
   HTTPClient http;
   http.setConnectTimeout(5000);
   http.setTimeout(10000);
@@ -177,7 +148,7 @@ void checkPendingSession() {
   sessionId = doc["data"]["id"].as<String>();
 
   Serial.println("\n─────────────────────────────────────────");
-  Serial.println("✓ Return session triggered from web!");
+  Serial.println("✓ Item scan session triggered from web!");
   Serial.printf("  Session ID: %s\n", sessionId.c_str());
   Serial.println("─────────────────────────────────────────");
   Serial.println("\nTap the item NFC tag on the scanner...");
@@ -185,8 +156,8 @@ void checkPendingSession() {
   currentState = WAIT_ITEM;
 }
 
-// Full return flow: resolve item → find lent record → patch returned → complete session
-void processReturn(const String& rfidUid) {
+// Resolve item from tag then complete the session
+void processItemScan(const String& rfidUid) {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   // ── Step 1: resolve item from tag ─────────────────────────────────────────
@@ -206,12 +177,12 @@ void processReturn(const String& rfidUid) {
 
   if (itemCode == 404) {
     Serial.println("✗ Item not registered.");
-    completeSession(false, "", "", Guid_Empty(), "Item tag not registered.");
+    completeSession(false, "", "", "", "Item tag not registered.");
     return;
   }
   if (itemCode != 200) {
     Serial.printf("✗ Item lookup error: %d\n", itemCode);
-    completeSession(false, "", "", Guid_Empty(), "Item lookup error " + String(itemCode));
+    completeSession(false, "", "", "", "Item lookup error " + String(itemCode));
     return;
   }
 
@@ -219,108 +190,27 @@ void processReturn(const String& rfidUid) {
   deserializeJson(itemDoc, itemResp);
   String itemId   = itemDoc["data"]["id"].as<String>();
   String itemName = itemDoc["data"]["itemName"].as<String>();
+
   Serial.printf("✓ Item: %s (ID: %s)\n", itemName.c_str(), itemId.c_str());
 
-  // ── Step 2: find active lent record for this item ─────────────────────────
-  String borrowedUrl = String(API_BASE_URL) + "/api/v1/lentItems/borrowed";
-  Serial.printf("GET %s\n", borrowedUrl.c_str());
-
-  HTTPClient http2;
-  http2.setConnectTimeout(5000);
-  http2.setTimeout(10000);
-  http2.begin(borrowedUrl);
-
-  int borrowedCode = http2.GET();
-  String borrowedResp = http2.getString();
-  http2.end();
-
-  Serial.printf("HTTP %d\n", borrowedCode);
-
-  if (borrowedCode != 200) {
-    Serial.printf("✗ Failed to get borrowed items: %d\n", borrowedCode);
-    completeSession(false, itemName, "", Guid_Empty(), "Borrowed list error " + String(borrowedCode));
-    return;
-  }
-
-  DynamicJsonDocument borrowedDoc(4096);
-  DeserializationError err = deserializeJson(borrowedDoc, borrowedResp);
-  if (err) {
-    Serial.printf("✗ JSON parse error: %s\n", err.c_str());
-    completeSession(false, itemName, "", Guid_Empty(), "JSON parse error.");
-    return;
-  }
-  JsonArray lentItems = borrowedDoc["data"].as<JsonArray>();
-
-  String lentItemId   = "";
-  String borrowerName = "";
-
-  for (JsonObject lent : lentItems) {
-    if (String(lent["item"]["id"].as<String>()) == itemId) {
-      lentItemId   = lent["id"].as<String>();
-      borrowerName = lent["borrowerFullName"].as<String>();
-      break;
-    }
-  }
-
-  if (lentItemId.length() == 0) {
-    Serial.println("✗ No active borrowed record found for this item.");
-    completeSession(false, itemName, "", Guid_Empty(), "Item is not currently borrowed.");
-    return;
-  }
-
-  Serial.printf("✓ Lent record: %s (Borrower: %s)\n", lentItemId.c_str(), borrowerName.c_str());
-
-  // ── Step 3: mark as returned ───────────────────────────────────────────────
-  String timestamp = getCurrentTimestamp();
-  if (timestamp.length() == 0) {
-    Serial.println("✗ Cannot get current time.");
-    completeSession(false, itemName, borrowerName, Guid_Empty(), "NTP time unavailable.");
-    return;
-  }
-
-  String patchUrl = String(API_BASE_URL) + "/api/v1/lentItems/" + lentItemId;
-  Serial.printf("PATCH %s\n", patchUrl.c_str());
-
-  StaticJsonDocument<128> patchDoc;
-  patchDoc["status"]     = "Returned";
-  patchDoc["returnedAt"] = timestamp;
-  String patchBody;
-  serializeJson(patchDoc, patchBody);
-
-  HTTPClient http3;
-  http3.setConnectTimeout(5000);
-  http3.setTimeout(10000);
-  http3.begin(patchUrl);
-  http3.addHeader("Content-Type", "application/json");
-
-  int patchCode = http3.PATCH(patchBody);
-  http3.end();
-
-  Serial.printf("PATCH HTTP %d\n", patchCode);
-
-  if (patchCode == 200) {
-    Serial.printf("✓ Item marked as RETURNED at %s\n", timestamp.c_str());
-    completeSession(true, itemName, borrowerName, lentItemId, "");
-  } else {
-    Serial.printf("✗ Return failed: %d\n", patchCode);
-    completeSession(false, itemName, borrowerName, Guid_Empty(), "PATCH error " + String(patchCode));
-  }
+  // ── Step 2: complete the session — pass itemId + rfidUid + itemName to web ─
+  completeSession(true, itemId, itemName, rfidUid, "");
 }
 
-// POST /api/v1/return-sessions/{id}/complete
-void completeSession(bool success, const String& itemName, const String& borrowerName,
-                     const String& lentItemId, const String& errorMsg) {
+// POST /api/v1/item-scan-sessions/{id}/complete
+void completeSession(bool success, const String& itemId, const String& itemName,
+                     const String& rfidUid, const String& errorMsg) {
   if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
-  String url = String(API_BASE_URL) + "/api/v1/return-sessions/" + sessionId + "/complete";
+  String url = String(API_BASE_URL) + "/api/v1/item-scan-sessions/" + sessionId + "/complete";
   Serial.printf("POST %s\n", url.c_str());
 
   StaticJsonDocument<256> doc;
-  doc["success"]      = success;
-  doc["itemName"]     = itemName;
-  doc["borrowerName"] = borrowerName;
-  if (success && lentItemId.length() > 0) doc["lentItemId"]   = lentItemId;
-  if (!success)                           doc["errorMessage"] = errorMsg;
+  doc["success"]  = success;
+  doc["itemName"] = itemName;
+  if (success && itemId.length() > 0)   doc["itemId"]       = itemId;
+  if (success && rfidUid.length() > 0)  doc["rfidUid"]      = rfidUid;
+  if (!success)                         doc["errorMessage"] = errorMsg;
   String body;
   serializeJson(doc, body);
 
@@ -336,7 +226,10 @@ void completeSession(bool success, const String& itemName, const String& borrowe
   Serial.printf("Session complete HTTP %d\n", code);
 
   if (code == 200) {
-    Serial.println("✓ Session closed.");
+    if (success)
+      Serial.printf("✓ Item ID sent to web — staff can now fill in guest details.\n");
+    else
+      Serial.printf("✗ Scan failed: %s\n", errorMsg.c_str());
   } else {
     Serial.printf("✗ Failed to complete session (HTTP %d) — retrying in 2s...\n", code);
     delay(2000);
@@ -353,9 +246,6 @@ void completeSession(bool success, const String& itemName, const String& borrowe
   }
 }
 
-// Helper — returns empty string to use as a null GUID placeholder
-String Guid_Empty() { return ""; }
-
 // ── Session Reset ─────────────────────────────────────────────────────────────
 
 void resetSession() {
@@ -365,10 +255,9 @@ void resetSession() {
 
   Serial.println("\n── Session reset — polling for next request...\n");
 
-  // Give the TCP stack time to fully close all connections before next poll
   delay(3000);
 
-  // Force WiFi reconnect to clear any stale socket state
+  // Reconnect WiFi to clear stale socket state
   if (WiFi.status() != WL_CONNECTED) {
     connectWiFi();
   } else {
@@ -376,9 +265,7 @@ void resetSession() {
     delay(500);
     WiFi.reconnect();
     unsigned long start = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) {
-      delay(200);
-    }
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) { delay(200); }
     Serial.printf("WiFi ready — IP: %s\n", WiFi.localIP().toString().c_str());
   }
 }

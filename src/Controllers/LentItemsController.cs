@@ -23,7 +23,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
             _service = service;
         }
         // POST: api/v1/lentItems — instant borrow via RFID scan, status set to Borrowed by backend
+        // AllowAnonymous so the ESP32 borrow station can submit without a JWT
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<LentItemsDto>>> Borrow([FromBody] CreateBorrowDto dto)
         {
             var created = await _service.AddBorrowAsync(dto);
@@ -118,8 +120,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // GET: api/v1/lentitems/borrowed
+        // AllowAnonymous so the ESP32 return station can query without a JWT
         [HttpGet("borrowed")]
-        [Authorize(Policy = "AdminOrStaff")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<IEnumerable<LentItemsDto>>>> GetAllBorrowedItems()
         {
             var items = await _service.GetAllBorrowedItemsAsync();
@@ -145,8 +148,9 @@ namespace BackendTechnicalAssetsManagement.src.Controllers
         }
 
         // PATCH: api/v1/lentitems/{id}
+        // AllowAnonymous so the ESP32 return station can patch without a JWT
         [HttpPatch("{id}")]
-        [Authorize(Policy = "AdminOrStaff")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResponse<object>>> Update(Guid id, [FromBody] UpdateLentItemDto dto)
         {
             // The old "ID mismatch" check is no longer needed if you removed Id from the DTO.

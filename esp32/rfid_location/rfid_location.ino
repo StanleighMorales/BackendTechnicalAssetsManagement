@@ -3,14 +3,14 @@
  *
  * Flow:
  *   1. Connect to WiFi
- *   2. Login via POST /api/v1/auth/login-mobile → get JWT
- *   3. Scan item RFID tag → GET /api/v1/items/rfid/{uid} → resolve itemId
- *   4. GET /api/v1/lentItems/borrowed → find active lent item for this itemId
- *   5. PATCH /api/v1/lentItems/{lentItemId} with { room: LOCATION_LABEL }
- *      to update the borrowed item's current room location
+ *   2. Scan item RFID tag → GET /api/v1/items/rfid/{uid}  → resolve itemId
+ *   3. GET /api/v1/lentItems/borrowed                     → find active lent record
+ *   4. PATCH /api/v1/lentItems/{lentItemId} { room: LOCATION_LABEL }
  *
- * Each ESP32 unit is deployed at a fixed location (e.g. a room or cabinet).
- * Set LOCATION_LABEL to identify where this unit is installed.
+ * This unit is always-on and passive — no web trigger needed.
+ * Deploy one unit per room/location. Set LOCATION_LABEL per unit.
+ *
+ * All endpoints are AllowAnonymous — no login required.
  *
  * Wiring (PN532 → ESP32) — I2C mode:
  *   VCC → 3.3V  |  GND → GND
@@ -27,15 +27,14 @@
 #include <ArduinoJson.h>
 
 // ── Config ────────────────────────────────────────────────────────────────────
-#define WIFI_SSID      "EjGwapo2.4G"
-#define WIFI_PASSWORD  "vigheadTHEG0D2.4G"
-#define API_BASE_URL   "http://192.168.1.4:5289"
-
-#define API_IDENTIFIER "christian"
-#define API_PASSWORD   "@Password123"
+#define WIFI_SSID        "EjGwapo2.4G"
+#define WIFI_PASSWORD    "vigheadTHEG0D2.4G"
+#define API_BASE_URL     "http://192.168.1.17:5289"
 
 // Label for this unit's physical location — change per deployment
-#define LOCATION_LABEL "Room 111"
+#define LOCATION_LABEL   "Room 111"
+
+#define SCAN_COOLDOWN_MS 2000
 
 // ── PN532 ─────────────────────────────────────────────────────────────────────
 #define PN532_IRQ   4
@@ -44,11 +43,8 @@
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 
 // ── Globals ───────────────────────────────────────────────────────────────────
-String jwtToken    = "";
-String lastUid     = "";
+String lastUid         = "";
 unsigned long lastScanTime = 0;
-
-#define SCAN_COOLDOWN_MS 2000
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -69,7 +65,6 @@ void setup() {
   nfc.SAMConfig();
 
   connectWiFi();
-  login();
 
   Serial.println("\nReady — scan an item tag to update its location.");
 }
@@ -93,12 +88,19 @@ void loop() {
   if (itemId.length() > 0) {
     String lentItemId = findActiveLentItem(itemId);
     if (lentItemId.length() > 0) {
-      updateLentItemRoom(lentItemId);
+      updateLocation(lentItemId);
     }
   }
+
+  // Reconnect WiFi after each scan to clear stale socket state
+  WiFi.disconnect(false);
+  delay(300);
+  WiFi.reconnect();
+  unsigned long start = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 5000) { delay(200); }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── WiFi ──────────────────────────────────────────────────────────────────────
 
 void connectWiFi() {
   Serial.printf("Connecting to %s", WIFI_SSID);
@@ -107,57 +109,28 @@ void connectWiFi() {
   Serial.printf("\nConnected — IP: %s\n", WiFi.localIP().toString().c_str());
 }
 
-void login() {
-  String url = String(API_BASE_URL) + "/api/v1/auth/login-mobile";
-  Serial.printf("Logging in as %s...\n", API_IDENTIFIER);
-
-  StaticJsonDocument<128> doc;
-  doc["identifier"] = API_IDENTIFIER;
-  doc["password"]   = API_PASSWORD;
-  String body;
-  serializeJson(doc, body);
-
-  HTTPClient http;
-  http.setConnectTimeout(5000);
-  http.setTimeout(10000);
-  http.begin(url);
-  http.addHeader("Content-Type", "application/json");
-
-  int code = http.POST(body);
-  String resp = http.getString();
-  http.end();
-
-  if (code != 200) {
-    Serial.printf("Login failed (%d) — halting.\n", code);
-    while (1);
-  }
-
-  StaticJsonDocument<1024> respDoc;
-  deserializeJson(respDoc, resp);
-  jwtToken = respDoc["data"]["accessToken"].as<String>();
-  Serial.println("Login successful.");
-}
+// ── UID Helper ────────────────────────────────────────────────────────────────
 
 String getUidString(uint8_t* buf, uint8_t len) {
   String s = "";
-  for (uint8_t i = 0; i < len; i++) {
-    if (buf[i] < 0x10) s += "0";
-    s += String(buf[i], HEX);
-  }
+  for (uint8_t i = 0; i < len; i++) { if (buf[i] < 0x10) s += "0"; s += String(buf[i], HEX); }
   s.toUpperCase();
   return s;
 }
 
-// Calls GET /api/v1/items/rfid/{uid} → returns itemId GUID or empty string on failure
+// ── API Calls ─────────────────────────────────────────────────────────────────
+
+// GET /api/v1/items/rfid/{uid} → returns itemId or empty string
 String resolveItem(const String& rfidUid) {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   String url = String(API_BASE_URL) + "/api/v1/items/rfid/" + rfidUid;
   Serial.printf("GET %s\n", url.c_str());
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
-  http.addHeader("Authorization", "Bearer " + jwtToken);
 
   int code = http.GET();
   String resp = http.getString();
@@ -165,7 +138,6 @@ String resolveItem(const String& rfidUid) {
 
   Serial.printf("HTTP %d\n", code);
 
-  if (code == 401) { Serial.println("Token expired, re-logging in..."); login(); return ""; }
   if (code == 404) { Serial.println("✗ Item not registered."); return ""; }
   if (code != 200) { Serial.printf("✗ Unexpected error: %d\n", code); return ""; }
 
@@ -177,16 +149,17 @@ String resolveItem(const String& rfidUid) {
   return id;
 }
 
-// Calls GET /api/v1/lentItems/borrowed → finds active lent item for this itemId
+// GET /api/v1/lentItems/borrowed → finds active lent record for this itemId
 String findActiveLentItem(const String& itemId) {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   String url = String(API_BASE_URL) + "/api/v1/lentItems/borrowed";
   Serial.printf("GET %s\n", url.c_str());
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
-  http.addHeader("Authorization", "Bearer " + jwtToken);
 
   int code = http.GET();
   String resp = http.getString();
@@ -194,16 +167,15 @@ String findActiveLentItem(const String& itemId) {
 
   Serial.printf("HTTP %d\n", code);
 
-  if (code == 401) { Serial.println("Token expired, re-logging in..."); login(); return ""; }
   if (code != 200) { Serial.printf("✗ Failed to get borrowed items: %d\n", code); return ""; }
 
-  DynamicJsonDocument doc(8192);
-  deserializeJson(doc, resp);
-  JsonArray items = doc["data"].as<JsonArray>();
+  DynamicJsonDocument doc(4096);
+  DeserializationError err = deserializeJson(doc, resp);
+  if (err) { Serial.printf("✗ JSON parse error: %s\n", err.c_str()); return ""; }
 
+  JsonArray items = doc["data"].as<JsonArray>();
   for (JsonObject item : items) {
-    String lentItemItemId = item["item"]["id"].as<String>();
-    if (lentItemItemId == itemId) {
+    if (String(item["item"]["id"].as<String>()) == itemId) {
       String lentItemId = item["id"].as<String>();
       Serial.printf("✓ Found active lent item: %s\n", lentItemId.c_str());
       return lentItemId;
@@ -214,9 +186,9 @@ String findActiveLentItem(const String& itemId) {
   return "";
 }
 
-// Calls PATCH /api/v1/lentItems/{lentItemId} with { room }
-void updateLentItemRoom(const String& lentItemId) {
-  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); login(); }
+// PATCH /api/v1/lentItems/{lentItemId} → updates room to LOCATION_LABEL
+void updateLocation(const String& lentItemId) {
+  if (WiFi.status() != WL_CONNECTED) { connectWiFi(); }
 
   String url = String(API_BASE_URL) + "/api/v1/lentItems/" + lentItemId;
   Serial.printf("PATCH %s\n", url.c_str());
@@ -227,21 +199,19 @@ void updateLentItemRoom(const String& lentItemId) {
   serializeJson(doc, body);
 
   HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(10000);
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("Authorization", "Bearer " + jwtToken);
 
   int code = http.PATCH(body);
-  String resp = http.getString();
   http.end();
 
-  Serial.printf("HTTP %d — %s\n", code, resp.c_str());
+  Serial.printf("HTTP %d\n", code);
 
   if (code == 200)
-    Serial.printf("✓ Room updated to \"%s\"\n", LOCATION_LABEL);
-  else if (code == 401) {
-    Serial.println("✗ Unauthorized — re-logging in..."); login();
-  } else if (code == 404)
+    Serial.printf("✓ Location updated to \"%s\"\n", LOCATION_LABEL);
+  else if (code == 404)
     Serial.println("✗ Lent item not found.");
   else
     Serial.printf("✗ Unexpected: %d\n", code);
