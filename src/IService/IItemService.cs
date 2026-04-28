@@ -10,7 +10,7 @@ namespace BackendTechnicalAssetsManagement.src.IService
         Task<IEnumerable<ItemDto>> GetAllItemsAsync();
         Task<ItemDto?> GetItemByIdAsync(Guid id);
         Task<ItemDto?> GetItemBySerialNumberAsync(string serialNumber);
-        Task<ItemDto> CreateItemAsync(CreateItemsDto createItemDto);
+        Task<(ItemDto Item, RfidRegistrationSessionDto? Session)> CreateItemAsync(CreateItemsDto createItemDto);
         Task<bool> UpdateItemAsync(Guid id, UpdateItemsDto updateItemDto);
         Task<(bool Success, string ErrorMessage, ItemStatus? NewStatus)> ScanRfidAsync(string rfidUid);
         Task<(bool Success, string ErrorMessage)> RegisterRfidToItemAsync(Guid itemId, string rfidUid);

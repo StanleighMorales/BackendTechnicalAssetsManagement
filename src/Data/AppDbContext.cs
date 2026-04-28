@@ -80,6 +80,9 @@ namespace BackendTechnicalAssetsManagement.src.Data
         // RFID Cards
         public DbSet<Rfid> Rfids { get; set; }
 
+        // RFID Registration Sessions (web-triggered, ESP32-completed)
+        public DbSet<RfidRegistrationSession> RfidRegistrationSessions { get; set; }
+
         /// <summary>
         /// Overridden method used to configure the database model and relationships using the ModelBuilder API.
         /// EF Core calls this method once when it is building its internal model of your database.

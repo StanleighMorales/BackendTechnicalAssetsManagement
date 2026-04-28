@@ -30,7 +30,7 @@ Authorization: Bearer <your_token>
 GET /api/v1/auth/me
 ```
 
-Returns the profile of the currently authenticated user.
+Returns the profile of the currently authenticated user. For students, includes an item summary array.
 
 **Auth:** Required (any role)
 
@@ -38,6 +38,51 @@ Returns the profile of the currently authenticated user.
 GET /api/v1/auth/me
 Authorization: Bearer <token>
 ```
+
+**Response Example (Student)**
+
+```json
+{
+  "success": true,
+  "message": "User profile retrieved successfully.",
+  "data": {
+    "$type": "Student",
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "username": "jdelacruz",
+    "email": "juan@example.com",
+    "lastName": "Dela Cruz",
+    "firstName": "Juan",
+    "middleName": null,
+    "phoneNumber": "09123456789",
+    "userRole": "Student",
+    "status": "Active",
+    "itemSummary": [
+      { "status": "Reserved", "count": 5 },
+      { "status": "Borrowed", "count": 3 },
+      { "status": "Returned", "count": 12 },
+      { "status": "Available", "count": 45 }
+    ],
+    "studentIdNumber": "2021-12345",
+    "course": "BSIT",
+    "section": "A",
+    "year": "3",
+    "lentItemsHistory": []
+  }
+}
+```
+
+**ItemSummary Array (Students Only)**
+
+The `itemSummary` field is only included for student profiles and contains an array of the student's borrow status counts:
+
+| Status      | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| `Reserved`  | Student's items with Pending or Approved status (waiting to borrow) |
+| `Borrowed`  | Student's items currently borrowed                             |
+| `Returned`  | Student's items that have been returned                        |
+| `Available` | Total available items in the system (for reference)            |
+
+**Note:** Teachers, Staff, and Admin profiles will not include the `itemSummary` field.
 
 **Responses**
 
