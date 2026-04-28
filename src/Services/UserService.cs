@@ -1,5 +1,6 @@
 using AutoMapper;
 using BackendTechnicalAssetsManagement.src.Classes;
+using BackendTechnicalAssetsManagement.src.DTOs.ActivityLog;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using BackendTechnicalAssetsManagement.src.IRepository;
 using BackendTechnicalAssetsManagement.src.IService;
@@ -23,8 +24,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
         private readonly ISupabaseStorageService _storageService;
         private readonly IItemRepository _itemRepository;
         private readonly ILentItemsRepository _lentItemsRepository;
+        private readonly IActivityLogRepository _activityLogRepository;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService, ISupabaseStorageService storageService, IItemRepository itemRepository, ILentItemsRepository lentItemsRepository)
+        public UserService(IUserRepository userRepository, IMapper mapper, IArchiveUserService archiveUserService, IPasswordHashingService passwordHashingService, IExcelReaderService excelReaderService, ISupabaseStorageService storageService, IItemRepository itemRepository, ILentItemsRepository lentItemsRepository, IActivityLogRepository activityLogRepository)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -34,6 +36,7 @@ namespace BackendTechnicalAssetsManagement.src.Services
             _storageService = storageService;
             _itemRepository = itemRepository;
             _lentItemsRepository = lentItemsRepository;
+            _activityLogRepository = activityLogRepository;
         }
 
         public async Task<BaseProfileDto?> GetUserProfileByIdAsync(Guid userId)
@@ -45,14 +48,32 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 return null; // Not found
             }
 
-            // 2. Explicitly check the runtime type and map to the specific DTO.
+            // 2. Fetch the 5 most recent activities for this user
+            var recentActivities = await _activityLogRepository.GetFilteredAsync(
+                category: null,
+                from: null,
+                to: null,
+                actorUserId: userId,
+                itemId: null,
+                status: null
+            );
+            
+            var recentActivitiesList = recentActivities
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(5)
+                .ToList();
+
+            // 3. Map activities to DTOs
+            var recentActivitiesDto = _mapper.Map<List<ActivityLogDto>>(recentActivitiesList);
+
+            // 4. Explicitly check the runtime type and map to the specific DTO.
             // This circumvents the occasional failure of AutoMapper's runtime polymorphism.
             BaseProfileDto profile;
             if (user is Student student)
             {
                 profile = _mapper.Map<GetStudentProfileDto>(student);
                 
-                // 3. Populate ItemSummary array for students only
+                // 5. Populate ItemSummary array for students only
                 var summary = await GetUserItemSummaryAsync(userId);
                 ((GetStudentProfileDto)profile).ItemSummary = new List<ItemStatusCountDto>
                 {
@@ -75,6 +96,9 @@ namespace BackendTechnicalAssetsManagement.src.Services
                 // Fallback: If the user is a base User or an unknown type, map to the base profile DTO.
                 profile = _mapper.Map<BaseProfileDto>(user);
             }
+
+            // 6. Populate recent activities for all user types
+            profile.RecentActivities = recentActivitiesDto;
 
             return profile;
         }

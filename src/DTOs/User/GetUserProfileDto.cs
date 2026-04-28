@@ -1,4 +1,5 @@
 ﻿using BackendTechnicalAssetsManagement.src.DTOs;
+using BackendTechnicalAssetsManagement.src.DTOs.ActivityLog;
 using BackendTechnicalAssetsManagement.src.DTOs.User;
 using System.Text.Json.Serialization;
 using static BackendTechnicalAssetsManagement.src.Classes.Enums;
@@ -23,6 +24,8 @@ namespace BackendTechnicalAssetsManagement.src.Models.DTOs.Users
 
         public UserRole UserRole { get; set; }
         public string? Status { get; set; } = string.Empty;
+        
+        public List<ActivityLogDto> RecentActivities { get; set; } = new List<ActivityLogDto>();
     }
     public class GetStaffProfileDto : BaseProfileDto
     {
