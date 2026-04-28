@@ -14,6 +14,17 @@ namespace BackendTechnicalAssetsManagement.src.Extensions
         {
             if (SkipSeedData) return;
 
+            // NOTE: This seed data is only applied during the INITIAL migration creation.
+            // When you add NEW migrations later, EF Core will NOT re-insert this data
+            // because it tracks what's already been seeded via the __EFMigrationsHistory table.
+            // 
+            // The seed data below will only be inserted when:
+            // 1. Creating the initial migration (already done)
+            // 2. Applying migrations to a fresh/empty database
+            //
+            // Future migrations will only contain schema changes (ALTER TABLE, etc.),
+            // not data inserts, unless you explicitly add new HasData() calls.
+
             // ─────────────────────────────────────────────────────────────────
             // Read sensitive values from environment variables (loaded from
             // .env via DotNetEnv.Env.Load() in both AppDbContextFactory and
