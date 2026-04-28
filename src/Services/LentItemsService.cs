@@ -511,13 +511,20 @@ namespace BackendTechnicalAssetsManagement.src.Services
                     }
                     
                     // Send general status change notification for all status changes
-                    await _notificationService.SendStatusChangeNotificationAsync(
-                        entity.Id,
-                        entity.UserId,
-                        entity.ItemName ?? "Unknown Item",
-                        oldStatus,
-                        newStatus
-                    );
+                    // EXCEPT when transitioning from Pending to Approved (already sent specific approval notification)
+                    bool isPendingToApproved = oldStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) && 
+                                               newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase);
+                    
+                    if (!isPendingToApproved)
+                    {
+                        await _notificationService.SendStatusChangeNotificationAsync(
+                            entity.Id,
+                            entity.UserId,
+                            entity.ItemName ?? "Unknown Item",
+                            oldStatus,
+                            newStatus
+                        );
+                    }
 
                     // Log the status transition
                     var updateLogCategory = newStatus switch
