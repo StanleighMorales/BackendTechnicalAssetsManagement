@@ -92,6 +92,7 @@ namespace BackendTechnicalAssetsManagement.src.Data
             base.OnModelCreating(modelBuilder);
             
             // Seed the database with initial data
+            // NOTE: This only runs when creating migrations, not on app startup
             modelBuilder.Seed();
 
             // --- ENUM TO STRING CONVERSIONS ---
